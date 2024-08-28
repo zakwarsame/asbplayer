@@ -34,6 +34,7 @@ interface BarProps {
     onDownloadSubtitleFilesAsSrt: () => void;
     onOpenSettings: () => void;
     onOpenCopyHistory: () => void;
+    onAutoSubsDialogChange?: () => void;
 }
 
 interface StyleProps {
@@ -125,6 +126,7 @@ export default function Bar({
     onOpenSettings,
     onOpenCopyHistory,
     onDownloadSubtitleFilesAsSrt,
+    onAutoSubsDialogChange,
 }: BarProps) {
     const classes = useStyles({ drawerWidth });
     const canSaveAsSrt =

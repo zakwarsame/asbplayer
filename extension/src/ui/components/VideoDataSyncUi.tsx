@@ -15,6 +15,7 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     ActiveProfileMessage,
+    VideoDataSearchMessage,
 } from '@project/common';
 import { createTheme } from '@project/common/theme';
 import { type PaletteMode } from '@mui/material/styles';
@@ -48,6 +49,9 @@ export default function VideoDataSyncUi({ bridge }: Props) {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [activeProfile, setActiveProfile] = useState<string>();
     const [fileInputTrackNumber, setFileInputTrackNumber] = useState<number>();
+    const [episode, setEpisode] = useState<number | ''>('');
+
+    const [isAnimeSite, setIsAnimeSite] = useState<boolean>(false);
 
     const theme = useMemo(() => createTheme((themeType || 'dark') as PaletteMode), [themeType]);
 
@@ -135,6 +139,14 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                 setProfiles(model.settings.profiles);
                 setActiveProfile(model.settings.activeProfile);
             }
+
+            if (model.episode !== undefined) {
+                setEpisode(model.episode);
+            }
+
+            if (model.isAnimeSite !== undefined) {
+                setIsAnimeSite(model.isAnimeSite);
+            }
         });
     }, [bridge, t]);
 
@@ -208,6 +220,19 @@ export default function VideoDataSyncUi({ bridge }: Props) {
         [bridge]
     );
 
+    const handleSearch = useCallback(
+        (title: string, episode: number | '') => {
+            const message: VideoDataSearchMessage = {
+                command: 'search',
+                title,
+                episode,
+            };
+            bridge.sendMessageFromServer(message);
+            setOpen(true);
+        },
+        [bridge]
+    );
+
     return (
         <StyledEngineProvider injectFirst>
             <ThemeProvider theme={theme}>
@@ -230,6 +255,9 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                     onOpenSettings={handleOpenSettings}
                     onConfirm={handleConfirm}
                     onSetActiveProfile={handleSetActiveProfile}
+                    isAnimeSite={isAnimeSite}
+                    episode={episode}
+                    onSearch={handleSearch}
                 />
                 <input
                     ref={fileInputRef}

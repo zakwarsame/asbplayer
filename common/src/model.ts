@@ -196,6 +196,9 @@ export interface VideoDataUiModel {
     openedFromAsbplayerId?: string;
     defaultCheckboxState?: boolean;
     settings: VideoDataUiSettings;
+    episode?: number | '';
+    isAnimeSite?: boolean;
+    onSearch?: (title: string, episode: number | '') => void;
 }
 
 export interface VideoTabModel {

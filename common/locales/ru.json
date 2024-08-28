@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Auto Subs",
         "cancel": "Отменить",
         "copy": "Копировать",
         "delete": "Удалить",
@@ -47,6 +48,16 @@
         "disabled": "Выкл",
         "inNotOut": "Включено",
         "inAndOut": "Включено с автовозобновлением"
+    },
+    "autoSubsDialog": {
+        "title": "Автоматические субтитры",
+        "selectSubtitles": "Выбрать субтитры",
+        "load": "Загрузить субтитры",
+        "animeTitle": "Название аниме",
+        "episode": "Эпизод",
+        "search": "Поиск",
+        "selectSubtitle": "Выбрать субтитр",
+        "apiKey": "Ключ API"
     },
     "ankiDialog": {
         "applySelection": "Применить выбор",
@@ -208,7 +219,9 @@
             "rememberTrackPreference": "Запомнить мой выбор дорожек для этого сайта",
             "selectSubtitles": "Выбрать субтитры",
             "subtitleTrack": "Выбрать дорожку субтитров",
-            "videoName": "Название видео"
+            "videoName": "Название видео",
+            "episode": "Эпизод",
+            "search": "Поиск"
         },
         "videoSelect": {
             "multipleVideoElements": "Обнаружено несколько видеоэлементов",
@@ -368,6 +381,7 @@
         "missingFieldError": "Field \"{{field}}\" not found in note type",
         "webSocketClientEnabled": "Включить WebSocket клиент",
         "webSocketServerUrl": "URL сервера WebSocket",
+        "apiKey": "Ключ API",
         "firefoxExtensionShortcutHelp": "Редактируйте этот ярлык в менеджере плагинов по адресу about:addons.",
         "postMinePlayback": "Настройка воспроизведения после майнинга",
         "pauseOnHoverMode": "Пауза при наведении на субтитры"

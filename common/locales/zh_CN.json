@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Auto Subs",
         "cancel": "取消",
         "copy": "复制",
         "delete": "删除",
@@ -47,6 +48,16 @@
         "disabled": "Disabled",
         "inNotOut": "Enabled",
         "inAndOut": "Enabled with auto-resume"
+    },
+    "autoSubsDialog": {
+        "title": "自动字幕",
+        "selectSubtitles": "选择字幕",
+        "load": "加载字幕",
+        "animeTitle": "动漫标题",
+        "episode": "集数",
+        "search": "搜索",
+        "selectSubtitle": "选择字幕",
+        "apiKey": "API密钥"
     },
     "ankiDialog": {
         "applySelection": "应用选中时间范围",
@@ -208,7 +219,9 @@
             "rememberTrackPreference": "Remember these track choices for this site",
             "selectSubtitles": "选择字幕",
             "subtitleTrack": "字幕轨道",
-            "videoName": "视频名称"
+            "videoName": "视频名称",
+            "episode": "剧集",
+            "search": "搜索"
         },
         "videoSelect": {
             "multipleVideoElements": "检测到多个视频元素",
@@ -366,8 +379,9 @@
         "wordField": "Word字段",
         "customFieldName": "Field name",
         "missingFieldError": "Field \"{{field}}\" not found in note type",
-        "webSocketClientEnabled": "Enable WebSocket client",
-        "webSocketServerUrl": "WebSocket Server URL",
+        "webSocketClientEnabled": "启用WebSocket客户端",
+        "webSocketServerUrl": "WebSocket服务器URL",
+        "apiKey": "API密钥",
         "firefoxExtensionShortcutHelp": "Edit this shortcut from the Plugin manager at about:addons.",
         "postMinePlayback": "Post-mining playback state",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles"

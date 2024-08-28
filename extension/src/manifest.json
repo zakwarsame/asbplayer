@@ -1,8 +1,9 @@
 {
-    "name": "asbplayer: Language-learning with subtitles",
-    "description": "__MSG_extensionDescription__",
-    "version": "1.9.1",
+    "name": "API subs for asbplayer",
+    "description": "API subs for asbplayer",
+    "version": "1.0.0",
     "manifest_version": 3,
+
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxmdAa3ymqAjLms43ympXqtyuJnC2bSYh70+5ZZmtyx/MsnGhTEdfbqtsp3BKxHbv0rPd49+Joacm1Shik5/mCppZ0h4I4ISMm983X01H6p/hfAzQYAcnvw/ZQNHAv1QgY9JiuyTBirCDoYB50Fxol/kI/0EviYXuX83KoYpjB0VGP/ssY9ocT//fQUbRmeLDJnciry8y6MduWXHzseOP99axQIjeVsNTE30L4fRN+ppX3aOkG/RFJNx0eI02qbLul3qw5dUuBK5GgMbYftwjHnDoOegnZYFr1sxRO1zsgmxdp/6du75RiDPRJOkPCz2GTrw4CX2FCywbDZlqaIpwqQIDAQAB",
     "default_locale": "en",
     "icons": {
@@ -11,7 +12,18 @@
         "128": "assets/icon128.png"
     },
     "minimum_chrome_version": "116",
-    "permissions": ["tabs", "tabCapture", "activeTab", "storage", "contextMenus", "sidePanel", "offscreen"],
+    "permissions": [
+        "tabs",
+        "tabCapture",
+        "activeTab",
+        "storage",
+        "contextMenus",
+        "sidePanel",
+        "offscreen",
+        "webNavigation",
+        "scripting"
+    ],
+    "host_permissions": ["<all_urls>"],
     "action": {
         "default_title": "asbplayer"
     },

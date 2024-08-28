@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Automatic Subs",
         "cancel": "Cancel",
         "copy": "Copy",
         "delete": "Delete",
@@ -47,6 +48,16 @@
         "disabled": "Disabled",
         "inNotOut": "Enabled",
         "inAndOut": "Enabled with auto-resume"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     },
     "ankiDialog": {
         "applySelection": "Apply Selection",
@@ -208,7 +219,9 @@
             "rememberTrackPreference": "Remember these track choices for this site",
             "selectSubtitles": "Select Subtitles",
             "subtitleTrack": "Subtitle Track",
-            "videoName": "Video Name"
+            "videoName": "Video Name",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Multiple Video Elements Detected",
@@ -368,6 +381,7 @@
         "missingFieldError": "Field \"{{field}}\" not found in note type",
         "webSocketClientEnabled": "Enable WebSocket client",
         "webSocketServerUrl": "WebSocket Server URL",
+        "apiKey": "API Key",
         "firefoxExtensionShortcutHelp": "Edit this shortcut from the Plugin manager at about:addons.",
         "postMinePlayback": "Post-mining playback state",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles"

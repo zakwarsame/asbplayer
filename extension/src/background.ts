@@ -60,6 +60,7 @@ import RequestCopyHistoryHandler from './handlers/asbplayerv2/request-copy-histo
 import DeleteCopyHistoryHandler from './handlers/asbplayerv2/delete-copy-history-handler';
 import ClearCopyHistoryHandler from './handlers/asbplayerv2/clear-copy-history-handler';
 import SaveCopyHistoryHandler from './handlers/asbplayerv2/save-copy-history-handler';
+import { animeSites, getAnimeSiteInfo, isAnimeSite } from './services/anime-sites';
 
 if (!isFirefoxBuild) {
     chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
@@ -173,6 +174,34 @@ chrome.runtime.onMessage.addListener((request: Command<Message>, sender, sendRes
                 break;
             }
         }
+    }
+});
+
+function getAnimeTitleAndEpisode(
+    tabId: number,
+    url: string
+): Promise<{ title: string; episode: number } | { error: string }> {
+    return new Promise((resolve) => {
+        chrome.tabs.sendMessage(tabId, { action: 'getTitleAndEp', url: url }, (response) => {
+            if (chrome.runtime.lastError) {
+                resolve({ error: chrome.runtime.lastError.message ?? 'Unknown error' });
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.command === 'GET_ANIME_TITLE_AND_EPISODE' && sender.tab?.id) {
+        getAnimeTitleAndEpisode(sender.tab.id, sender.tab.url ?? '')
+            .then(sendResponse)
+            .catch((error) => sendResponse({ error: error.message }));
+        return true;
+    }
+    if (message.command === 'CHECK_IF_ANIME_SITE') {
+        sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
+        return true;
     }
 });
 

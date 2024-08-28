@@ -11,6 +11,8 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     VideoToExtensionCommand,
+    VideoDataSearchMessage,
+    UpdateEpisodeMessage,
 } from '@project/common';
 import { AsbplayerSettings, SettingsProvider } from '@project/common/settings';
 import { base64ToBlob, bufferToBase64 } from '@project/common/base64';
@@ -20,6 +22,8 @@ import { Parser as m3U8Parser } from 'm3u8-parser';
 import UiFrame from '../services/ui-frame';
 import { fetchLocalization } from '../services/localization-fetcher';
 import i18n from 'i18next';
+import { fetchAnilistInfo } from '../services/anilist';
+import { fetchSubtitles } from '../services/subtitle';
 
 async function html(lang: string) {
     return `<!DOCTYPE html>
@@ -72,6 +76,8 @@ export default class VideoDataSyncController {
     private _activeElement?: Element;
     private _autoSyncAttempted: boolean = false;
     private _dataReceivedListener?: (event: Event) => void;
+    private _episode: number | '' = '';
+    private _isAnimeSite: boolean = false;
 
     constructor(context: Binding, settings: SettingsProvider) {
         this._context = context;
@@ -87,6 +93,8 @@ export default class VideoDataSyncController {
         };
         this._domain = new URL(window.location.href).host;
         this._frame = new UiFrame(html);
+        this._isAnimeSite = false;
+        this.checkIfAnimeSite();
     }
 
     private get lastLanguagesSynced(): string[] {
@@ -171,26 +179,30 @@ export default class VideoDataSyncController {
         const themeType = await this._context.settings.getSingle('themeType');
         const profilesPromise = this._context.settings.profiles();
         const activeProfilePromise = this._context.settings.activeProfile();
+        const { title, episode } = await this.getAnimeTitleAndEpisode();
 
         return this._syncedData
             ? {
                   isLoading: this._syncedData.subtitles === undefined,
-                  suggestedName: this._syncedData.basename,
+                  suggestedName: title ? title : this._syncedData.basename,
                   selectedSubtitle: autoSelectedTrackIds,
                   subtitles: subtitleTrackChoices,
                   error: this._syncedData.error,
                   defaultCheckboxState: defaultCheckboxState,
                   openedFromAsbplayerId: '',
                   settings: {
-                      themeType: themeType,
+                      themeType,
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
+                  //  todo: put these in one state object
+                  episode: episode ? episode : this._episode,
+                  isAnimeSite: this._isAnimeSite,
                   ...additionalFields,
               }
             : {
                   isLoading: this._context.hasPageScript,
-                  suggestedName: document.title,
+                  suggestedName: title ? title : document.title,
                   selectedSubtitle: autoSelectedTrackIds,
                   error: '',
                   showSubSelect: true,
@@ -198,10 +210,12 @@ export default class VideoDataSyncController {
                   defaultCheckboxState: defaultCheckboxState,
                   openedFromAsbplayerId: '',
                   settings: {
-                      themeType: themeType,
+                      themeType,
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
+                  episode: this._episode,
+                  isAnimeSite: this._isAnimeSite,
                   ...additionalFields,
               };
     }
@@ -348,6 +362,15 @@ export default class VideoDataSyncController {
                             await this._reportError(e.message);
                         }
                     }
+                } else if ('updateEpisode' === message.command) {
+                    const updateEpisodeMessage = message as UpdateEpisodeMessage;
+                    this._episode = updateEpisodeMessage.episode;
+                    client.updateState({ episode: this._episode, open: true });
+                    dataWasSynced = false;
+                } else if ('search' === message.command) {
+                    const searchSubtitlesMessage = message as VideoDataSearchMessage;
+                    await this._handleSearch(searchSubtitlesMessage);
+                    dataWasSynced = false;
                 }
 
                 if (dataWasSynced) {
@@ -360,7 +383,18 @@ export default class VideoDataSyncController {
         return client;
     }
 
-    private _prepareShow() {
+    private async _prepareShow() {
+        const client = await this._client();
+        await this.checkIfAnimeSite();
+        const { title, episode } = await this.getAnimeTitleAndEpisode();
+
+        client.updateState({
+            isAnimeSite: this._isAnimeSite,
+            suggestedName: title || this._syncedData?.basename || document.title,
+            episode: episode ? parseInt(episode) : '',
+            open: true,
+        });
+
         this._wasPaused = this._wasPaused ?? this._context.video.paused;
         this._context.pause();
 
@@ -595,6 +629,82 @@ export default class VideoDataSyncController {
             showSubSelect: true,
             error,
             themeType: themeType,
+        });
+    }
+
+    private async _handleSearch(message: VideoDataSearchMessage) {
+        const client = await this._client();
+        client.updateState({ isLoading: true, error: null, open: true });
+
+        const apiKey = await this._context.settings.getSingle('apiKey');
+
+        try {
+            const { anilistId } = await fetchAnilistInfo(message.title);
+            if (!anilistId) {
+                throw new Error('Unable to find Anilist ID for the given title');
+            }
+
+            const subtitles = await fetchSubtitles(anilistId, message.episode || 0, apiKey || '');
+            if (typeof subtitles === 'string') {
+                throw new Error(subtitles);
+            }
+
+            const fetchedSubtitles = subtitles
+                .map((sub, index) => ({
+                    id: `fetched-${index}`,
+                    language: 'ja',
+                    url: sub.url,
+                    label: sub.name,
+                    extension: 'srt',
+                }))
+                .filter((sub) => sub.url && sub.label);
+
+            const { title } = await this.getAnimeTitleAndEpisode();
+
+            // Update the subtitles state with the fetched subtitles
+            this._syncedData = {
+                ...this._syncedData,
+                subtitles: [
+                    { id: '-', language: '-', url: '-', label: 'No subtitle', extension: 'srt' },
+                    ...fetchedSubtitles,
+                ],
+            } as VideoData;
+
+            // Make sure to keep the dialog open after updating state
+            client.updateState({
+                subtitles: this._syncedData.subtitles,
+                isLoading: false,
+                episode: message.episode,
+                open: true,
+                suggestedName: title,
+            });
+        } catch (error) {
+            // Keep dialog open when showing error
+            client.updateState({
+                error: error instanceof Error ? error.message : 'An error occurred while fetching subtitles',
+                isLoading: false,
+                open: true,
+            });
+        }
+    }
+
+    private async checkIfAnimeSite(): Promise<void> {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({ command: 'CHECK_IF_ANIME_SITE' }, (response) => {
+                this._isAnimeSite = response.isAnimeSite;
+                resolve();
+            });
+        });
+    }
+    private async getAnimeTitleAndEpisode(): Promise<{ title: string; episode: string }> {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({ command: 'GET_ANIME_TITLE_AND_EPISODE' }, (response) => {
+                if (response.error) {
+                    resolve({ title: '', episode: '' });
+                } else {
+                    resolve({ title: response.title, episode: response.episode.toString() });
+                }
+            });
         });
     }
 }
