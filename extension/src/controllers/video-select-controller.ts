@@ -194,7 +194,7 @@ export default class VideoSelectController {
         }
 
         const client = await this._frame.client();
-        client.updateState({ open: false });
+        client.updateState({ open: true });
         this._frame.hide();
     }
 

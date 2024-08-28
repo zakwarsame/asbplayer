@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Auto Subs",
         "cancel": "キャンセル",
         "copy": "コピー",
         "delete": "削除",
@@ -52,6 +53,16 @@
         "disabled": "無効",
         "inNotOut": "有効",
         "inAndOut": "有効。マウスカーソルを外すと自動再生。"
+    },
+    "autoSubsDialog": {
+        "title": "自動字幕",
+        "selectSubtitles": "字幕を選択",
+        "load": "字幕をロード",
+        "animeTitle": "タイトル",
+        "episode": "エピソード",
+        "apiKey": "APIキー",
+        "search": "検索",
+        "selectSubtitle": "字幕を選択"
     },
     "ankiDialog": {
         "applySelection": "選択範囲を適用する",
@@ -235,6 +246,8 @@
             "subtitleTrack": "字幕トラック",
             "videoName": "動画ファイル名",
             "ftue": "自動検出された字幕トラックはここで選択できます。asbplayerはすべてのサイトで字幕トラックを検出できるわけではありません。自分の字幕ファイルはいつでもロードすることができます。"
+            "episode": "エピソード",
+            "search": "検索"
         },
         "videoSelect": {
             "multipleVideoElements": "複数の動画を探知しました",
@@ -428,6 +441,7 @@
         "missingFieldError": "フィールド \"{{field}}\" がノートタイプに見つかりません",
         "webSocketClientEnabled": "WebSocketクライアントを有効",
         "webSocketServerUrl": "WebSocketサーバーのURL",
+        "apiKey": "APIキー",
         "firefoxExtensionShortcutHelp": "ショートカットの編集はプラグイン管理 （about:addons）で行えます。",
         "postMinePlayback": "マイニング後のプレイバック状態",
         "pauseOnHoverMode": "マウスカーソルを字幕に重ねると自動一時停止",

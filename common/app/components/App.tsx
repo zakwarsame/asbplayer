@@ -24,7 +24,13 @@ import {
 } from '@project/common';
 import { createTheme } from '@project/common/theme';
 import { AsbplayerSettings, Profile } from '@project/common/settings';
-import { humanReadableTime, download, extractText } from '@project/common/util';
+import {
+    humanReadableTime,
+    download,
+    extractText,
+    extractTitleAndEpisode,
+    fetchSubtitleContent,
+} from '@project/common/util';
 import { AudioClip, Mp3Encoder } from '@project/common/audio-clip';
 import { ExportParams } from '@project/common/anki';
 import { SubtitleReader } from '@project/common/subtitle-reader';
@@ -33,6 +39,7 @@ import clsx from 'clsx';
 import Alert from './Alert';
 import AnkiDialog from '@project/common/components/AnkiDialog';
 import Paper from '@mui/material/Paper';
+import AutoSubsDialog from './AutoSubsDialog';
 import DragOverlay from './DragOverlay';
 import Bar from './Bar';
 import ChromeExtension, { ExtensionMessage } from '../services/chrome-extension';
@@ -277,6 +284,12 @@ function App({
     } = useCopyHistory(settings.miningHistoryStorageLimit, copyHistoryRepository);
     const copyHistoryItemsRef = useRef<CopyHistoryItem[]>([]);
     copyHistoryItemsRef.current = copyHistoryItems;
+    const [autoSubsDialogOpen, setAutoSubsDialogOpen] = useState(false);
+    const [videoInfo, setVideoInfo] = useState<{ title: string; episode: number | ''; apiKey: string }>({
+        title: '',
+        episode: '',
+        apiKey: localStorage.getItem('apiKey') || '',
+    });
     const [copyHistoryOpen, setCopyHistoryOpen] = useState<boolean>(false);
     const [theaterMode, setTheaterMode] = useState<boolean>(playbackPreferences.theaterMode);
     const [hideSubtitlePlayer, setHideSubtitlePlayer] = useState<boolean>(playbackPreferences.hideSubtitleList);
@@ -303,6 +316,14 @@ function App({
     const [lastError, setLastError] = useState<any>();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { subtitleFiles } = sources;
+
+    const handleCloseAutoSubsDialog = useCallback(() => {
+        setAutoSubsDialogOpen(false);
+    }, []);
+
+    const handleAutoSubsDialog = useCallback(() => {
+        autoSubsDialogOpen ? handleCloseAutoSubsDialog() : setAutoSubsDialogOpen(true);
+    }, [autoSubsDialogOpen, handleCloseAutoSubsDialog]);
 
     const handleError = useCallback(
         (message: any) => {
@@ -768,6 +789,10 @@ function App({
                         }
 
                         setTab(undefined);
+
+                        const { epTitle, episode } = extractTitleAndEpisode(videoFile.name);
+
+                        setVideoInfo((prev) => ({ ...prev, title: epTitle || '', episode: episode || '' }));
                     } else {
                         videoFile = previous.videoFile;
                         videoFileUrl = previous.videoFileUrl;
@@ -807,6 +832,28 @@ function App({
             }
         },
         [handleError]
+    );
+
+    const handleSubtitleSelected = useCallback(
+        async (subtitle: { name: string; url: string }) => {
+            try {
+                setLoadingSources((prev) => [...prev, new File([], subtitle.name)]);
+                const subtitleContent = await fetchSubtitleContent(subtitle.url);
+                const subtitleFile = new File([subtitleContent], subtitle.name, { type: 'text/plain' });
+
+                handleFiles({ files: [subtitleFile] });
+                setAutoSubsDialogOpen(false);
+
+                setAlertSeverity('success');
+                setAlert(t('info.subtitleLoaded', { fileName: subtitle.name }) ?? 'Subtitle loaded');
+                setAlertOpen(true);
+            } catch (error) {
+                handleError(error instanceof Error ? error.message : 'Failed to load subtitle');
+            } finally {
+                setLoadingSources((prev) => prev.filter((file) => file.name !== subtitle.name));
+            }
+        },
+        [handleFiles, handleError, t]
     );
 
     const handleDirectory = useCallback(
@@ -1341,6 +1388,15 @@ function App({
                                 settings={settings}
                                 scrollToId={settingsDialogScrollToId}
                                 {...profilesContext}
+                            />
+                            <AutoSubsDialog
+                                open={autoSubsDialogOpen}
+                                onClose={handleCloseAutoSubsDialog}
+                                onSubtitleSelected={handleSubtitleSelected}
+                                title={videoInfo?.title || ''}
+                                episode={videoInfo?.episode || ''}
+                                apiKey={videoInfo?.apiKey || ''}
+                                onVideoInfoChange={setVideoInfo}
                             />
                             <NeedRefreshDialog
                                 open={needRefreshDialogOpen}

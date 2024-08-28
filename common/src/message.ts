@@ -486,6 +486,12 @@ export interface VideoDataUiBridgeOpenFileMessage extends Message {
     readonly subtitles: SerializedSubtitleFile[];
 }
 
+export interface VideoDataSearchMessage extends Message {
+    readonly command: 'search';
+    readonly title: string;
+    readonly episode: number | '';
+}
+
 export interface CropAndResizeMessage extends Message, ImageCaptureParams {
     readonly command: 'crop-and-resize';
     readonly dataUrl: string;
@@ -755,4 +761,9 @@ export interface DeleteCopyHistoryMessage extends MessageWithId {
 
 export interface ClearCopyHistoryMessage extends MessageWithId {
     readonly command: 'clear-copy-history';
+}
+
+export interface UpdateEpisodeMessage extends Message {
+    readonly command: 'updateEpisode';
+    readonly episode: number | '';
 }

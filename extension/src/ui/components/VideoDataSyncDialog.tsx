@@ -68,12 +68,15 @@ interface Props {
     activeProfile?: string;
     hasSeenFtue?: boolean;
     hideRememberTrackPreferenceToggle?: boolean;
+    episode: number | '';
+    onSearch: (title: string, episode: number | '') => void;
     onCancel: () => void;
     onOpenFile: (track?: number) => void;
     onOpenSettings: () => void;
     onConfirm: (track: ConfirmedVideoDataSubtitleTrack[], shouldRememberTrackChoices: boolean) => void;
     onSetActiveProfile: (profile: string | undefined) => void;
     onDismissFtue: () => void;
+    isAnimeSite: boolean;
 }
 
 export default function VideoDataSyncDialog({
@@ -91,12 +94,15 @@ export default function VideoDataSyncDialog({
     activeProfile,
     hasSeenFtue,
     hideRememberTrackPreferenceToggle,
+    episode: initialEpisode,
+    onSearch,
     onCancel,
     onOpenFile,
     onOpenSettings,
     onConfirm,
     onSetActiveProfile,
     onDismissFtue,
+    isAnimeSite,
 }: Props) {
     const { t } = useTranslation();
     const [userSelectedSubtitleTrackIds, setUserSelectedSubtitleTrackIds] = useState(['-', '-', '-']);
@@ -104,6 +110,7 @@ export default function VideoDataSyncDialog({
     const [shouldRememberTrackChoices, setShouldRememberTrackChoices] = useState(false);
     const trimmedName = name.trim();
     const classes = createClasses();
+    const [localEpisode, setLocalEpisode] = useState(initialEpisode);
 
     useEffect(() => {
         if (open) {
@@ -125,6 +132,11 @@ export default function VideoDataSyncDialog({
 
     useEffect(() => {
         setName((name) => {
+            // Don't auto-update name if episode is set (arbitrarily doing this to prevent name from being changed when searching)
+            if (localEpisode !== '') {
+                return name || suggestedName;
+            }
+
             if (!subtitleTracks) {
                 // Unable to calculate the video name
                 return name;
@@ -153,7 +165,14 @@ export default function VideoDataSyncDialog({
             // Otherwise, let the name be whatever the user set it to
             return name;
         });
-    }, [suggestedName, userSelectedSubtitleTrackIds, subtitleTracks]);
+
+        setLocalEpisode((prev) => {
+            if (prev === '') {
+                return initialEpisode;
+            }
+            return prev;
+        });
+    }, [suggestedName, userSelectedSubtitleTrackIds, subtitleTracks, initialEpisode, localEpisode]);
 
     function handleOkButtonClick() {
         const selectedSubtitleTracks: ConfirmedVideoDataSubtitleTrack[] = allSelectedSubtitleTracks();
@@ -242,6 +261,16 @@ export default function VideoDataSyncDialog({
         }
     }, [open, trimmedName, disabled]);
 
+    const handleEpisodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLocalEpisode(e.target.value === '' ? '' : parseInt(e.target.value));
+    };
+
+    const isSearchDisabled = isLoading || !localEpisode || !name;
+
+    const handleSearch = () => {
+        onSearch(name, localEpisode);
+    };
+
     return (
         <Dialog disableRestoreFocus disableEnforceFocus fullWidth maxWidth="sm" open={open} onClose={onCancel}>
             <Toolbar>
@@ -300,6 +329,19 @@ export default function VideoDataSyncDialog({
                                 onChange={(e) => setName(e.target.value)}
                             />
                         </Grid>
+                        {isAnimeSite && (
+                            <Grid item>
+                                <TextField
+                                    fullWidth
+                                    label={t('extension.videoDataSync.episode')}
+                                    value={localEpisode}
+                                    onChange={handleEpisodeChange}
+                                    margin="normal"
+                                    variant="outlined"
+                                    type="number"
+                                />
+                            </Grid>
+                        )}
                         {threeSubtitleTrackSelectors}
                         {!hideRememberTrackPreferenceToggle && (
                             <Grid item>
@@ -322,6 +364,32 @@ export default function VideoDataSyncDialog({
                                 />
                             </Grid>
                         )}
+                        {isAnimeSite && (
+                            <Grid item>
+                                <Button onClick={handleSearch} disabled={isSearchDisabled}>
+                                    {t('extension.videoDataSync.search')}
+                                </Button>
+                            </Grid>
+                        )}
+                        <Grid item>
+                            <LabelWithHoverEffect
+                                control={
+                                    <Switch
+                                        checked={shouldRememberTrackChoices}
+                                        onChange={handleRememberTrackChoices}
+                                        color="primary"
+                                    />
+                                }
+                                label={t('extension.videoDataSync.rememberTrackPreference')}
+                                labelPlacement="start"
+                                style={{
+                                    display: 'flex',
+                                    marginLeft: 'auto',
+                                    marginRight: '-13px',
+                                    width: 'fit-content',
+                                }}
+                            />
+                        </Grid>
                     </Grid>
                 </form>
             </DialogContent>
