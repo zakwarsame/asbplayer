@@ -379,3 +379,49 @@ export function seekWithNudge(media: HTMLMediaElement, timestampSeconds: number)
 
     return media.currentTime;
 }
+
+export function extractTitleAndEpisode(filename: string): { epTitle: string | null; episode: number | null } {
+    const nameWithoutExtension = filename.replace(/\.[^/.]+$/, '');
+
+    const episodeMatch =
+        nameWithoutExtension.match(/(?:E|Ep|Episode|S\d+E)(\d+)/i) || nameWithoutExtension.match(/\s(\d+)$/);
+    const episode = episodeMatch ? parseInt(episodeMatch[1]) : null;
+
+    // Patterns to remove from the title
+    const patternsToRemove = [
+        /(?:E|Ep|Episode|S\d+E)\d+.*$/i, // Remove episode number and everything after
+        /\[.*?\]/g, // Remove content in square brackets
+        /\(.*?\)/g, // Remove content in parentheses
+        /\.-\./g, // Replace ".-." with space
+        /[._-]/g, // Replace dots, underscores, and hyphens with spaces
+    ];
+
+    // Apply removal patterns
+    let epTitle = nameWithoutExtension;
+    for (const pattern of patternsToRemove) {
+        epTitle = epTitle.replace(pattern, ' ');
+    }
+
+    // Find and remove everything after the resolution
+    const resolutionMatch = epTitle.match(/\d{3,4}p/);
+    if (resolutionMatch) {
+        epTitle = epTitle.slice(0, resolutionMatch.index).trim();
+    } else {
+        // If no resolution found, remove common tags and trailing numbers
+        epTitle = epTitle.replace(/\b(?:AMZN|WEB-DL|x\d+|DUAL|DDP\d+\.\d+|H\.264|MSubs).*$/i, '');
+        epTitle = epTitle.replace(/\s+S\d+$/i, '').replace(/\s+\d+$/, '');
+    }
+
+    // Clean up extra spaces and trim
+    epTitle = epTitle.replace(/\s+/g, ' ').trim();
+
+    return { epTitle, episode };
+}
+
+export async function fetchSubtitleContent(url: string): Promise<string> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch subtitle: ${response.statusText}`);
+    }
+    return await response.text();
+}
