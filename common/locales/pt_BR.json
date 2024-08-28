@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Subtítulos Automáticos",
         "cancel": "Cancelar",
         "copy": "Copiar",
         "delete": "Excluir",
@@ -51,6 +52,16 @@
         "disabled": "Desabilitado",
         "inNotOut": "Habilitado",
         "inAndOut": "Ativado com reinício automático"
+    },
+    "autoSubsDialog": {
+        "title": "Subtítulos Automáticos",
+        "selectSubtitles": "Selecionar Subtítulos",
+        "load": "Carregar Subtítulos",
+        "animeTitle": "Título",
+        "episode": "Episódio",
+        "search": "Pesquisar",
+        "selectSubtitle": "Selecionar Subtítulo",
+        "apiKey": "Chave de API"
     },
     "ankiDialog": {
         "applySelection": "Aplicar seleção",
@@ -233,7 +244,9 @@
             "selectSubtitles": "Selecionar legenda",
             "subtitleTrack": "Selecionar faixa",
             "videoName": "Nome do vídeo",
-            "ftue": "As faixas de legendas detectadas automaticamente podem ser selecionadas aqui. O asbplayer não sabe como detectar legendas em todo site. Você sempre pode carregar seus próprios arquivos de legenda."
+            "ftue": "As faixas de legendas detectadas automaticamente podem ser selecionadas aqui. O asbplayer não sabe como detectar legendas em todo site. Você sempre pode carregar seus próprios arquivos de legenda.",
+            "episode": "Episódio",
+            "search": "Pesquisar"
         },
         "videoSelect": {
             "multipleVideoElements": "Detectados Múltiplos Elementos de Vídeo",
@@ -423,7 +436,8 @@
         "firefoxExtensionShortcutHelp": "Edite este atalho do Gerenciador de Plugins em about:addons.",
         "postMinePlayback": "Estado de reprodução pós-mineração",
         "pauseOnHoverMode": "Pausar automaticamente ao posicionar o mouse sobre as legendas",
-        "createTestCard": "Criar Cartão de Teste"
+        "createTestCard": "Criar Cartão de Teste",
+        "apiKey": "Chave da API"
     },
     "subtitlePlayer": {
         "multiSubtitleSelectHelp": "Clique, segure e arraste para minerar múltiplas legendas"

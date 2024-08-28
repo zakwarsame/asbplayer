@@ -947,6 +947,7 @@ export default function SettingsForm({
         webSocketClientEnabled,
         webSocketServerUrl,
         pauseOnHoverMode,
+        apiKey,
     } = settings;
 
     const keyBindProperties = useMemo<{ [key in AllKeyNames]: KeyBindProperties }>(
@@ -3070,6 +3071,15 @@ export default function SettingsForm({
                                     ),
                                 },
                             }}
+                        />
+                    </Grid>
+                    <Grid item>
+                        <TextField
+                            label={t('settings.apiKey')}
+                            fullWidth
+                            color="secondary"
+                            value={apiKey}
+                            onChange={(event) => handleSettingChanged('apiKey', event.target.value)}
                         />
                     </Grid>
                     <Grid item>

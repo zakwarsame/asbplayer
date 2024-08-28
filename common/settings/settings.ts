@@ -341,6 +341,7 @@ export interface AsbplayerSettings
         StreamingVideoSettings,
         WebSocketClientSettings {
     readonly subtitlePreview: string;
+    readonly apiKey: string;
 }
 
 const keyBindNameMap: any = {
