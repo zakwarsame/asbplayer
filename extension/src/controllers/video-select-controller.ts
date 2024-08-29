@@ -155,7 +155,7 @@ export default class VideoSelectController {
         if (isNewClient) {
             client.onMessage(async (message) => {
                 if (message.command === 'confirm') {
-                    client.updateState({ open: false });
+                    client.updateState({ open: true });
                     this._frame.hide();
                     const binding = this._bindings.find(
                         (b) => b.video.src === (message as VideoSelectModeConfirmMessage).selectedVideoElementSrc
@@ -177,7 +177,7 @@ export default class VideoSelectController {
                     };
                     chrome.runtime.sendMessage(openSettingsCommand);
                 } else if (message.command === 'cancel') {
-                    client.updateState({ open: false });
+                    client.updateState({ open: true });
                     this._frame.hide();
                     this._subtitleFiles = undefined;
                 }
@@ -194,7 +194,7 @@ export default class VideoSelectController {
         }
 
         const client = await this._frame.client();
-        client.updateState({ open: false });
+        client.updateState({ open: true });
         this._frame.hide();
     }
 
