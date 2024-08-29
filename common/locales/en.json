@@ -192,7 +192,10 @@
             "rememberTrackPreference": "Remember these track choices for this site",
             "selectSubtitles": "Select Subtitles",
             "subtitleTrack": "Subtitle Track",
-            "videoName": "Video Name"
+            "videoName": "Video Name",
+            "episode": "Episode",
+            "search": "Search",
+            "apiKey": "API Key"
         },
         "videoSelect": {
             "multipleVideoElements": "Multiple Video Elements Detected",

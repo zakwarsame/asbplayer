@@ -6,6 +6,7 @@ import {
     SetSettingsMessage,
 } from '@project/common';
 import { ExtensionSettingsStorage } from './services/extension-settings-storage';
+import { getAnimeSiteInfo } from './services/anime-sites';
 
 const sendMessageToPlayer = (message: any) => {
     window.postMessage({

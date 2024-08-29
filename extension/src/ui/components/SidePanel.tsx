@@ -502,7 +502,7 @@ export default function SidePanel({ settings, extension }: Props) {
                                 onAnkiDialogRequest={noOp}
                                 onAnkiDialogRewind={noOp}
                                 onAppBarToggle={noOp}
-                                onFullscreenToggle={noOp}
+                                // onFullscreenToggle={noOp}
                                 onHideSubtitlePlayer={noOp}
                                 onVideoPopOut={noOp}
                                 onPlayModeChangedViaBind={noOp}

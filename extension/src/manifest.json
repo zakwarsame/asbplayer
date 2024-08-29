@@ -11,7 +11,18 @@
         "128": "assets/icon128.png"
     },
     "minimum_chrome_version": "116",
-    "permissions": ["tabs", "tabCapture", "activeTab", "storage", "contextMenus", "sidePanel", "offscreen"],
+    "permissions": [
+        "tabs",
+        "tabCapture",
+        "activeTab",
+        "storage",
+        "contextMenus",
+        "sidePanel",
+        "offscreen",
+        "webNavigation",
+        "scripting"
+    ],
+    "host_permissions": ["<all_urls>"],
     "action": {
         "default_title": "asbplayer"
     },
@@ -44,6 +55,12 @@
         {
             "matches": ["*://killergerbah.github.io/asbplayer*", "*://localhost/*"],
             "js": ["asbplayer.js"],
+            "all_frames": true,
+            "run_at": "document_start"
+        },
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"],
             "all_frames": true,
             "run_at": "document_start"
         }

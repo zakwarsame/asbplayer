@@ -37,6 +37,10 @@ export default function VideoDataSyncUi({ bridge }: Props) {
     const [openedFromMiningCommand, setOpenedFromMiningCommand] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [themeType, setThemeType] = useState<string>();
+    const [apiKey, setApiKey] = useState<string>('');
+    const [episode, setEpisode] = useState<number | ''>('');
+
+    const [isAnimeSite, setIsAnimeSite] = useState<boolean>(false);
 
     const theme = useMemo(() => createTheme((themeType || 'dark') as PaletteType), [themeType]);
 
@@ -109,6 +113,18 @@ export default function VideoDataSyncUi({ bridge }: Props) {
             if (Object.prototype.hasOwnProperty.call(state, 'openedFromMiningCommand')) {
                 setOpenedFromMiningCommand(state.openedFromMiningCommand);
             }
+
+            if (Object.prototype.hasOwnProperty.call(state, 'apiKey')) {
+                setApiKey(state.apiKey);
+            }
+
+            if (Object.prototype.hasOwnProperty.call(state, 'episode')) {
+                setEpisode(state.episode);
+            }
+
+            if (Object.prototype.hasOwnProperty.call(state, 'isAnimeSite')) {
+                setIsAnimeSite(state.isAnimeSite);
+            }
         });
     }, [bridge, t]);
 
@@ -143,6 +159,30 @@ export default function VideoDataSyncUi({ bridge }: Props) {
 
     const handleOpenFile = useCallback(() => fileInputRef.current?.click(), []);
 
+    const handleApiKeyChange = useCallback(
+        (newApiKey: string) => {
+            setApiKey(newApiKey);
+            bridge.sendMessageFromServer({ command: 'updateApiKey', apiKey: newApiKey });
+        },
+        [bridge]
+    );
+
+    const handleEpisodeChange = useCallback(
+        (newEpisode: number | '') => {
+            setEpisode(newEpisode);
+            bridge.sendMessageFromServer({ command: 'updateEpisode', episode: newEpisode });
+        },
+        [bridge]
+    );
+
+    const handleSearch = useCallback(
+        (title: string, episode: number | '', apiKey: string) => {
+            bridge.sendMessageFromServer({ command: 'search', title, episode, apiKey });
+            setOpen(true);
+        },
+        [bridge]
+    );
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -157,9 +197,15 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                 defaultCheckboxState={defaultCheckboxState}
                 openedFromMiningCommand={openedFromMiningCommand}
                 error={error}
+                isAnimeSite={isAnimeSite}
                 onCancel={handleCancel}
                 onOpenFile={handleOpenFile}
                 onConfirm={handleConfirm}
+                apiKey={apiKey}
+                episode={episode}
+                onApiKeyChange={handleApiKeyChange}
+                onEpisodeChange={handleEpisodeChange}
+                onSearch={handleSearch}
             />
             <input
                 ref={fileInputRef}
