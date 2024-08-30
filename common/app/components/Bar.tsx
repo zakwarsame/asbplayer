@@ -14,6 +14,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip, { TooltipProps } from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import React, { useCallback } from 'react';
+import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 
 interface BarProps {
     drawerWidth: number;
@@ -25,6 +26,7 @@ interface BarProps {
     onDownloadSubtitleFilesAsSrt: () => void;
     onOpenSettings: () => void;
     onOpenCopyHistory: () => void;
+    onAutoSubsDialogChange?: () => void;
 }
 
 interface StyleProps {
@@ -105,6 +107,7 @@ export default function Bar({
     onOpenCopyHistory,
     onFileSelector,
     onDownloadSubtitleFilesAsSrt,
+    onAutoSubsDialogChange,
 }: BarProps) {
     const classes = useStyles({ drawerWidth });
     const canSaveAsSrt =
@@ -142,6 +145,12 @@ export default function Bar({
                             <FolderIcon />
                         </IconButton>
                     </Tooltip>
+                    <Tooltip title={t('action.autoSubs')!}>
+                        <IconButton edge="start" color="inherit" onClick={onAutoSubsDialogChange}>
+                            <CloudDownloadIcon />
+                        </IconButton>
+                    </Tooltip>
+
                     {canSaveAsSrt && (
                         <Tooltip title={t('action.downloadSubtitlesAsSrt')!}>
                             <IconButton
