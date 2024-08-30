@@ -223,22 +223,6 @@ export default function VideoDataSyncUi({ bridge }: Props) {
         [bridge]
     );
 
-    const handleApiKeyChange = useCallback(
-        (newApiKey: string) => {
-            setApiKey(newApiKey);
-            bridge.sendMessageFromServer({ command: 'updateApiKey', apiKey: newApiKey });
-        },
-        [bridge]
-    );
-
-    const handleEpisodeChange = useCallback(
-        (newEpisode: number | '') => {
-            setEpisode(newEpisode);
-            bridge.sendMessageFromServer({ command: 'updateEpisode', episode: newEpisode });
-        },
-        [bridge]
-    );
-
     const handleSearch = useCallback(
         (title: string, episode: number | '', apiKey: string) => {
             bridge.sendMessageFromServer({ command: 'search', title, episode, apiKey });
@@ -271,8 +255,6 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                 onSetActiveProfile={handleSetActiveProfile}
                 apiKey={apiKey}
                 episode={episode}
-                onApiKeyChange={handleApiKeyChange}
-                onEpisodeChange={handleEpisodeChange}
                 onSearch={handleSearch}
             />
             <input
