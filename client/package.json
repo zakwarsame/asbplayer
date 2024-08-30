@@ -28,7 +28,7 @@
     "homepage": "https://killergerbah.github.io/asbplayer",
     "scripts": {
         "predeploy": "npm run build",
-        "deploy": "gh-pages -d build",
+        "deploy": "gh-pages -d build -r https://github.com/zakwarsame/asbplayer.git",
         "start": "NODE_OPTIONS=--openssl-legacy-provider craco start",
         "build": "../scripts/loc/loc-keys-match && NODE_OPTIONS=--openssl-legacy-provider craco build",
         "test": "craco test",
