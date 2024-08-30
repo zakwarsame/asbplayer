@@ -103,7 +103,6 @@ export default class VideoDataSyncController {
         this._loadApiKey();
         this._isAnimeSite = false;
         this.checkIfAnimeSite();
-        this.debugLog('Controller initialized');
     }
 
     private get lastLanguagesSynced(): string[] {
@@ -404,11 +403,6 @@ export default class VideoDataSyncController {
         await this.checkIfAnimeSite();
         const { title, episode } = await this.getAnimeTitleAndEpisode();
 
-        this.debugLog('Preparing to show dialog');
-        this.debugLog('Is anime site:', this._isAnimeSite);
-        this.debugLog('Suggested name:', title);
-        this.debugLog('Episode:', episode);
-
         client.updateState({
             isAnimeSite: this._isAnimeSite,
             suggestedName: title,
@@ -654,9 +648,7 @@ export default class VideoDataSyncController {
     }
 
     private async _loadApiKey() {
-        this.debugLog('API key!!!!:', this._apiKey);
         this._apiKey = (await this.getStorage(['apiKey'])).apiKey || '';
-        this.debugLog('API key after getStorage:', this._apiKey);
     }
 
     private async _handleSearch(message: SearchSubtitlesMessage) {
@@ -676,8 +668,6 @@ export default class VideoDataSyncController {
 
             this._apiKey = message.apiKey;
             await this.setStorage({ apiKey: this._apiKey });
-            this.debugLog('API key set:', this._apiKey);
-            this.debugLog('Fetched subtitles:', subtitles);
 
             const fetchedSubtitles = subtitles
                 .map((sub, index) => ({
@@ -720,9 +710,7 @@ export default class VideoDataSyncController {
     private async checkIfAnimeSite(): Promise<void> {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage({ command: 'CHECK_IF_ANIME_SITE' }, (response) => {
-                // this._isAnimeSite = response.isAnimeSite;
                 this._isAnimeSite = response.isAnimeSite;
-                this.debugLog('Is anime site:', this._isAnimeSite);
                 resolve();
             });
         });
@@ -730,9 +718,7 @@ export default class VideoDataSyncController {
     private async getAnimeTitleAndEpisode(): Promise<{ title: string; episode: string }> {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage({ command: 'GET_ANIME_TITLE_AND_EPISODE' }, (response) => {
-                this.debugLog('Anime title and episode response:', response);
                 if (response.error) {
-                    this.debugLog('Error getting anime info:', response.error);
                     resolve({ title: '', episode: '' });
                 } else {
                     resolve({ title: response.title, episode: response.episode.toString() });
@@ -744,7 +730,6 @@ export default class VideoDataSyncController {
     private async getStorage(keys: string[]): Promise<any> {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage({ command: 'GET_STORAGE', keys }, (response) => {
-                this.debugLog('Storage response ISS!:', response);
                 resolve(response);
             });
         });
@@ -755,17 +740,6 @@ export default class VideoDataSyncController {
             chrome.runtime.sendMessage({ command: 'SET_STORAGE', data }, () => {
                 resolve();
             });
-        });
-    }
-
-    private debugLog(...args: any[]): void {
-        console.log('Sending debug log:', args);
-        chrome.runtime.sendMessage({ type: 'DEBUG_LOG', args }, (response) => {
-            if (chrome.runtime.lastError) {
-                console.error('Error sending message:', chrome.runtime.lastError);
-            } else {
-                console.log('Debug log sent successfully');
-            }
         });
     }
 }

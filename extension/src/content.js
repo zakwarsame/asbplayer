@@ -1,5 +1,3 @@
-// import { animeSites } from './services/anime-sites';
-
 export const animeSites = new Map([
     [
         'hianime.to',
@@ -16,14 +14,6 @@ export const animeSites = new Map([
                     episode: epElement?.textContent?.trim() || '',
                 };
             },
-        },
-    ],
-    [
-        'animesuge.to',
-        {
-            titleQuery: 'h1.title',
-            epQuery: 'div.range a.active',
-            epPlayerRegEx: /https:\/\/animesuge\.to\/anime\/.+\/ep-.+/,
         },
     ],
 ]);
@@ -67,6 +57,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 });
-
-console.log('currentSite', new URL(window.location.href));
-console.log('Content script loaded');
