@@ -21,7 +21,8 @@
         "exportSettings": "Exportar Ajustes",
         "hideOverlay": "Ocultar Overlay",
         "decreaseOffsetButton": "Reducir el offset para que el siguiente subtítulo esté en la posición actual. Mantenga pulsado para disminuir en 100ms.",
-        "increaseOffsetButton": "Aumentar el offset para que el siguiente subtítulo esté en la posición actual. Mantenga pulsado para disminuir en 100ms."
+        "increaseOffsetButton": "Aumentar el offset para que el siguiente subtítulo esté en la posición actual. Mantenga pulsado para disminuir en 100ms.",
+        "autoSubs": "Automatic Subs"
     },
     "postMineAction": {
         "none": "Ninguna",
@@ -38,6 +39,16 @@
         "disabled": "Disabled",
         "inNotOut": "Enabled",
         "inAndOut": "Enabled with auto-resume"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     },
     "ankiDialog": {
         "applySelection": "Aplicar Selección",
@@ -229,7 +240,9 @@
         "connectionFailed": "Error en la conexión",
         "error": "Error: {{message}}",
         "errorNoMessage": "Error",
-        "toggleSubtitlesShortcut": "Pulsa \"{{keys}}\" para activar/desactivar la visualización de subtítulos"
+        "toggleSubtitlesShortcut": "Pulsa \"{{keys}}\" para activar/desactivar la visualización de subtítulos",
+        "subtitleDownloaded": "Subtitle downloaded",
+        "subtitleLoaded": "Subtitle loaded {{fileName}}"
     },
     "landing": {
         "cta": "Arrastra archivos de medios y subtítulos o <1>explora</1>.",
