@@ -127,13 +127,13 @@ export default class VideoSelectController {
         if (isNewClient) {
             client.onMessage((message) => {
                 if (message.command === 'confirm') {
-                    client.updateState({ open: true });
+                    client.updateState({ open: false });
                     this._frame.hide();
                     this._bindings
                         .find((b) => b.video.src === (message as VideoSelectModeConfirmMessage).selectedVideoElementSrc)
                         ?.showVideoDataDialog(false);
                 } else if (message.command === 'cancel') {
-                    client.updateState({ open: true });
+                    client.updateState({ open: false });
                     this._frame.hide();
                 }
             });

@@ -169,10 +169,7 @@ export interface VideoDataUiState {
     apiKey?: string;
     episode?: number | '';
     isAnimeSite?: boolean;
-    onApiKeyChange?: (apiKey: string) => void;
-    onEpisodeChange?: (episode: number | '') => void;
     onSearch?: (title: string, episode: number | '') => void;
-    fetchedSubtitles: VideoDataSubtitleTrack[];
 }
 
 export interface VideoTabModel {
