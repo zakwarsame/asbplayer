@@ -77,10 +77,6 @@ const AutoSubsDialog: React.FC<AutoSubsDialogProps> = ({
                     [429, 'You downloaded too many subs in a short amount of time. Try again in a short bit'],
                 ]);
 
-                if (subtitles && subtitles.length > 0) {
-                    return;
-                }
-
                 if (!currentAnilistId) {
                     return;
                 }
