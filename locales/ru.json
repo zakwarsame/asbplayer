@@ -21,7 +21,8 @@
         "exportSettings": "Экспортировать настройки",
         "hideOverlay": "Hide Overlay",
         "decreaseOffsetButton": "Decrease offset to so that next subtitle is at current position. Hold to decrease by 100ms.",
-        "increaseOffsetButton": "Increase offset to so that previous subtitle is at current position. Hold to increase by 100ms."
+        "increaseOffsetButton": "Increase offset to so that previous subtitle is at current position. Hold to increase by 100ms.",
+        "autoSubs": "Automatic Subs"
     },
     "postMineAction": {
         "none": "Ничего",
@@ -38,6 +39,16 @@
         "disabled": "Disabled",
         "inNotOut": "Enabled",
         "inAndOut": "Enabled with auto-resume"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     },
     "ankiDialog": {
         "applySelection": "Применить выбор",
@@ -229,7 +240,9 @@
         "connectionFailed": "Connection failed",
         "error": "Error: {{message}}",
         "errorNoMessage": "Error",
-        "toggleSubtitlesShortcut": "Press \"{{keys}}\" to toggle subtitle display"
+        "toggleSubtitlesShortcut": "Press \"{{keys}}\" to toggle subtitle display",
+        "subtitleDownloaded": "Subtitle downloaded",
+        "subtitleLoaded": "Subtitle loaded {{fileName}}"
     },
     "landing": {
         "cta": "Перетащите медиафайлы и файлы субтитров или <1>выберите</1> их.",

@@ -21,7 +21,8 @@
         "exportSettings": "設定をエクスポートする",
         "hideOverlay": "オーバーレイを非表示",
         "decreaseOffsetButton": "次の字幕を現在のタイムスタンプに合わせる。長押しすると、字幕表示タイミングが100msずつ変わる。",
-        "increaseOffsetButton": "前の字幕を現在のタイムスタンプに合わせる。長押しすると、字幕表示タイミングが100msずつ変わる。"
+        "increaseOffsetButton": "前の字幕を現在のタイムスタンプに合わせる。長押しすると、字幕表示タイミングが100msずつ変わる。",
+        "autoSubs": "Automatic Subs"
     },
     "postMineAction": {
         "none": "何もしない",
@@ -38,6 +39,16 @@
         "disabled": "無効",
         "inNotOut": "有効",
         "inAndOut": "有効。マウスカーソルを外すと自動再生。"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     },
     "ankiDialog": {
         "applySelection": "選択範囲を適用する",
@@ -229,7 +240,9 @@
         "connectionFailed": "接続に失敗しました",
         "error": "エラー：{{message}}",
         "errorNoMessage": "エラー",
-        "toggleSubtitlesShortcut": "字幕を表示するには 「{{keys}}」 を押してください"
+        "toggleSubtitlesShortcut": "字幕を表示するには 「{{keys}}」 を押してください",
+        "subtitleDownloaded": "Subtitle downloaded",
+        "subtitleLoaded": "Subtitle loaded {{fileName}}"
     },
     "landing": {
         "cta": "字幕やメディアファイルをドラッグ＆ドロップ、または<1>ファイルを選択</1>してください。",
