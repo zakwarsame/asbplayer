@@ -15,6 +15,7 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     ActiveProfileMessage,
+    VideoDataSearchMessage,
 } from '@project/common';
 import { createTheme } from '@project/common/theme';
 import { PaletteType } from '@material-ui/core';
@@ -225,7 +226,8 @@ export default function VideoDataSyncUi({ bridge }: Props) {
 
     const handleSearch = useCallback(
         (title: string, episode: number | '', apiKey: string) => {
-            bridge.sendMessageFromServer({ command: 'search', title, episode, apiKey });
+            const message: VideoDataSearchMessage = { command: 'search', title, episode, apiKey };
+            bridge.sendMessageFromServer(message);
             setOpen(true);
         },
         [bridge]
