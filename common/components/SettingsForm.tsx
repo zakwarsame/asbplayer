@@ -841,6 +841,7 @@ export default function SettingsForm({
         webSocketClientEnabled,
         webSocketServerUrl,
         pauseOnHoverMode,
+        apiKey,
     } = settings;
 
     const [selectedSubtitleAppearanceTrack, setSelectedSubtitleAppearanceTrack] = useState<number>();
@@ -2618,6 +2619,15 @@ export default function SettingsForm({
                             </Grid>
                         </>
                     )}
+                    <Grid item>
+                        <TextField
+                            label="API Key"
+                            fullWidth
+                            color="secondary"
+                            value={apiKey}
+                            onChange={(event) => handleSettingChanged('apiKey', event.target.value)}
+                        />
+                    </Grid>
                     <Grid item>
                         <Button
                             variant="contained"

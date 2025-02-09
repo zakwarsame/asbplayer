@@ -3,6 +3,8 @@ interface Subs {
     url: string;
 }
 
+const UNSUPPORTED_SUBTITLE_EXTENSIONS = ['.zip', '.7z', '.rar'];
+
 export async function fetchSubtitles(anilistId: number, episode: number, apiKey: string): Promise<Subs[] | string> {
     const BASE_URL = 'https://jimaku.cc/api';
     const jimakuErrors = new Map([
@@ -43,7 +45,15 @@ export async function fetchSubtitles(anilistId: number, episode: number, apiKey:
             throw new Error(error);
         }
 
-        const subs: Subs[] = await filesResponse.json();
+        let subs: Subs[] = await filesResponse.json();
+
+        subs = subs.filter((sub) => {
+            const url = new URL(sub.url);
+            const path = url.pathname;
+            const extension = path.split('.').pop() ?? '';
+            return !UNSUPPORTED_SUBTITLE_EXTENSIONS.includes(`.${extension}`);
+        });
+
         if (subs.length === 0) {
             throw new Error(`No subs for episode ${episode} found`);
         }
