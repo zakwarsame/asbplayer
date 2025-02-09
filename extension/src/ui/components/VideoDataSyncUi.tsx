@@ -48,7 +48,6 @@ export default function VideoDataSyncUi({ bridge }: Props) {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [activeProfile, setActiveProfile] = useState<string>();
     const [fileInputTrackNumber, setFileInputTrackNumber] = useState<number>();
-    const [apiKey, setApiKey] = useState<string>('');
     const [episode, setEpisode] = useState<number | ''>('');
 
     const [isAnimeSite, setIsAnimeSite] = useState<boolean>(false);
@@ -140,10 +139,6 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                 setActiveProfile(model.settings.activeProfile);
             }
 
-            if (model.apiKey !== undefined) {
-                setApiKey(model.apiKey);
-            }
-
             if (model.episode !== undefined) {
                 setEpisode(model.episode);
             }
@@ -225,8 +220,12 @@ export default function VideoDataSyncUi({ bridge }: Props) {
     );
 
     const handleSearch = useCallback(
-        (title: string, episode: number | '', apiKey: string) => {
-            const message: VideoDataSearchMessage = { command: 'search', title, episode, apiKey };
+        (title: string, episode: number | '') => {
+            const message: VideoDataSearchMessage = {
+                command: 'search',
+                title,
+                episode,
+            };
             bridge.sendMessageFromServer(message);
             setOpen(true);
         },
@@ -255,7 +254,6 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                 onOpenSettings={handleOpenSettings}
                 onConfirm={handleConfirm}
                 onSetActiveProfile={handleSetActiveProfile}
-                apiKey={apiKey}
                 episode={episode}
                 onSearch={handleSearch}
             />

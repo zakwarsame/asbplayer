@@ -468,8 +468,8 @@ export interface VideoDataSearchMessage extends Message {
     readonly command: 'search';
     readonly title: string;
     readonly episode: number | '';
-    readonly apiKey: string;
 }
+
 export interface CropAndResizeMessage extends Message, ImageCaptureParams {
     readonly command: 'crop-and-resize';
     readonly dataUrl: string;

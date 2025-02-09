@@ -2621,7 +2621,7 @@ export default function SettingsForm({
                     )}
                     <Grid item>
                         <TextField
-                            label="API Key"
+                            label={t('settings.apiKey')}
                             fullWidth
                             color="secondary"
                             value={apiKey}

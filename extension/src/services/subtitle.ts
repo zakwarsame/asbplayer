@@ -1,3 +1,6 @@
+import { SettingsProvider } from '@project/common/settings';
+import type { AsbplayerSettings } from '@project/common/settings';
+
 interface Subs {
     name: string;
     url: string;
@@ -18,7 +21,7 @@ export async function fetchSubtitles(anilistId: number, episode: number, apiKey:
         const searchResponse = await fetch(`${BASE_URL}/entries/search?anilist_id=${anilistId}`, {
             method: 'GET',
             headers: {
-                Authorization: `${apiKey}`,
+                Authorization: apiKey,
             },
         });
 
@@ -36,7 +39,7 @@ export async function fetchSubtitles(anilistId: number, episode: number, apiKey:
         const filesResponse = await fetch(`${BASE_URL}/entries/${id}/files?episode=${episode}`, {
             method: 'GET',
             headers: {
-                Authorization: `${apiKey}`,
+                Authorization: apiKey,
             },
         });
 

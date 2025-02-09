@@ -11,9 +11,6 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     VideoToExtensionCommand,
-    Message,
-    UpdateApiKeyMessage,
-    UpdateEpisodeMessage,
     SearchSubtitlesMessage,
 } from '@project/common';
 import { AsbplayerSettings, SettingsProvider } from '@project/common/settings';
@@ -81,7 +78,6 @@ export default class VideoDataSyncController {
     private _dataReceivedListener?: (event: Event) => void;
     private _autoSyncing: boolean = false;
     private _waitingForSubtitles: boolean = false;
-    private _apiKey: string = '';
     private _episode: number | '' = '';
     private _fetchedSubtitles: VideoDataSubtitleTrack[] = [];
     private _isAnimeSite: boolean = false;
@@ -100,7 +96,6 @@ export default class VideoDataSyncController {
         };
         this._domain = new URL(window.location.href).host;
         this._frame = new UiFrame(html);
-        this._loadApiKey();
         this._isAnimeSite = false;
         this.checkIfAnimeSite();
     }
@@ -204,7 +199,6 @@ export default class VideoDataSyncController {
                       activeProfile: (await activeProfilePromise)?.name,
                   },
                   //  todo: put these in one state object
-                  apiKey: this._apiKey,
                   episode: episode ? episode : this._episode,
                   isAnimeSite: this._isAnimeSite,
                   ...additionalFields,
@@ -223,7 +217,6 @@ export default class VideoDataSyncController {
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
-                  apiKey: this._apiKey,
                   episode: this._episode,
                   isAnimeSite: this._isAnimeSite,
                   ...additionalFields,
@@ -372,11 +365,6 @@ export default class VideoDataSyncController {
                             await this._reportError(e.message);
                         }
                     }
-                } else if ('updateApiKey' === message.command) {
-                    const updateApiKeyMessage = message as UpdateApiKeyMessage;
-                    this._apiKey = updateApiKeyMessage.apiKey;
-                    await this.setStorage({ apiKey: this._apiKey });
-                    client.updateState({ apiKey: this._apiKey, open: true });
                 } else if ('updateEpisode' === message.command) {
                     const updateEpisodeMessage = message as UpdateEpisodeMessage;
                     this._episode = updateEpisodeMessage.episode;
@@ -645,13 +633,11 @@ export default class VideoDataSyncController {
         });
     }
 
-    private async _loadApiKey() {
-        this._apiKey = (await this.getStorage(['apiKey'])).apiKey || '';
-    }
-
     private async _handleSearch(message: SearchSubtitlesMessage) {
         const client = await this._client();
         client.updateState({ isLoading: true, error: null, open: true });
+
+        const apiKey = await this._context.settings.getSingle('apiKey');
 
         try {
             const { anilistId } = await fetchAnilistInfo(message.title);
@@ -659,13 +645,10 @@ export default class VideoDataSyncController {
                 throw new Error('Unable to find Anilist ID for the given title');
             }
 
-            const subtitles = await fetchSubtitles(anilistId, message.episode || 0, message.apiKey);
+            const subtitles = await fetchSubtitles(anilistId, message.episode || 0, apiKey || '');
             if (typeof subtitles === 'string') {
                 throw new Error(subtitles);
             }
-
-            this._apiKey = message.apiKey;
-            await this.setStorage({ apiKey: this._apiKey });
 
             const fetchedSubtitles = subtitles
                 .map((sub, index) => ({
@@ -691,7 +674,6 @@ export default class VideoDataSyncController {
             client.updateState({
                 subtitles: this._syncedData.subtitles,
                 isLoading: false,
-                apiKey: this._apiKey,
                 episode: message.episode,
                 open: true,
                 suggestedName: title,

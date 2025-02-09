@@ -64,9 +64,8 @@ interface Props {
     openReason: VideoDataUiOpenReason;
     profiles: Profile[];
     activeProfile?: string;
-    apiKey: string;
     episode: number | '';
-    onSearch: (title: string, episode: number | '', apiKey: string) => void;
+    onSearch: (title: string, episode: number | '') => void;
     onCancel: () => void;
     onOpenFile: (track?: number) => void;
     onOpenSettings: () => void;
@@ -88,7 +87,6 @@ export default function VideoDataSyncDialog({
     openReason,
     profiles,
     activeProfile,
-    apiKey: initialApiKey,
     episode: initialEpisode,
     onSearch,
     onCancel,
@@ -104,7 +102,6 @@ export default function VideoDataSyncDialog({
     const [shouldRememberTrackChoices, setShouldRememberTrackChoices] = React.useState(false);
     const trimmedName = name.trim();
     const classes = createClasses();
-    const [localApiKey, setLocalApiKey] = useState(initialApiKey);
     const [localEpisode, setLocalEpisode] = useState(initialEpisode);
 
     useEffect(() => {
@@ -156,20 +153,13 @@ export default function VideoDataSyncDialog({
             return name;
         });
 
-        setLocalApiKey((prev) => {
-            if (!prev) {
-                return initialApiKey;
-            }
-            return prev;
-        });
-
         setLocalEpisode((prev) => {
             if (prev === '') {
                 return initialEpisode;
             }
             return prev;
         });
-    }, [suggestedName, userSelectedSubtitleTrackIds, subtitleTracks, initialApiKey, initialEpisode]);
+    }, [suggestedName, userSelectedSubtitleTrackIds, subtitleTracks, initialEpisode]);
 
     function handleOkButtonClick() {
         const selectedSubtitleTracks: ConfirmedVideoDataSubtitleTrack[] = allSelectedSubtitleTracks();
@@ -258,18 +248,14 @@ export default function VideoDataSyncDialog({
         }
     }, [open, trimmedName, disabled]);
 
-    const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setLocalApiKey(e.target.value);
-    };
-
     const handleEpisodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLocalEpisode(e.target.value === '' ? '' : parseInt(e.target.value));
     };
 
-    const isSearchDisabled = isLoading || !localApiKey || !localEpisode || !name;
+    const isSearchDisabled = isLoading || !localEpisode || !name;
 
     const handleSearch = () => {
-        onSearch(name, localEpisode, localApiKey);
+        onSearch(name, localEpisode);
     };
 
     return (
@@ -315,37 +301,26 @@ export default function VideoDataSyncDialog({
                                 onChange={(e) => setName(e.target.value)}
                             />
                         </Grid>
-
+                        {isAnimeSite && (
+                            <Grid item>
+                                <TextField
+                                    fullWidth
+                                    label={t('extension.videoDataSync.episode')}
+                                    value={localEpisode}
+                                    onChange={handleEpisodeChange}
+                                    margin="normal"
+                                    variant="outlined"
+                                    type="number"
+                                />
+                            </Grid>
+                        )}
                         {threeSubtitleTrackSelectors}
                         {isAnimeSite && (
-                            <>
-                                <Grid item>
-                                    <TextField
-                                        fullWidth
-                                        label={t('extension.videoDataSync.apiKey')}
-                                        value={localApiKey}
-                                        onChange={handleApiKeyChange}
-                                        margin="normal"
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        fullWidth
-                                        label={t('extension.videoDataSync.episode')}
-                                        value={localEpisode}
-                                        onChange={handleEpisodeChange}
-                                        margin="normal"
-                                        variant="outlined"
-                                        type="number"
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <Button onClick={handleSearch} disabled={isSearchDisabled}>
-                                        {t('extension.videoDataSync.search')}
-                                    </Button>
-                                </Grid>
-                            </>
+                            <Grid item>
+                                <Button onClick={handleSearch} disabled={isSearchDisabled}>
+                                    {t('extension.videoDataSync.search')}
+                                </Button>
+                            </Grid>
                         )}
                         <Grid item>
                             <LabelWithHoverEffect
