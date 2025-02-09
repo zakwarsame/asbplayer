@@ -219,16 +219,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-const updateWebSocketClientState = () => {
-    settings.getSingle('webSocketClientEnabled').then((webSocketClientEnabled) => {
-        if (webSocketClientEnabled) {
-            bindWebSocketClient(settings, tabRegistry);
-        } else {
-            unbindWebSocketClient();
-        }
-    });
-};
-
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus?.create({
         id: 'load-subtitles',
@@ -371,11 +361,12 @@ chrome.commands?.onCommand.addListener((command) => {
                             return undefined;
                         }
 
-                        const extensionToPlayerCommand: Command<TakeScreenshotMessage> = {
+                        const extensionToPlayerCommand: ExtensionToAsbPlayerCommand<TakeScreenshotMessage> = {
                             sender: 'asbplayer-extension-to-player',
                             message: {
                                 command: 'take-screenshot',
                             },
+                            asbplayerId: asbplayer.id,
                         };
                         return extensionToPlayerCommand;
                     },
@@ -396,6 +387,22 @@ chrome.commands?.onCommand.addListener((command) => {
                     };
                     return extensionToVideoCommand;
                 });
+                tabRegistry.publishCommandToAsbplayers({
+                    commandFactory: (asbplayer) => {
+                        if (!validAsbplayer(asbplayer)) {
+                            return undefined;
+                        }
+
+                        const extensionToPlayerCommand: ExtensionToAsbPlayerCommand<ToggleRecordingMessage> = {
+                            sender: 'asbplayer-extension-to-player',
+                            message: {
+                                command: 'toggle-recording',
+                            },
+                            asbplayerId: asbplayer.id,
+                        };
+                        return extensionToPlayerCommand;
+                    },
+                });
                 break;
             default:
                 throw new Error('Unknown command ' + command);
@@ -415,6 +422,16 @@ function postMineActionFromCommand(command: string) {
             throw new Error('Cannot determine post mine action for unknown command ' + command);
     }
 }
+
+const updateWebSocketClientState = () => {
+    settings.getSingle('webSocketClientEnabled').then((webSocketClientEnabled) => {
+        if (webSocketClientEnabled) {
+            bindWebSocketClient(settings, tabRegistry);
+        } else {
+            unbindWebSocketClient();
+        }
+    });
+};
 
 updateWebSocketClientState();
 tabRegistry.onAsbplayerInstance(updateWebSocketClientState);

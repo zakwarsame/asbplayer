@@ -17,6 +17,25 @@ export const animeSites = new Map([
         },
     ],
     [
+        'miruro.tv',
+        {
+            titleQuery: '.anime-title > a',
+            epQuery: null, // we get episode from URL
+            epPlayerRegEx: /https:\/\/www\.miruro\.tv\/watch\?id=.+ep=.+/,
+            extractInfo: () => {
+                const titleElement = document.querySelector('.anime-title > a');
+                const urlParams = new URLSearchParams(window.location.search);
+                const episodeString = urlParams.get('ep');
+                const anilistId = urlParams.get('id');
+                return {
+                    title: titleElement?.textContent?.trim() || '',
+                    episode: episodeString || '',
+                    anilistId: anilistId ? parseInt(anilistId) : null,
+                };
+            },
+        },
+    ],
+    [
         'animesuge.to',
         {
             titleQuery: 'h1.title',
@@ -27,11 +46,11 @@ export const animeSites = new Map([
 ]);
 
 export function isAnimeSite(url: string): boolean {
-    const hostname = new URL(url).hostname;
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
     return animeSites.has(hostname);
 }
 
 export function getAnimeSiteInfo(url: string) {
-    const hostname = new URL(url).hostname;
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
     return animeSites.get(hostname);
 }

@@ -1,6 +1,6 @@
 import CssBaseline from '@material-ui/core/CssBaseline';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import VideoDataSyncDialog from './VideoDataSyncDialog';
 import Bridge from '../bridge';
@@ -139,16 +139,16 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                 setActiveProfile(model.settings.activeProfile);
             }
 
-            if (Object.prototype.hasOwnProperty.call(state, 'apiKey')) {
-                setApiKey(state.apiKey);
+            if (model.apiKey !== undefined) {
+                setApiKey(model.apiKey);
             }
 
-            if (Object.prototype.hasOwnProperty.call(state, 'episode')) {
-                setEpisode(state.episode);
+            if (model.episode !== undefined) {
+                setEpisode(model.episode);
             }
 
-            if (Object.prototype.hasOwnProperty.call(state, 'isAnimeSite')) {
-                setIsAnimeSite(state.isAnimeSite);
+            if (model.isAnimeSite !== undefined) {
+                setIsAnimeSite(model.isAnimeSite);
             }
         });
     }, [bridge, t]);

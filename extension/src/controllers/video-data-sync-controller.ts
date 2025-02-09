@@ -187,6 +187,7 @@ export default class VideoDataSyncController {
         const themeType = await this._context.settings.getSingle('themeType');
         const profilesPromise = this._context.settings.profiles();
         const activeProfilePromise = this._context.settings.activeProfile();
+        const { title, episode } = await this.getAnimeTitleAndEpisode();
 
         return this._syncedData
             ? {
@@ -198,7 +199,7 @@ export default class VideoDataSyncController {
                   defaultCheckboxState: defaultCheckboxState,
                   openedFromAsbplayerId: '',
                   settings: {
-                      themeType: themeType,
+                      themeType,
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
@@ -218,7 +219,7 @@ export default class VideoDataSyncController {
                   defaultCheckboxState: defaultCheckboxState,
                   openedFromAsbplayerId: '',
                   settings: {
-                      themeType: themeType,
+                      themeType,
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
@@ -375,17 +376,14 @@ export default class VideoDataSyncController {
                     const updateApiKeyMessage = message as UpdateApiKeyMessage;
                     this._apiKey = updateApiKeyMessage.apiKey;
                     await this.setStorage({ apiKey: this._apiKey });
-                    shallUpdate = false;
                     client.updateState({ apiKey: this._apiKey, open: true });
                 } else if ('updateEpisode' === message.command) {
                     const updateEpisodeMessage = message as UpdateEpisodeMessage;
                     this._episode = updateEpisodeMessage.episode;
-                    shallUpdate = false;
                     client.updateState({ episode: this._episode, open: true });
                 } else if ('search' === message.command) {
                     const searchSubtitlesMessage = message as SearchSubtitlesMessage;
                     await this._handleSearch(searchSubtitlesMessage);
-                    shallUpdate = false;
                 }
 
                 if (dataWasSynced) {
@@ -405,8 +403,8 @@ export default class VideoDataSyncController {
 
         client.updateState({
             isAnimeSite: this._isAnimeSite,
-            suggestedName: title,
-            episode: episode,
+            suggestedName: title || this._syncedData?.basename || document.title,
+            episode: episode ? parseInt(episode) : '',
             open: true,
         });
 
