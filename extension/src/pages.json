@@ -1,6 +1,30 @@
 {
     "pages": [
         {
+            "host": "^hianime\\.to$",
+            "script": "anime-page.js",
+            "path": "watch/.*",
+            "autoSync": {
+                "enabled": true
+            }
+        },
+        {
+            "host": "^megacloud\\.tv$",
+            "script": "anime-page.js",
+            "path": ".*",
+            "autoSync": {
+                "enabled": true
+            }
+        },
+        {
+            "host": "www\\.miruro\\.tv$",
+            "script": "anime-page.js",
+            "path": ".*",
+            "autoSync": {
+                "enabled": true
+            }
+        },
+        {
             "key": "netflix",
             "host": "www\\.netflix\\.com",
             "pageScript": "netflix-page.js",

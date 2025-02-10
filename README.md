@@ -37,7 +37,6 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 
 ### Extension Features
 
-
 - **Automatic Anime Detection**: Automatically detects anime titles and episodes on supported streaming sites
 - **Subtitle Search**: Search and download subtitles directly through the asbplayer interface using the Jimaku API
 - **Supported Sites**:

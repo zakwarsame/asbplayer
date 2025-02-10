@@ -46,14 +46,29 @@ export const animeSites = new Map<string, AnimeSite>([
     ],
 ]);
 
-export function getAnimeTitleAndEpisode(url: string, maxRetries = 5, delay = 1000) {
+interface AnimeInfoResult {
+    title: string;
+    episode: number | '';
+    error?: string;
+    currentSite?: string;
+    animeSites?: string[];
+    anilistId?: number;
+}
+
+export function getAnimeTitleAndEpisode(url: string, maxRetries = 10, delay = 1000): Promise<AnimeInfoResult> {
     return new Promise((resolve) => {
         const attempt = (retryCount: number) => {
             const currentSite = new URL(url).hostname.replace(/^www\./, '');
             const siteSpecifics = animeSites.get(currentSite);
 
             if (!siteSpecifics) {
-                resolve({ error: 'Unsupported website.', currentSite, animeSites: Array.from(animeSites.keys()) });
+                resolve({
+                    title: '',
+                    episode: '',
+                    error: 'Unsupported website.',
+                    currentSite,
+                    animeSites: Array.from(animeSites.keys()),
+                });
                 return;
             }
 
@@ -84,7 +99,11 @@ export function getAnimeTitleAndEpisode(url: string, maxRetries = 5, delay = 100
             if (retryCount < maxRetries) {
                 setTimeout(() => attempt(retryCount + 1), delay);
             } else {
-                resolve({ error: "Couldn't identify the correct Anime Title and Episode." });
+                resolve({
+                    title: '',
+                    episode: '',
+                    error: "Couldn't identify the correct Anime Title and Episode.",
+                });
             }
         };
 
