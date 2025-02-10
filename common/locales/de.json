@@ -208,7 +208,9 @@
             "rememberTrackPreference": "Remember these track choices for this site",
             "selectSubtitles": "Untertitel auswählen",
             "subtitleTrack": "Untertitelspur",
-            "videoName": "Videotitel"
+            "videoName": "Videotitel",
+            "episode": "Episode",
+            "search": "Suchen"
         },
         "videoSelect": {
             "multipleVideoElements": "Mehrere Video-Elemente gefunden",
@@ -364,6 +366,7 @@
         "wordField": "Wort-Feld",
         "webSocketClientEnabled": "Enable WebSocket client",
         "webSocketServerUrl": "WebSocket Server URL",
+        "apiKey": "API Key",
         "firefoxExtensionShortcutHelp": "Edit this shortcut from the Plugin manager at about:addons.",
         "postMinePlayback": "Post-mining playback state",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles"

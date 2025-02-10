@@ -208,7 +208,9 @@
             "rememberTrackPreference": "Remember these track choices for this site",
             "selectSubtitles": "选择字幕",
             "subtitleTrack": "字幕轨道",
-            "videoName": "视频名称"
+            "videoName": "视频名称",
+            "episode": "剧集",
+            "search": "搜索"
         },
         "videoSelect": {
             "multipleVideoElements": "检测到多个视频元素",
@@ -362,8 +364,9 @@
         "unboundBind": "未绑定",
         "urlField": "URL字段",
         "wordField": "Word字段",
-        "webSocketClientEnabled": "Enable WebSocket client",
-        "webSocketServerUrl": "WebSocket Server URL",
+        "webSocketClientEnabled": "启用WebSocket客户端",
+        "webSocketServerUrl": "WebSocket服务器URL",
+        "apiKey": "API密钥",
         "firefoxExtensionShortcutHelp": "Edit this shortcut from the Plugin manager at about:addons.",
         "postMinePlayback": "Post-mining playback state",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles"

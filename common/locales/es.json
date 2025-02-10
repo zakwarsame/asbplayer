@@ -208,7 +208,9 @@
             "rememberTrackPreference": "Recordar estas opciones de pista para este sitio",
             "selectSubtitles": "Seleccionar Subtítulos",
             "subtitleTrack": "Pista de Subtítulos",
-            "videoName": "Nombre de Video"
+            "videoName": "Nombre de Video",
+            "episode": "Episodio",
+            "search": "Buscar"
         },
         "videoSelect": {
             "multipleVideoElements": "Múltiples Elementos de Video Detectados",
@@ -364,6 +366,7 @@
         "wordField": "Campo de Palabra",
         "webSocketClientEnabled": "Habilitar cliente WebSocket",
         "webSocketServerUrl": "URL del servidor WebSocket",
+        "apiKey": "Clave de API",
         "firefoxExtensionShortcutHelp": "Edita este acceso directo desde el gestor de plugins en about:addons.",
         "postMinePlayback": "Estado de reproducción post-minado",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles"
