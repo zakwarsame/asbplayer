@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Auto Subs",
         "cancel": "Abbrechen",
         "copy": "Kopieren",
         "delete": "Löschen",
@@ -47,6 +48,16 @@
         "disabled": "Disabled",
         "inNotOut": "Enabled",
         "inAndOut": "Enabled with auto-resume"
+    },
+    "autoSubsDialog": {
+        "title": "Automatische Untertitel",
+        "selectSubtitles": "Untertitel auswählen",
+        "load": "Untertitel laden",
+        "animeTitle": "Titel",
+        "episode": "Episode",
+        "search": "Suchen",
+        "selectSubtitle": "Untertitel auswählen",
+        "apiKey": "API-Schlüssel"
     },
     "ankiDialog": {
         "applySelection": "Auswahl anwenden",

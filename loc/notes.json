@@ -162,6 +162,8 @@
         "extension.videoDataSync.selectSubtitles": "Title for popup that allows user to select subtitles to load. The popup may contain subtitle tracks that are automatically detected. The same popup also allows the user to manually open a file, or load an empty subtitle track.",
         "extension.videoDataSync.subtitleTrack": "Label for subtitle track selector dropdown.",
         "extension.videoDataSync.videoName": "Label for field where user inputs the name of the video they want to mine.",
+        "extension.videoDataSync.episode": "Label for field where user inputs the episode number of the video they want to mine.",
+        "extension.videoDataSync.search": "Label for button that opens a popup where the user can search for a video.",
         "extension.videoSelect.multipleVideoElements": "Title for popup shown when the user tries to open the subtitle track selector, but there are multiple video elements on the screen. This popup allows the user to pick what video element to sync to asbplayer. The \"element\" in \"video element\" refers to an HTML element, a technical term for a particular piece or \"element\" of the webpage.\nextension.videoSelect.selectVideo,Explanation text for the popup described above.",
         "extension.videoSelect.syncBeforeMine": "Explanation text for the popup described above.",
         "extension.videoSelect.videoElement": "Field label for video element selector dropdown.",

@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Auto Subs",
         "cancel": "Anuluj",
         "copy": "Kopiuj",
         "delete": "Usuń",
@@ -47,6 +48,16 @@
         "disabled": "Disabled",
         "inNotOut": "Enabled",
         "inAndOut": "Enabled with auto-resume"
+    },
+    "autoSubsDialog": {
+        "title": "Automatyczne napisy",
+        "selectSubtitles": "Wybierz napisy",
+        "load": "Załaduj napisy",
+        "animeTitle": "Tytuł anime",
+        "episode": "Odcinek",
+        "search": "Szukaj",
+        "selectSubtitle": "Wybierz napisy",
+        "apiKey": "Klucz API"
     },
     "ankiDialog": {
         "applySelection": "Zastosuj wybór",

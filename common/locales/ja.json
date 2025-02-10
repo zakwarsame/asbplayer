@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Auto Subs",
         "cancel": "キャンセル",
         "copy": "コピー",
         "delete": "削除",
@@ -47,6 +48,14 @@
         "disabled": "無効",
         "inNotOut": "有効",
         "inAndOut": "有効。マウスカーソルを外すと自動再生。"
+    },
+    "autoSubsDialog": {
+        "title": "自動字幕",
+        "selectSubtitles": "字幕を選択",
+        "load": "字幕をロード",
+        "animeTitle": "タイトル",
+        "episode": "エピソード",
+        "apiKey": "APIキー"
     },
     "ankiDialog": {
         "applySelection": "選択範囲を適用する",

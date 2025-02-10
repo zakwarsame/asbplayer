@@ -126,7 +126,7 @@ export default function VideoDataSyncDialog({
         setName((name) => {
             // Don't auto-update name if episode is set (arbitrarily doing this to prevent name from being changed when searching)
             if (localEpisode !== '') {
-                return name;
+                return name || suggestedName;
             }
 
             if (!subtitleTracks) {
