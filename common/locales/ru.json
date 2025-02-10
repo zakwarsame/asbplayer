@@ -208,7 +208,9 @@
             "rememberTrackPreference": "Запомнить мой выбор дорожек для этого сайта",
             "selectSubtitles": "Выбрать субтитры",
             "subtitleTrack": "Выбрать дорожку субтитров",
-            "videoName": "Название видео"
+            "videoName": "Название видео",
+            "episode": "Эпизод",
+            "search": "Поиск"
         },
         "videoSelect": {
             "multipleVideoElements": "Обнаружено несколько видеоэлементов",
@@ -364,6 +366,7 @@
         "wordField": "Поле слова",
         "webSocketClientEnabled": "Включить WebSocket клиент",
         "webSocketServerUrl": "URL сервера WebSocket",
+        "apiKey": "Ключ API",
         "firefoxExtensionShortcutHelp": "Редактируйте этот ярлык в менеджере плагинов по адресу about:addons.",
         "postMinePlayback": "Настройка воспроизведения после майнинга",
         "pauseOnHoverMode": "Пауза при наведении на субтитры"
