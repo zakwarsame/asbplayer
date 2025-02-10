@@ -399,6 +399,9 @@ const settingsSchema = {
         lastSelectedAnkiExportMode: {
             type: 'string',
         },
+        apiKey: {
+            type: 'string',
+        },
         _schema: {
             type: 'number',
         },
