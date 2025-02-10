@@ -221,8 +221,7 @@
             "subtitleTrack": "Subtitle Track",
             "videoName": "Video Name",
             "episode": "Episode",
-            "search": "Search",
-            "apiKey": "API Key"
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Multiple Video Elements Detected",

@@ -11,7 +11,8 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     VideoToExtensionCommand,
-    SearchSubtitlesMessage,
+    VideoDataSearchMessage,
+    UpdateEpisodeMessage,
 } from '@project/common';
 import { AsbplayerSettings, SettingsProvider } from '@project/common/settings';
 import { base64ToBlob, bufferToBase64 } from '@project/common/base64';
@@ -23,7 +24,6 @@ import { fetchLocalization } from '../services/localization-fetcher';
 import i18n from 'i18next';
 import { fetchAnilistInfo } from '../services/anilist';
 import { fetchSubtitles } from '../services/subtitle';
-import { animeSites } from '../services/anime-sites';
 
 async function html(lang: string) {
     return `<!DOCTYPE html>
@@ -76,10 +76,7 @@ export default class VideoDataSyncController {
     private _activeElement?: Element;
     private _autoSyncAttempted: boolean = false;
     private _dataReceivedListener?: (event: Event) => void;
-    private _autoSyncing: boolean = false;
-    private _waitingForSubtitles: boolean = false;
     private _episode: number | '' = '';
-    private _fetchedSubtitles: VideoDataSubtitleTrack[] = [];
     private _isAnimeSite: boolean = false;
 
     constructor(context: Binding, settings: SettingsProvider) {
@@ -369,9 +366,11 @@ export default class VideoDataSyncController {
                     const updateEpisodeMessage = message as UpdateEpisodeMessage;
                     this._episode = updateEpisodeMessage.episode;
                     client.updateState({ episode: this._episode, open: true });
+                    dataWasSynced = false;
                 } else if ('search' === message.command) {
-                    const searchSubtitlesMessage = message as SearchSubtitlesMessage;
+                    const searchSubtitlesMessage = message as VideoDataSearchMessage;
                     await this._handleSearch(searchSubtitlesMessage);
+                    dataWasSynced = false;
                 }
 
                 if (dataWasSynced) {
@@ -633,7 +632,7 @@ export default class VideoDataSyncController {
         });
     }
 
-    private async _handleSearch(message: SearchSubtitlesMessage) {
+    private async _handleSearch(message: VideoDataSearchMessage) {
         const client = await this._client();
         client.updateState({ isLoading: true, error: null, open: true });
 
@@ -671,6 +670,7 @@ export default class VideoDataSyncController {
                 ],
             } as VideoData;
 
+            // Make sure to keep the dialog open after updating state
             client.updateState({
                 subtitles: this._syncedData.subtitles,
                 isLoading: false,
@@ -679,6 +679,7 @@ export default class VideoDataSyncController {
                 suggestedName: title,
             });
         } catch (error) {
+            // Keep dialog open when showing error
             client.updateState({
                 error: error instanceof Error ? error.message : 'An error occurred while fetching subtitles',
                 isLoading: false,
@@ -703,22 +704,6 @@ export default class VideoDataSyncController {
                 } else {
                     resolve({ title: response.title, episode: response.episode.toString() });
                 }
-            });
-        });
-    }
-
-    private async getStorage(keys: string[]): Promise<any> {
-        return new Promise((resolve) => {
-            chrome.runtime.sendMessage({ command: 'GET_STORAGE', keys }, (response) => {
-                resolve(response);
-            });
-        });
-    }
-
-    private async setStorage(data: { [key: string]: any }): Promise<void> {
-        return new Promise((resolve) => {
-            chrome.runtime.sendMessage({ command: 'SET_STORAGE', data }, () => {
-                resolve();
             });
         });
     }

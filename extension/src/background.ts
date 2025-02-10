@@ -203,20 +203,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
         return true;
     }
-
-    if (message.command === 'GET_STORAGE') {
-        chrome.storage.local.get(message.keys, (result) => {
-            sendResponse(result);
-        });
-        return true;
-    }
-
-    if (message.command === 'SET_STORAGE') {
-        chrome.storage.local.set(message.data, () => {
-            sendResponse();
-        });
-        return true;
-    }
 });
 
 chrome.runtime.onInstalled.addListener(() => {

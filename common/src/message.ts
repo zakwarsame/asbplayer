@@ -733,3 +733,8 @@ export interface DeleteCopyHistoryMessage extends MessageWithId {
 export interface ClearCopyHistoryMessage extends MessageWithId {
     readonly command: 'clear-copy-history';
 }
+
+export interface UpdateEpisodeMessage extends Message {
+    readonly command: 'updateEpisode';
+    readonly episode: number | '';
+}
