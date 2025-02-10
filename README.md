@@ -6,6 +6,8 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 
 ## Extension Installation
 
+🦊 Firefox Addon: https://addons.mozilla.org/en-CA/firefox/addon/api-subs-for-asbplayer/
+
 1. Go to the [Releases](https://github.com/zakwarsame/asbplayer/releases) page
 2. Find the latest release
 3. Under "Assets", download the appropriate file:
