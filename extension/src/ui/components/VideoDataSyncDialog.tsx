@@ -124,6 +124,11 @@ export default function VideoDataSyncDialog({
 
     useEffect(() => {
         setName((name) => {
+            // Don't auto-update name if episode is set (arbitrarily doing this to prevent name from being changed when searching)
+            if (localEpisode !== '') {
+                return name;
+            }
+
             if (!subtitleTracks) {
                 // Unable to calculate the video name
                 return name;
@@ -159,7 +164,7 @@ export default function VideoDataSyncDialog({
             }
             return prev;
         });
-    }, [suggestedName, userSelectedSubtitleTrackIds, subtitleTracks, initialEpisode]);
+    }, [suggestedName, userSelectedSubtitleTrackIds, subtitleTracks, initialEpisode, localEpisode]);
 
     function handleOkButtonClick() {
         const selectedSubtitleTracks: ConfirmedVideoDataSubtitleTrack[] = allSelectedSubtitleTracks();
