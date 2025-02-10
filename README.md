@@ -88,6 +88,7 @@ To add support for additional anime sites:
 ## Credits
 
 This project is based on [asbplayer](https://github.com/killergerbah/asbplayer) by killergerbah.
+Inspired by [asb-auto-subs](https://github.com/GodPepe7/asb-auto-subs) by GodPepe7.
 
 ## License
 

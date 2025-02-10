@@ -55,7 +55,9 @@
         "load": "字幕をロード",
         "animeTitle": "タイトル",
         "episode": "エピソード",
-        "apiKey": "APIキー"
+        "apiKey": "APIキー",
+        "search": "検索",
+        "selectSubtitle": "字幕を選択"
     },
     "ankiDialog": {
         "applySelection": "選択範囲を適用する",

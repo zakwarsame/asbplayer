@@ -55,6 +55,8 @@
         "load": "Cargar Subtítulos",
         "animeTitle": "Título",
         "episode": "Episodio",
+        "search": "Buscar",
+        "selectSubtitle": "Seleccionar Subtítulo",
         "apiKey": "Clave de API"
     },
     "ankiDialog": {

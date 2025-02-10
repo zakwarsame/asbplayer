@@ -31,6 +31,7 @@ import { v4 as uuidv4 } from 'uuid';
 import clsx from 'clsx';
 import Alert from './Alert';
 import AnkiDialog from '@project/common/components/AnkiDialog';
+import AutoSubsDialog from './AutoSubsDialog';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Paper from '@material-ui/core/Paper';
 import DragOverlay from './DragOverlay';
@@ -305,7 +306,7 @@ function App({
 
     const handleAutoSubsDialog = useCallback(() => {
         autoSubsDialogOpen ? handleCloseAutoSubsDialog() : setAutoSubsDialogOpen(true);
-    }, [autoSubsDialogOpen]);
+    }, [autoSubsDialogOpen, handleCloseAutoSubsDialog]);
 
     const handleError = useCallback(
         (message: any) => {

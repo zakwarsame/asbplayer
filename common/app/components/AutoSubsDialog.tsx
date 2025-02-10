@@ -128,7 +128,7 @@ const AutoSubsDialog: React.FC<AutoSubsDialogProps> = ({
                 setLoading(false);
             }
         },
-        [episode]
+        [episode, subtitles]
     );
 
     const handleDownload = useCallback(() => {
@@ -193,7 +193,7 @@ const AutoSubsDialog: React.FC<AutoSubsDialogProps> = ({
         } finally {
             setLoading(false);
         }
-    }, [title, fetchSubtitles]);
+    }, [title, fetchSubtitles, episode, apiKey]);
 
     const handleapiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newApiKey = e.target.value;
