@@ -168,7 +168,6 @@ const nonModuleEntryPoints = {
     video: './src/video.ts',
     page: './src/page.ts',
     asbplayer: './src/asbplayer.ts',
-    content: './src/content.js',
 };
 
 const entries = Object.entries(nonModuleEntryPoints);
