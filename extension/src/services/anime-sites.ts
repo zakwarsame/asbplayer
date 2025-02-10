@@ -1,4 +1,12 @@
-export const animeSites = new Map([
+interface AnimeSite {
+    titleQuery: string;
+    epQuery: string;
+    epPlayerRegEx: RegExp;
+    syncData?: string | null;
+    extractInfo: () => { title: string; episode: string; anilistId?: number | null };
+}
+
+export const animeSites = new Map<string, AnimeSite>([
     [
         'hianime.to',
         {
@@ -20,13 +28,14 @@ export const animeSites = new Map([
         'miruro.tv',
         {
             titleQuery: '.anime-title > a',
-            epQuery: null, // we get episode from URL
+            epQuery: '', // we get episode from URL
             epPlayerRegEx: /https:\/\/www\.miruro\.tv\/watch\?id=.+ep=.+/,
             extractInfo: () => {
                 const titleElement = document.querySelector('.anime-title > a');
                 const urlParams = new URLSearchParams(window.location.search);
                 const episodeString = urlParams.get('ep');
                 const anilistId = urlParams.get('id');
+
                 return {
                     title: titleElement?.textContent?.trim() || '',
                     episode: episodeString || '',
@@ -35,15 +44,53 @@ export const animeSites = new Map([
             },
         },
     ],
-    [
-        'animesuge.to',
-        {
-            titleQuery: 'h1.title',
-            epQuery: 'div.range a.active',
-            epPlayerRegEx: /https:\/\/animesuge\.to\/anime\/.+\/ep-.+/,
-        },
-    ],
 ]);
+
+export function getAnimeTitleAndEpisode(url: string, maxRetries = 5, delay = 1000) {
+    return new Promise((resolve) => {
+        const attempt = (retryCount: number) => {
+            const currentSite = new URL(url).hostname.replace(/^www\./, '');
+            const siteSpecifics = animeSites.get(currentSite);
+
+            if (!siteSpecifics) {
+                resolve({ error: 'Unsupported website.', currentSite, animeSites: Array.from(animeSites.keys()) });
+                return;
+            }
+
+            if (siteSpecifics.extractInfo) {
+                const info = siteSpecifics.extractInfo();
+                if (info.title && info.episode) {
+                    resolve({
+                        title: info.title,
+                        episode: parseInt(info.episode, 10),
+                        ...(info.anilistId ? { anilistId: info.anilistId } : {}),
+                    });
+                    return;
+                }
+            } else {
+                const titleElement = document.querySelector(siteSpecifics.titleQuery);
+                const episodeElement = document.querySelector(siteSpecifics.epQuery ?? '');
+
+                const title = titleElement ? titleElement.textContent?.trim() : '';
+                const episodeString = episodeElement ? episodeElement.textContent?.trim() : '';
+                const episode = episodeString ? parseInt(episodeString, 10) : NaN;
+
+                if (title && !isNaN(episode)) {
+                    resolve({ title, episode });
+                    return;
+                }
+            }
+
+            if (retryCount < maxRetries) {
+                setTimeout(() => attempt(retryCount + 1), delay);
+            } else {
+                resolve({ error: "Couldn't identify the correct Anime Title and Episode." });
+            }
+        };
+
+        attempt(0);
+    });
+}
 
 export function isAnimeSite(url: string): boolean {
     const hostname = new URL(url).hostname.replace(/^www\./, '');
