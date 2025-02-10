@@ -1,6 +1,3 @@
-import { SettingsProvider } from '@project/common/settings';
-import type { AsbplayerSettings } from '@project/common/settings';
-
 interface Subs {
     name: string;
     url: string;

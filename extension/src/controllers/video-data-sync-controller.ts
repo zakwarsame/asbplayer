@@ -78,6 +78,7 @@ export default class VideoDataSyncController {
     private _dataReceivedListener?: (event: Event) => void;
     private _episode: number | '' = '';
     private _isAnimeSite: boolean = false;
+    private _pageLoadSynced: boolean = false;
 
     constructor(context: Binding, settings: SettingsProvider) {
         this._context = context;
@@ -93,6 +94,7 @@ export default class VideoDataSyncController {
         };
         this._domain = new URL(window.location.href).host;
         this._frame = new UiFrame(html);
+        this._pageLoadSynced = false;
         this._isAnimeSite = false;
         this.checkIfAnimeSite();
     }
@@ -274,7 +276,11 @@ export default class VideoDataSyncController {
                 this._autoSyncAttempted = true;
                 const subs = this._matchLastSyncedWithAvailableTracks();
 
-                if (subs.completeMatch) {
+                // Only auto-sync if we truly have subtitles to sync (- means "No subtitle")
+                const isAnimeSite = this._isAnimeSite;
+                const hasRealTracks = subs.autoSelectedTracks.some((track) => track.url !== '-');
+
+                if (subs.completeMatch && !(isAnimeSite && !hasRealTracks)) {
                     const autoSelectedTracks: VideoDataSubtitleTrack[] = subs.autoSelectedTracks;
                     await this._syncData(autoSelectedTracks);
 
@@ -387,6 +393,15 @@ export default class VideoDataSyncController {
         const client = await this._client();
         await this.checkIfAnimeSite();
         const { title, episode } = await this.getAnimeTitleAndEpisode();
+
+        if (this._isAnimeSite && title && episode) {
+            await this._handleSearch({
+                command: 'search',
+                title: title,
+                episode: parseInt(episode),
+            });
+            return;
+        }
 
         client.updateState({
             isAnimeSite: this._isAnimeSite,
@@ -650,33 +665,43 @@ export default class VideoDataSyncController {
             }
 
             const fetchedSubtitles = subtitles
-                .map((sub, index) => ({
-                    id: `fetched-${index}`,
-                    language: 'ja',
-                    url: sub.url,
-                    label: sub.name,
-                    extension: 'srt',
-                }))
+                .map((sub, index) => {
+                    const url = new URL(sub.url);
+                    const extension = url.pathname.split('.').pop() || 'srt';
+                    return {
+                        id: `fetched-${index}`,
+                        language: 'ja',
+                        url: sub.url,
+                        label: sub.name,
+                        extension: extension,
+                    };
+                })
                 .filter((sub) => sub.url && sub.label);
 
             const { title } = await this.getAnimeTitleAndEpisode();
 
-            // Update the subtitles state with the fetched subtitles
+            // Only store fetched subtitles, no empty tracks
             this._syncedData = {
                 ...this._syncedData,
-                subtitles: [
-                    { id: '-', language: '-', url: '-', label: 'No subtitle', extension: 'srt' },
-                    ...fetchedSubtitles,
-                ],
+                subtitles: fetchedSubtitles,
             } as VideoData;
 
-            // Make sure to keep the dialog open after updating state
+            // Only auto-load subtitles and hide the dialog if triggered by page load
+            if (fetchedSubtitles.length > 0 && this._autoSync && !this._pageLoadSynced) {
+                this._pageLoadSynced = true;
+                await this._syncData([fetchedSubtitles[0]]);
+                client.updateState({ open: false });
+                this._hideAndResume();
+                return;
+            }
+
             client.updateState({
-                subtitles: this._syncedData.subtitles,
+                subtitles: fetchedSubtitles, // Use fetchedSubtitles directly
                 isLoading: false,
                 episode: message.episode,
                 open: true,
                 suggestedName: title,
+                selectedSubtitle: fetchedSubtitles.length > 0 ? [`fetched-0`, '-', '-'] : ['-', '-', '-'],
             });
         } catch (error) {
             // Keep dialog open when showing error
@@ -696,6 +721,7 @@ export default class VideoDataSyncController {
             });
         });
     }
+
     private async getAnimeTitleAndEpisode(): Promise<{ title: string; episode: string }> {
         return new Promise((resolve) => {
             chrome.runtime.sendMessage({ command: 'GET_ANIME_TITLE_AND_EPISODE' }, (response) => {
