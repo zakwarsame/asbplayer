@@ -2,7 +2,7 @@
 
 Web app: https://zakwarsame.github.io/asbplayer/
 
-This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that adds automatic subtitle search and download functionality for anime sites. It works with the [Jimaku API](https://jimaku.cc/login) and [Anilist API](https://anilist.co/docs/api) to automatically detect anime titles and episodes on supported streaming sites.
+This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that adds automatic subtitle search and download functionality for anime sites. It works with the [Jimaku API](https://jimaku.cc/login) and [Anilist API](https://docs.anilist.co/) to automatically detect anime titles and episodes on supported streaming sites.
 
 ## Extension Installation
 
@@ -12,19 +12,19 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 2. Find the latest release
 3. Under "Assets", download the appropriate file:
 
-    - For Chrome/Chromium browsers: `api-subs-for-asbplayer-1.0.0-chromium.zip`
-    - For Firefox: `api-subs-for-asbplayer-1.0.0-firefox.zip`
-    - For Firefox Android: `api-subs-for-asbplayer-1.0.0-firefoxandroid.zip`
+    - For Chrome/Chromium browsers: `api-subs-for-asbplayer-1.x.x-chromium.zip`
+
+    <!---
+     - For Firefox: `api-subs-for-asbplayer-1.x.x-firefox.zip`
+     - For Firefox Android: `api-subs-for-asbplayer-1.x.x-firefoxandroid.zip`
+     -->
 
 4. Install in your browser:
     - **Chrome/Chromium**:
         - Go to `chrome://extensions/`
         - Enable "Developer mode" (top right)
         - Drag and drop the downloaded ZIP file into the extensions page OR click "Load unpacked" and select the folder containing the extension files
-    - **Firefox**:
-        - Go to `about:addons`
-        - Click the gear icon ⚙️ and select "Install Add-on From File..."
-        - Select the downloaded ZIP file
+    - **Firefox**: - Install addon: https://addons.mozilla.org/en-CA/firefox/addon/api-subs-for-asbplayer/
 
 ## Extension Setup
 
@@ -62,6 +62,9 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 6. Click search to find and load available subtitles
 
 **Extension demo:**
+
+> [!NOTE]
+> this demo is a bit outdated. You don't need to click "Search". And if you have `Auto-load detected subtitle` enabled, it picks the first one and loads it as soon as you click on anime.
 
 https://github.com/user-attachments/assets/08be7905-fe75-4ef4-8424-0ea20753e5af
 
