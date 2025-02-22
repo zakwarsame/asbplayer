@@ -2,7 +2,7 @@
 
 Web app: https://zakwarsame.github.io/asbplayer/
 
-This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that adds automatic subtitle search and download functionality for anime sites. It works with the [Jimaku API](https://jimaku.cc/login) and [Anilist API](https://anilist.co/docs/api) to automatically detect anime titles and episodes on supported streaming sites.
+This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that adds automatic subtitle search and download functionality for anime sites. It works with the [Jimaku API](https://jimaku.cc/login) and [Anilist API](https://docs.anilist.co/) to automatically detect anime titles and episodes on supported streaming sites.
 
 ## Extension Installation
 
