@@ -44,6 +44,37 @@ export const animeSites = new Map<string, AnimeSite>([
             },
         },
     ],
+
+      [
+        'app.strem.io',
+        {
+            titleQuery: '.fallback.ng-binding',
+            epQuery: 'title',
+            epPlayerRegEx: /https:\/\/app\.strem\.io\/.+/,
+            extractInfo: () => {
+                const titleElement = document.querySelector('.fallback.ng-binding');
+                const title = titleElement?.textContent?.trim() || '';
+
+                // extract episode from title tag which has format: "Stremio - [Anime Title] - [Episode Title] (SxE)"
+                const titleTag = document.querySelector('title');
+                const titleText = titleTag?.textContent || '';
+
+                // extract the (SxE) pattern, where S is season and E is episode
+                const episodeMatch = titleText.match(/(\d+)x(\d+)/);
+                let episode = '';
+
+                if (episodeMatch && episodeMatch[2]) {
+                    // use the episode number (second group in the match)
+                    episode = episodeMatch[2];
+                }
+
+                return {
+                    title,
+                    episode,
+                };
+            },
+        },
+    ],
 ]);
 
 interface AnimeInfoResult {
