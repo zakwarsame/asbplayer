@@ -19,9 +19,9 @@
     "dependencies": {
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.0",
-        "@mui/icons-material": "^6.4.3",
-        "@mui/material": "^6.4.3",
-        "@mui/styles": "^6.4.3",
+        "@mui/icons-material": "^6.4.7",
+        "@mui/material": "^6.4.7",
+        "@mui/styles": "^6.4.7",
         "@project/common": "0.1.0",
         "@types/chrome": "^0.0.261",
         "@types/dom-mediacapture-record": "^1.0.11",
