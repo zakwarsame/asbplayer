@@ -39,8 +39,9 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 - **Automatic Anime Detection**: Automatically detects anime titles and episodes on supported streaming sites
 - **Subtitle Search**: Search and download subtitles directly through the asbplayer interface using the Jimaku API
 - **Supported Sites**:
-    - hianime.to
-    - miruro.to
+    - hianime
+    - miruro
+    - animekai
     - More sites can be easily added
 
 ### Web app features
