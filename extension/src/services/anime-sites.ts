@@ -10,6 +10,7 @@ const BRANDS = {
     HIANIME: 'hianime',
     MIRURO: 'miruro',
     STREM: 'strem',
+    ANIMEKAI: 'animekai',
 } as const;
 type BrandKey = (typeof BRANDS)[keyof typeof BRANDS];
 
@@ -17,6 +18,7 @@ const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
     [BRANDS.HIANIME]: (hostname) => /(^|\.)hianime[a-z]?\./.test(hostname),
     [BRANDS.MIRURO]: (hostname) => /(^|\.)miruro\./.test(hostname),
     [BRANDS.STREM]: (hostname) => /^app\.strem\./.test(hostname),
+    [BRANDS.ANIMEKAI]: (hostname) => /(^|\.)animekai\./.test(hostname),
 };
 
 // Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
@@ -80,6 +82,32 @@ export const animeSites = new Map<string, AnimeSite>([
                     // use the episode number (second group in the match)
                     episode = episodeMatch[2];
                 }
+
+                return {
+                    title,
+                    episode,
+                };
+            },
+        },
+    ],
+    [
+        BRANDS.ANIMEKAI,
+        {
+            titleQuery: '', // Not used since we extract from URL
+            epQuery: '', // Not used since we extract from URL
+            epPlayerRegEx: /https:\/\/animekai\.[^/]+\/watch\/[^#]+#ep=\d+/,
+            extractInfo: () => {
+                const url = window.location.href;
+                const match = url.match(/\/watch\/([^#]+)#ep=(\d+)/);
+                if (!match) return { title: '', episode: '' };
+
+                const [, titleSlug, episode] = match;
+                // Remove the last segment which is the site ID (always 4 characters)
+                const titleParts = titleSlug.split('-');
+                const title = titleParts
+                    .slice(0, -1) // Remove the last part (site ID)
+                    .join(' ')
+                    .trim();
 
                 return {
                     title,

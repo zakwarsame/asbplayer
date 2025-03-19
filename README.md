@@ -11,7 +11,6 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 1. Go to the [Releases](https://github.com/zakwarsame/asbplayer/releases) page
 2. Find the latest release
 3. Under "Assets", download the appropriate file:
-
     - For Chrome/Chromium browsers: `api-subs-for-asbplayer-1.x.x-chromium.zip`
 
     <!---
@@ -40,8 +39,9 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 - **Automatic Anime Detection**: Automatically detects anime titles and episodes on supported streaming sites
 - **Subtitle Search**: Search and download subtitles directly through the asbplayer interface using the Jimaku API
 - **Supported Sites**:
-    - hianime.to
-    - miruro.to
+    - hianime
+    - miruro
+    - animekai
     - More sites can be easily added
 
 ### Web app features
