@@ -24,6 +24,25 @@ export const animeSites = new Map<string, AnimeSite>([
             },
         },
     ],
+
+    [
+        'hianimez.to',
+        {
+            titleQuery: 'h2.film-name > a',
+            epQuery: '.ssl-item.ep-item.active',
+            epPlayerRegEx: /https:\/\/hianimez\.to\/watch\/.+\?ep=.+/,
+            syncData: '#syncData',
+            extractInfo: () => {
+                const titleElement = document.querySelector('h2.film-name > a');
+                const epElement = document.querySelector('.ssl-item.ep-item.active');
+                return {
+                    title: titleElement?.textContent?.trim() || '',
+                    episode: epElement?.textContent?.trim() || '',
+                };
+            },
+        },
+    ],
+    
     [
         'miruro.tv',
         {
