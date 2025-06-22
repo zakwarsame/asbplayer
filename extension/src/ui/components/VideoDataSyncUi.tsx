@@ -159,6 +159,8 @@ export default function VideoDataSyncUi({ bridge }: Props) {
 
             if (model.hideRememberTrackPreferenceToggle !== undefined) {
                 setHideRememberTrackPreferenceToggle(model.hideRememberTrackPreferenceToggle);
+            }
+
             if (model.episode !== undefined) {
                 setEpisode(model.episode);
             }
