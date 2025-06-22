@@ -229,7 +229,7 @@
             "selectSubtitles": "Selecionar legenda",
             "subtitleTrack": "Selecionar faixa",
             "videoName": "Nome do vídeo",
-            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files."
+            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files.",
             "episode": "Episódio",
             "search": "Pesquisar"
         },

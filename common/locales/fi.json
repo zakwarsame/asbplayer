@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Automaattiset tekstitykset",
         "cancel": "Peruuta",
         "copy": "Kopioi",
         "delete": "Poista",
@@ -24,6 +25,16 @@
         "decreaseOffsetButton": "Vähennä siirtymää niin, että seuraava tekstitys on nykyisessä asennossa. Pienennä sitä 100ms:llä.",
         "increaseOffsetButton": "Lisää siirtymää niin, että edellinen tekstitys on nykyisessä asennossa. Kasvata 100 ms:n tarkkuudella.",
         "gotIt": "Selvä"
+    },
+    "autoSubsDialog": {
+        "title": "Automaattiset tekstitykset",
+        "selectSubtitles": "Valitse tekstitykset",
+        "load": "Lataa tekstitys",
+        "animeTitle": "Otsikko",
+        "episode": "Jakso",
+        "search": "Haku",
+        "selectSubtitle": "Valitse tekstitys",
+        "apiKey": "API-avain"
     },
     "about": {
         "title": "Tietoja asbplayeristä",
@@ -218,7 +229,9 @@
             "selectSubtitles": "Valitse tekstitys",
             "subtitleTrack": "Tekstitysraita",
             "videoName": "Videonnimi",
-            "ftue": "Automaattisesti havaitut tekstitysraidat voidaan valita täällä. asbplayer ei osaa havaita tekstityksiä jokaisella sivustolla. Voit aina ladata omia tekstitystiedostoja."
+            "ftue": "Automaattisesti havaitut tekstitysraidat voidaan valita täällä. asbplayer ei osaa havaita tekstityksiä jokaisella sivustolla. Voit aina ladata omia tekstitystiedostoja.",
+            "episode": "Jakso",
+            "search": "Haku"
         },
         "videoSelect": {
             "multipleVideoElements": "Useita video-elementtejä havaittu",
@@ -405,6 +418,7 @@
         "missingFieldError": "Kenttä \"{{field}}\" ei löydy merkintätyypistä",
         "webSocketClientEnabled": "Ota WebSocket asiakasohjelma käyttöön",
         "webSocketServerUrl": "WebSocket-palvelimen URL",
+        "apiKey": "API-avain",
         "firefoxExtensionShortcutHelp": "Muokkaa tätä pikakuvaketta Plugin managerilta about:addons.",
         "postMinePlayback": "Jatka Ankiin lähettämisen jälkeen",
         "pauseOnHoverMode": "Pysäytä automaattisesti kun hiiri on tekstitysten päällä",

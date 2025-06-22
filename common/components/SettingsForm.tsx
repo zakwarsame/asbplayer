@@ -1393,8 +1393,12 @@ export default function SettingsForm({
         const timeString = `${now.getFullYear()}-${
             now.getMonth() + 1
         }-${now.getDate()}-${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
+
+        // Exclude apiKey from exports for backwards compatibility
+        const { apiKey, ...settingsToExport } = settings;
+
         download(
-            new Blob([JSON.stringify(settings)], { type: 'appliction/json' }),
+            new Blob([JSON.stringify(settingsToExport)], { type: 'appliction/json' }),
             `asbplayer-settings-${timeString}.json`
         );
     }, [settings]);

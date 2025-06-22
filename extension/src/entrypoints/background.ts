@@ -161,7 +161,13 @@ export default defineBackground(() => {
         new MobileOverlayForwarderHandler(),
     ];
 
-    browser.runtime.onMessage.addListener((request: Command<Message>, sender, sendResponse) => {
+    browser.runtime.onMessage.addListener((request: Command<Message> | any, sender, sendResponse) => {
+        // Handle logging messages
+        if (request.command === 'asbplayer-log') {
+            console.log(request.message, request.data);
+            return false;
+        }
+
         for (const handler of handlers) {
             if (
                 (typeof handler.sender === 'string' && handler.sender === request.sender) ||
@@ -194,13 +200,13 @@ export default defineBackground(() => {
     }
 
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.command === 'GET_ANIME_TITLE_AND_EPISODE' && sender.tab?.id) {
+        if (message.command === 'get-anime-title-and-episode' && sender.tab?.id) {
             getAnimeTitleAndEpisode(sender.tab.id, sender.tab.url ?? '')
                 .then(sendResponse)
                 .catch((error) => sendResponse({ error: error.message }));
             return true;
         }
-        if (message.command === 'CHECK_IF_ANIME_SITE') {
+        if (message.command === 'check-if-anime-site') {
             sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
             return true;
         }

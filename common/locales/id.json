@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Sub Otomatis",
         "cancel": "Batal",
         "copy": "Salin",
         "delete": "Hapus",
@@ -24,6 +25,16 @@
         "decreaseOffsetButton": "Kurangi offset agar takarir berikutnya berada di posisi saat ini. Tahan untuk mengurangi 100 ms.",
         "increaseOffsetButton": "Tambah offset agar takarir sebelumnya berada di posisi saat ini. Tahan untuk menambah 100 ms.",
         "gotIt": "Mengerti"
+    },
+    "autoSubsDialog": {
+        "title": "Sub Otomatis",
+        "selectSubtitles": "Pilih Subtitle",
+        "load": "Muat subtitle",
+        "animeTitle": "Judul",
+        "episode": "Episode",
+        "search": "Cari",
+        "selectSubtitle": "Pilih Subtitle",
+        "apiKey": "Kunci API"
     },
     "about": {
         "title": "Tentang asbplayer",
@@ -218,7 +229,9 @@
             "selectSubtitles": "Pilih Takarir",
             "subtitleTrack": "Trek Takarir",
             "videoName": "Nama Video",
-            "ftue": "Trek takarir yang terdeteksi otomatis dapat dipilih di sini. asbplayer tidak dapat mendeteksi takarir di semua situs. Anda selalu dapat memuat berkas takarir sendiri."
+            "ftue": "Trek takarir yang terdeteksi otomatis dapat dipilih di sini. asbplayer tidak dapat mendeteksi takarir di semua situs. Anda selalu dapat memuat berkas takarir sendiri.",
+            "episode": "Episode",
+            "search": "Cari"
         },
         "videoSelect": {
             "multipleVideoElements": "Beberapa elemen video terdeteksi",
@@ -405,6 +418,7 @@
         "missingFieldError": "Field \"{{field}}\" not found in note type",
         "webSocketClientEnabled": "Enable WebSocket client",
         "webSocketServerUrl": "WebSocket Server URL",
+        "apiKey": "Kunci API",
         "firefoxExtensionShortcutHelp": "Edit this shortcut from the Plugin manager at about:addons.",
         "postMinePlayback": "Post-mining playback state",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles",

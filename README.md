@@ -41,7 +41,7 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 - **Subtitle Search**: Search and download subtitles directly through the asbplayer interface using the Jimaku API
 - **Supported Sites**:
     - hianime.to
-    - miruro.tv
+    - miruro.to
     - More sites can be easily added
 
 ### Web app features

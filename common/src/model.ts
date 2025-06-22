@@ -171,6 +171,7 @@ export interface VideoData {
     basename: string;
     error?: string;
     subtitles?: VideoDataSubtitleTrack[];
+    reAttempt?: boolean;
 }
 
 export enum VideoDataUiOpenReason {

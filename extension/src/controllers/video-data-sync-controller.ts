@@ -83,6 +83,7 @@ export default class VideoDataSyncController {
     private _episode: number | '' = '';
     private _isAnimeSite: boolean = false;
     private _pageLoadSynced: boolean = false;
+    private _lastConfirmedTrackIds?: string[];
 
     constructor(context: Binding, settings: SettingsProvider) {
         this._context = context;
@@ -143,22 +144,35 @@ export default class VideoDataSyncController {
     }
 
     requestSubtitles() {
-        if (!this._context.hasPageScript || !currentPageDelegate()?.isVideoPage()) {
+        const hasPageScript = this._context.hasPageScript;
+        const isVideoPage = currentPageDelegate()?.isVideoPage();
+        if ((!hasPageScript || !isVideoPage) && !this._isAnimeSite) {
             return;
         }
 
-        this._syncedData = undefined;
-        this._autoSyncAttempted = false;
+        // Only clear synced data if we don't have any subtitle data yet
+        if (!this._hasSubtitles()) {
+            this._syncedData = undefined;
+            this._autoSyncAttempted = false;
+        }
 
         if (!this._dataReceivedListener) {
             this._dataReceivedListener = (event: Event) => {
                 const data = (event as CustomEvent).detail as VideoData;
+                if (data?.reAttempt) {
+                    this._autoSyncAttempted = false;
+                }
                 this._setSyncedData(data);
             };
             document.addEventListener('asbplayer-synced-data', this._dataReceivedListener, false);
         }
 
-        document.dispatchEvent(new CustomEvent('asbplayer-get-synced-data'));
+        // If we already have subtitle data, show the dialog directly
+        if (this._hasSubtitles()) {
+            this.show({ reason: VideoDataUiOpenReason.userRequested });
+        } else {
+            document.dispatchEvent(new CustomEvent('asbplayer-get-synced-data'));
+        }
     }
 
     async show({ reason, fromAsbplayerId }: ShowOptions) {
@@ -192,13 +206,22 @@ export default class VideoDataSyncController {
         const activeProfilePromise = this._context.settings.activeProfile();
         const hasSeenFtue = (await globalStateProvider.get(['ftueHasSeenSubtitleTrackSelector']))
             .ftueHasSeenSubtitleTrackSelector;
-        const { title, episode } = await this.getAnimeTitleAndEpisode();
+        await this.checkIfAnimeSite();
+        let title = '';
+        let episode = '';
+        let autoSelectBasedOnLastSavedSub = autoSelectedTrackIds;
+        if (this._isAnimeSite) {
+            autoSelectBasedOnLastSavedSub =
+                this._lastConfirmedTrackIds ??
+                (subtitleTrackChoices.length > 0 ? [subtitleTrackChoices[0].id, '-', '-'] : autoSelectedTrackIds);
+            ({ title, episode } = await this.obtainTitleAndEpisode());
+        }
 
         return this._syncedData
             ? {
                   isLoading: this._syncedData.subtitles === undefined,
                   suggestedName: title ? title : this._syncedData.basename,
-                  selectedSubtitle: autoSelectedTrackIds,
+                  selectedSubtitle: autoSelectBasedOnLastSavedSub,
                   subtitles: subtitleTrackChoices,
                   error: this._syncedData.error,
                   defaultCheckboxState: defaultCheckboxState,
@@ -293,10 +316,22 @@ export default class VideoDataSyncController {
 
                 // Only auto-sync if we truly have subtitles to sync (- means "No subtitle")
                 const isAnimeSite = this._isAnimeSite;
-                const hasRealTracks = subs.autoSelectedTracks.some((track) => track.url !== '-');
+                const hasAvailableSubtitles = this._syncedData.subtitles.length > 0;
 
-                if (subs.completeMatch && !(isAnimeSite && !hasRealTracks)) {
-                    const autoSelectedTracks: VideoDataSubtitleTrack[] = subs.autoSelectedTracks;
+                // For anime sites with available subtitles, always auto-load
+                // For other sites, follow the normal language matching logic
+                const shouldAutoSync = isAnimeSite ? hasAvailableSubtitles : subs.completeMatch;
+
+                if (shouldAutoSync) {
+                    let autoSelectedTracks: VideoDataSubtitleTrack[];
+
+                    if (isAnimeSite && this._syncedData.subtitles.length > 0) {
+                        // For anime sites, auto-select the first available subtitle
+                        autoSelectedTracks = [this._syncedData.subtitles[0], this._emptySubtitle, this._emptySubtitle];
+                    } else {
+                        autoSelectedTracks = subs.autoSelectedTracks;
+                    }
+
                     await this._syncData(autoSelectedTracks);
 
                     if (!this._frame.hidden) {
@@ -311,8 +346,16 @@ export default class VideoDataSyncController {
                 }
             }
         } else if (this._frame.clientIfLoaded !== undefined) {
-            this._frame.clientIfLoaded.updateState(await this._buildModel({}));
+            const subtitleTrackChoices = this._syncedData?.subtitles ?? [];
+            this._frame.clientIfLoaded.updateState({
+                subtitles: subtitleTrackChoices,
+                isLoading: false,
+            });
         }
+    }
+
+    private _hasSubtitles(): boolean {
+        return (this._syncedData?.subtitles?.length || 0) > 0;
     }
 
     private _canAutoSync(): boolean {
@@ -368,6 +411,9 @@ export default class VideoDataSyncController {
                 if ('confirm' === message.command) {
                     const confirmMessage = message as VideoDataUiBridgeConfirmMessage;
 
+                    // Store the actual track IDs that were confirmed
+                    this._lastConfirmedTrackIds = confirmMessage.data.map((track) => track.id || '-');
+
                     if (confirmMessage.shouldRememberTrackChoices) {
                         this.lastLanguagesSynced = confirmMessage.data
                             .map((track) => track.language)
@@ -416,9 +462,9 @@ export default class VideoDataSyncController {
     private async _prepareShow() {
         const client = await this._client();
         await this.checkIfAnimeSite();
-        const { title, episode } = await this.getAnimeTitleAndEpisode();
+        const { title, episode } = await this.obtainTitleAndEpisode();
 
-        if (this._isAnimeSite && title && episode) {
+        if (this._isAnimeSite && title && episode && !this._autoSyncAttempted) {
             await this._handleSearch({
                 command: 'search',
                 title: title,
@@ -690,7 +736,7 @@ export default class VideoDataSyncController {
                 })
                 .filter((sub) => sub.url && sub.label);
 
-            const { title } = await this.getAnimeTitleAndEpisode();
+            const { title } = await this.obtainTitleAndEpisode();
 
             // Only store fetched subtitles, no empty tracks
             this._syncedData = {
@@ -719,6 +765,7 @@ export default class VideoDataSyncController {
             // Keep dialog open when showing error
             client.updateState({
                 error: error instanceof Error ? error.message : 'An error occurred while fetching subtitles',
+                episode: message.episode || '',
                 isLoading: false,
                 open: true,
             });
@@ -727,18 +774,19 @@ export default class VideoDataSyncController {
 
     private async checkIfAnimeSite(): Promise<void> {
         return new Promise((resolve) => {
-            chrome.runtime.sendMessage({ command: 'CHECK_IF_ANIME_SITE' }, (response) => {
+            chrome.runtime.sendMessage({ command: 'check-if-anime-site' }, (response) => {
                 this._isAnimeSite = response.isAnimeSite;
+
                 resolve();
             });
         });
     }
 
-    private async getAnimeTitleAndEpisode(): Promise<{ title: string; episode: string }> {
-        return new Promise((resolve) => {
-            chrome.runtime.sendMessage({ command: 'GET_ANIME_TITLE_AND_EPISODE' }, (response) => {
+    private async obtainTitleAndEpisode(): Promise<{ title: string; episode: string }> {
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({ command: 'get-anime-title-and-episode' }, (response) => {
                 if (response.error) {
-                    resolve({ title: '', episode: '' });
+                    reject({ title: '', episode: '' });
                 } else {
                     resolve({ title: response.title, episode: response.episode.toString() });
                 }
