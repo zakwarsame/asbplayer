@@ -1414,6 +1414,7 @@ function App({
                                 onOpenSettings={handleOpenSettings}
                                 lastError={lastError}
                                 onCopyLastError={handleCopyLastError}
+                                onAutoSubsDialogChange={handleAutoSubsDialog}
                             />
                             <input
                                 ref={fileInputRef}

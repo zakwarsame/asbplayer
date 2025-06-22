@@ -10,6 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import HistoryIcon from '@mui/icons-material/History';
 import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import Toolbar from '@mui/material/Toolbar';
 import type { TooltipProps } from '@mui/material/Tooltip';
 import Tooltip from '../../components/Tooltip';
@@ -193,6 +194,13 @@ export default function Bar({
                     <Typography variant="h6" noWrap className={classes.title}>
                         {title}
                     </Typography>
+                    {onAutoSubsDialogChange && (
+                        <Tooltip title={t('action.autoSubs')!}>
+                            <IconButton edge="end" color="inherit" onClick={onAutoSubsDialogChange}>
+                                <CloudDownloadIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                     <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
                         <GitHubIcon />
                     </IconButton>

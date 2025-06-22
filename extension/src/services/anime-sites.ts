@@ -44,8 +44,7 @@ export const animeSites = new Map<string, AnimeSite>([
             },
         },
     ],
-
-      [
+    [
         'app.strem.io',
         {
             titleQuery: '.fallback.ng-binding',
