@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "자동 자막",
         "cancel": "취소",
         "copy": "복사",
         "delete": "삭제",
@@ -27,6 +28,16 @@
         "gotIt": "확인",
         "revert": "Revert",
         "userGuide": "User guide"
+    },
+    "autoSubsDialog": {
+        "title": "자동 자막",
+        "selectSubtitles": "자막 선택",
+        "load": "자막 로드",
+        "animeTitle": "제목",
+        "episode": "에피소드",
+        "search": "검색",
+        "selectSubtitle": "자막 선택",
+        "apiKey": "API 키"
     },
     "about": {
         "title": "asbplayer 소개",
@@ -234,7 +245,9 @@
             "selectSubtitles": "자막 선택",
             "subtitleTrack": "자막 트랙",
             "videoName": "영상 이름",
-            "ftue": "자동으로 감지된 자막 트랙은 여기에서 선택할 수 있습니다.\nasbplayer가 모든 사이트에서 자막을 감지할 수 있는 것은 아닙니다.\n언제든지 직접 자막 파일을 불러올 수 있습니다."
+            "ftue": "자동으로 감지된 자막 트랙은 여기에서 선택할 수 있습니다.\nasbplayer가 모든 사이트에서 자막을 감지할 수 있는 것은 아닙니다.\n언제든지 직접 자막 파일을 불러올 수 있습니다.",
+            "episode": "에피소드",
+            "search": "검색"
         },
         "videoSelect": {
             "multipleVideoElements": "다수의 영상 요소가 감지되었습니다.",
@@ -428,6 +441,7 @@
         "missingFieldError": "노트 유형에서 '{{field}}' 필드를 찾을 수 없습니다",
         "webSocketClientEnabled": "WebSocket 클라이언트 활성화",
         "webSocketServerUrl": "WebSocket 서버 URL",
+        "apiKey": "API 키",
         "firefoxExtensionShortcutHelp": "단축키를 변경하려면 about:addons의 플러그인 관리자에서 설정하세요.",
         "postMinePlayback": "자막 추출 후 재생 상태",
         "pauseOnHoverMode": "자막 위에 마우스를 올리면 자동 일시정지",

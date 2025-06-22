@@ -6,13 +6,27 @@ interface AnimeSite {
     extractInfo: () => { title: string; episode: string; anilistId?: number | null };
 }
 
+const BRANDS = {
+    HIANIME: 'hianime',
+    MIRURO: 'miruro',
+    STREM: 'strem',
+} as const;
+type BrandKey = (typeof BRANDS)[keyof typeof BRANDS];
+
+const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
+    [BRANDS.HIANIME]: (hostname) => /(^|\.)hianime[a-z]?\./.test(hostname),
+    [BRANDS.MIRURO]: (hostname) => /(^|\.)miruro\./.test(hostname),
+    [BRANDS.STREM]: (hostname) => /^app\.strem\./.test(hostname),
+};
+
+// Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
 export const animeSites = new Map<string, AnimeSite>([
     [
-        'hianime.to',
+        BRANDS.HIANIME,
         {
             titleQuery: 'h2.film-name > a',
             epQuery: '.ssl-item.ep-item.active',
-            epPlayerRegEx: /https:\/\/hianime\.to\/watch\/.+\?ep=.+/,
+            epPlayerRegEx: /https:\/\/hianime[a-z]?\.[^/]+\/watch\/.+\?ep=.+/,
             syncData: '#syncData',
             extractInfo: () => {
                 const titleElement = document.querySelector('h2.film-name > a');
@@ -25,11 +39,11 @@ export const animeSites = new Map<string, AnimeSite>([
         },
     ],
     [
-        'miruro.tv',
+        BRANDS.MIRURO,
         {
             titleQuery: '.anime-title > a',
             epQuery: '', // we get episode from URL
-            epPlayerRegEx: /https:\/\/www\.miruro\.tv\/watch\?id=.+ep=.+/,
+            epPlayerRegEx: /https:\/\/(?:www\.)?miruro\.[^/]+\/watch\?id=.+ep=.+/,
             extractInfo: () => {
                 const titleElement = document.querySelector('.anime-title > a');
                 const urlParams = new URLSearchParams(window.location.search);
@@ -45,11 +59,11 @@ export const animeSites = new Map<string, AnimeSite>([
         },
     ],
     [
-        'app.strem.io',
+        BRANDS.STREM,
         {
             titleQuery: '.fallback.ng-binding',
             epQuery: 'title',
-            epPlayerRegEx: /https:\/\/app\.strem\.io\/.+/,
+            epPlayerRegEx: /https:\/\/app\.strem\.[^/]+\/.+/,
             extractInfo: () => {
                 const titleElement = document.querySelector('.fallback.ng-binding');
                 const title = titleElement?.textContent?.trim() || '';
@@ -86,17 +100,18 @@ interface AnimeInfoResult {
 }
 
 export function getAnimeTitleAndEpisode(url: string, maxRetries = 10, delay = 1000): Promise<AnimeInfoResult> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const attempt = (retryCount: number) => {
-            const currentSite = new URL(url).hostname.replace(/^www\./, '');
-            const siteSpecifics = animeSites.get(currentSite);
+            const currentHost = normalizeHostname(new URL(url).hostname);
+            const siteKey = detectSiteKey(currentHost);
+            const siteSpecifics = siteKey ? animeSites.get(siteKey) : undefined;
 
             if (!siteSpecifics) {
-                resolve({
+                reject({
                     title: '',
                     episode: '',
                     error: 'Unsupported website.',
-                    currentSite,
+                    currentSite: currentHost,
                     animeSites: Array.from(animeSites.keys()),
                 });
                 return;
@@ -129,7 +144,7 @@ export function getAnimeTitleAndEpisode(url: string, maxRetries = 10, delay = 10
             if (retryCount < maxRetries) {
                 setTimeout(() => attempt(retryCount + 1), delay);
             } else {
-                resolve({
+                reject({
                     title: '',
                     episode: '',
                     error: "Couldn't identify the correct Anime Title and Episode.",
@@ -141,12 +156,45 @@ export function getAnimeTitleAndEpisode(url: string, maxRetries = 10, delay = 10
     });
 }
 
+function normalizeHostname(hostname: string): string {
+    return hostname.replace(/^www\./, '');
+}
+
+function detectSiteKey(hostname: string): string | undefined {
+    for (const brand of Object.values(BRANDS)) {
+        const tester = BRAND_HOST_TESTS[brand as BrandKey];
+        if (tester && tester(hostname)) return brand;
+    }
+    return undefined;
+}
+
 export function isAnimeSite(url: string): boolean {
-    const hostname = new URL(url).hostname.replace(/^www\./, '');
-    return animeSites.has(hostname);
+    const hostname = normalizeHostname(new URL(url).hostname);
+    return Boolean(detectSiteKey(hostname));
 }
 
 export function getAnimeSiteInfo(url: string) {
-    const hostname = new URL(url).hostname.replace(/^www\./, '');
-    return animeSites.get(hostname);
+    const hostname = normalizeHostname(new URL(url).hostname);
+    const siteKey = detectSiteKey(hostname);
+    return siteKey ? animeSites.get(siteKey) : undefined;
+}
+
+export function animeSiteInitConfig(
+    hostname: string,
+    referrer: string | undefined
+): {
+    isReferredFromAnimeSite: boolean;
+    referrerHostname: string | undefined;
+} {
+    const isCloudflare = hostname.includes('cloudflare.com');
+    const referrerHostname = referrer ? normalizeHostname(new URL(referrer).host) : undefined;
+
+    const normalizedReferrerHostname = referrerHostname;
+    const isReferredFromAnimeSite =
+        normalizedReferrerHostname && Boolean(detectSiteKey(normalizedReferrerHostname)) && !isCloudflare;
+
+    return {
+        isReferredFromAnimeSite: Boolean(isReferredFromAnimeSite),
+        referrerHostname,
+    };
 }

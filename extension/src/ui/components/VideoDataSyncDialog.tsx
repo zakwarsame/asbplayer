@@ -371,25 +371,6 @@ export default function VideoDataSyncDialog({
                                 </Button>
                             </Grid>
                         )}
-                        <Grid item>
-                            <LabelWithHoverEffect
-                                control={
-                                    <Switch
-                                        checked={shouldRememberTrackChoices}
-                                        onChange={handleRememberTrackChoices}
-                                        color="primary"
-                                    />
-                                }
-                                label={t('extension.videoDataSync.rememberTrackPreference')}
-                                labelPlacement="start"
-                                style={{
-                                    display: 'flex',
-                                    marginLeft: 'auto',
-                                    marginRight: '-13px',
-                                    width: 'fit-content',
-                                }}
-                            />
-                        </Grid>
                     </Grid>
                 </form>
             </DialogContent>

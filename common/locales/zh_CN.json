@@ -245,7 +245,7 @@
             "selectSubtitles": "选择字幕",
             "subtitleTrack": "字幕轨道",
             "videoName": "视频名称",
-            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files."
+            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files.",
             "episode": "剧集",
             "search": "搜索"
         },
