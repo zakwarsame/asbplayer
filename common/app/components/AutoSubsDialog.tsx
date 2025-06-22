@@ -123,7 +123,7 @@ const AutoSubsDialog: React.FC<AutoSubsDialogProps> = ({
                 setSubtitles(subs);
                 setSelectedSubtitle(subs[0]);
             } catch (err) {
-                setError(err.message);
+                setError(err instanceof Error ? err.message : String(err));
             } finally {
                 setLoading(false);
             }
@@ -189,7 +189,7 @@ const AutoSubsDialog: React.FC<AutoSubsDialogProps> = ({
                 throw new Error('Unable to find Anilist ID for the given title');
             }
         } catch (err) {
-            setError(err.message);
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setLoading(false);
         }
@@ -270,11 +270,11 @@ const AutoSubsDialog: React.FC<AutoSubsDialogProps> = ({
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>{t('action.cancel')}</Button>
-                <Button onClick={handleSubmitTemp} color="default">
+                <Button onClick={handleSubmitTemp} color="primary">
                     {t('autoSubsDialog.search')}
                 </Button>
                 {subtitles && (
-                    <Button onClick={handleDownload} color="default" disabled={!selectedSubtitle}>
+                    <Button onClick={handleDownload} color="primary" disabled={!selectedSubtitle}>
                         {t('autoSubsDialog.load')}
                     </Button>
                 )}

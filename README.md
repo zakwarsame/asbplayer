@@ -11,8 +11,7 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 1. Go to the [Releases](https://github.com/zakwarsame/asbplayer/releases) page
 2. Find the latest release
 3. Under "Assets", download the appropriate file:
-
-    - For Chrome/Chromium browsers: `api-subs-for-asbplayer-1.x.x-chromium.zip`
+    - For Chrome/Chromium browsers: `projectextension-1.x.x-chromium.zip`
 
     <!---
      - For Firefox: `api-subs-for-asbplayer-1.x.x-firefox.zip`
@@ -41,7 +40,7 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
 - **Subtitle Search**: Search and download subtitles directly through the asbplayer interface using the Jimaku API
 - **Supported Sites**:
     - hianime.to
-    - miruro.tv
+    - miruro.to
     - More sites can be easily added
 
 ### Web app features

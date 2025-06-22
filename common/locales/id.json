@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Sub Otomatis",
         "cancel": "Batal",
         "copy": "Salin",
         "delete": "Hapus",
@@ -26,6 +27,16 @@
         "gotIt": "Mengerti",
         "revert": "Kembalikan",
         "userGuide": "Panduan Pengguna"
+    },
+    "autoSubsDialog": {
+        "title": "Sub Otomatis",
+        "selectSubtitles": "Pilih Subtitle",
+        "load": "Muat subtitle",
+        "animeTitle": "Judul",
+        "episode": "Episode",
+        "search": "Cari",
+        "selectSubtitle": "Pilih Subtitle",
+        "apiKey": "Kunci API"
     },
     "about": {
         "title": "Tentang asbplayer",
@@ -233,7 +244,9 @@
             "selectSubtitles": "Pilih Takarir",
             "subtitleTrack": "Trek Takarir",
             "videoName": "Nama Video",
-            "ftue": "Trek takarir yang terdeteksi otomatis dapat dipilih di sini. asbplayer tidak dapat mendeteksi takarir di semua situs. Anda selalu dapat memuat berkas takarir sendiri."
+            "ftue": "Trek takarir yang terdeteksi otomatis dapat dipilih di sini. asbplayer tidak dapat mendeteksi takarir di semua situs. Anda selalu dapat memuat berkas takarir sendiri.",
+            "episode": "Episode",
+            "search": "Cari"
         },
         "videoSelect": {
             "multipleVideoElements": "Beberapa elemen video terdeteksi",
@@ -423,7 +436,8 @@
         "firefoxExtensionShortcutHelp": "Sunting pintasan ini dari Pengelola Plugin di about:addons.",
         "postMinePlayback": "Status pemutaran setelah penambangan",
         "pauseOnHoverMode": "Jeda otomatis saat kursor diarahkan ke takarir",
-        "createTestCard": "Buat Kartu Uji"
+        "createTestCard": "Buat Kartu Uji",
+        "apiKey": "Kunci API"
     },
     "subtitlePlayer": {
         "multiSubtitleSelectHelp": "Klik, tahan, dan seret untuk menambang beberapa takarir sekaligus"
