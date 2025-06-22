@@ -26,5 +26,43 @@ export default defineContentScript({
                 return true;
             }
         });
+
+        // Listen for custom events from page scripts
+        document.addEventListener('asbplayer-get-anime-info', async (event) => {
+            const customEvent = event as CustomEvent;
+            const { url } = customEvent.detail;
+
+            try {
+                const result = await getAnimeTitleAndEpisode(url);
+                document.dispatchEvent(
+                    new CustomEvent('asbplayer-anime-info-response', {
+                        detail: result,
+                    })
+                );
+            } catch (error) {
+                document.dispatchEvent(
+                    new CustomEvent('asbplayer-anime-info-response', {
+                        detail: { error: error instanceof Error ? error.message : String(error) },
+                    })
+                );
+            }
+        });
+
+        document.addEventListener('asbplayer-get-api-key', async () => {
+            try {
+                const result = await browser.storage.local.get('apiKey');
+                document.dispatchEvent(
+                    new CustomEvent('asbplayer-api-key-response', {
+                        detail: { apiKey: result.apiKey || '' },
+                    })
+                );
+            } catch (error) {
+                document.dispatchEvent(
+                    new CustomEvent('asbplayer-api-key-response', {
+                        detail: { apiKey: '' },
+                    })
+                );
+            }
+        });
     },
 });

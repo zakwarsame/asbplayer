@@ -422,8 +422,8 @@ export default class Binding {
     _bind() {
         this._notifyReady();
         this._subscribe();
-        this._refreshSettings().then(() => {
-            this.videoDataSyncController.requestSubtitles();
+        this._refreshSettings().then(async () => {
+            await this.videoDataSyncController.requestSubtitles();
         });
         this.subtitleController.bind();
         this.dragController.bind(this);
@@ -572,8 +572,8 @@ export default class Binding {
         };
 
         if (this.hasPageScript) {
-            this.videoChangeListener = () => {
-                this.videoDataSyncController.requestSubtitles();
+            this.videoChangeListener = async () => {
+                await this.videoDataSyncController.requestSubtitles();
                 this._resetSubtitles();
             };
             this.video.addEventListener('loadedmetadata', this.videoChangeListener);
