@@ -1,4 +1,5 @@
 import TabRegistry, { Asbplayer } from '@/services/tab-registry';
+import { isAnimeSite } from '@/services/anime-sites';
 import ImageCapturer from '@/services/image-capturer';
 import VideoHeartbeatHandler from '@/handlers/video/video-heartbeat-handler';
 import RecordMediaHandler from '@/handlers/video/record-media-handler';
@@ -184,6 +185,34 @@ export default defineBackground(() => {
                     break;
                 }
             }
+        }
+    });
+
+    function getAnimeTitleAndEpisode(
+        tabId: number,
+        url: string
+    ): Promise<{ title: string; episode: number } | { error: string }> {
+        return new Promise((resolve) => {
+            browser.tabs.sendMessage(tabId, { action: 'getTitleAndEp', url: url }, (response) => {
+                if (browser.runtime.lastError) {
+                    resolve({ error: browser.runtime.lastError.message ?? 'Unknown error' });
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    }
+
+    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.command === 'GET_ANIME_TITLE_AND_EPISODE' && sender.tab?.id) {
+            getAnimeTitleAndEpisode(sender.tab.id, sender.tab.url ?? '')
+                .then(sendResponse)
+                .catch((error) => sendResponse({ error: error.message }));
+            return true;
+        }
+        if (message.command === 'CHECK_IF_ANIME_SITE') {
+            sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
+            return true;
         }
     });
 

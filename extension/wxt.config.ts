@@ -47,9 +47,9 @@ export default defineConfig({
     },
     manifest: ({ browser, mode }) => {
         let manifest: UserManifest = {
-            name: 'asbplayer: Language-learning with subtitles',
-            description: '__MSG_extensionDescription__',
-            version: '1.13.0',
+            name: 'API subs for asbplayer',
+            description: 'API subs for asbplayer',
+            version: '1.0.1',
             action: { default_title: 'asbplayer' },
             default_locale: 'en',
             icons: {
@@ -169,8 +169,8 @@ export default defineConfig({
                 commands,
                 browser_specific_settings: {
                     gecko: {
-                        id: '{e4b27483-2e73-4762-b2ec-8d988a143a40}',
-                        update_url: 'https://killergerbah.github.io/asbplayer/firefox-extension-updates.json',
+                        id: '{3e0b3d41-1618-4764-b3a5-3f38f47b6d0a}',
+                        update_url: 'https://zakwarsame.github.io/asbplayer/firefox-extension-updates.json',
                     },
                 },
             };
@@ -184,7 +184,7 @@ export default defineConfig({
                 host_permissions: ['<all_urls>'],
                 browser_specific_settings: {
                     gecko: {
-                        id: '{49de9206-c73e-4829-be4d-bda770d7f4b5}',
+                        id: '{a2f16d07-b655-4c1a-9873-c2e52d5a146f}',
                     },
                     gecko_android: {},
                 },
