@@ -52,7 +52,7 @@ export default defineConfig({
         let manifest: UserManifest = {
             name: 'API subs for asbplayer',
             description: 'API subs for asbplayer',
-            version: '1.0.3',
+            version: '1.0.4',
             action: { default_title: 'asbplayer' },
             default_locale: 'en',
             icons: {
