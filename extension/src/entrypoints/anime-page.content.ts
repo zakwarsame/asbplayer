@@ -1,8 +1,10 @@
 import { VideoData } from '@project/common';
+import { SettingsProvider } from '@project/common/settings';
 import { trackFromDef } from '@/pages/util';
 import { fetchAnilistInfo } from '@/services/anilist';
 import { fetchSubtitles } from '@/services/subtitle';
 import { animeSiteInitConfig, getAnimeTitleAndEpisode, isAnimeSite } from '@/services/anime-sites';
+import { ExtensionSettingsStorage } from '@/services/extension-settings-storage';
 import type { ContentScriptContext } from '#imports';
 
 const excludeGlobs = ['*://killergerbah.github.io/asbplayer*', '*://app.asbplayer.dev/*', '*cloudflare.com*'];
@@ -19,6 +21,7 @@ export default defineContentScript({
     runAt: 'document_start',
 
     main(ctx: ContentScriptContext) {
+        const settingsProvider = new SettingsProvider(new ExtensionSettingsStorage());
         let lastUrlDispatched: string | undefined;
         const { isReferredFromAnimeSite, referrerHostname } = animeSiteInitConfig(
             window.location.hostname,
@@ -123,8 +126,7 @@ export default defineContentScript({
 
                 response.basename = title;
 
-                const result = await browser.storage.local.get('apiKey');
-                const apiKey = result?.apiKey || '';
+                const apiKey = await settingsProvider.getSingle('apiKey');
 
                 // Get Anilist ID
                 const { anilistId } = await fetchAnilistInfo(title);
