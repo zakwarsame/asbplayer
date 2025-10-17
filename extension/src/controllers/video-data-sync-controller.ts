@@ -808,7 +808,7 @@ export default class VideoDataSyncController {
                 if (response.error) {
                     reject({ title: '', episode: '' });
                 } else {
-                    resolve({ title: response.title, episode: response.episode.toString() });
+                    resolve({ title: response.title, episode: response.episode?.toString() });
                 }
             });
         });
