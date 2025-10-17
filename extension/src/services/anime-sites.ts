@@ -18,7 +18,7 @@ const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
     [BRANDS.HIANIME]: (hostname) => /(^|\.)hianime[a-z]?\./.test(hostname),
     [BRANDS.MIRURO]: (hostname) => /(^|\.)miruro\./.test(hostname),
     [BRANDS.STREM]: (hostname) => /^app\.strem\./.test(hostname),
-    [BRANDS.ANIMEKAI]: (hostname) => /(^|\.)animekai\./.test(hostname),
+    [BRANDS.ANIMEKAI]: (hostname) => /(^|\.)(animekai|anikai)\./.test(hostname),
 };
 
 // Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
@@ -45,9 +45,22 @@ export const animeSites = new Map<string, AnimeSite>([
         {
             titleQuery: '.anime-title > a',
             epQuery: '', // we get episode from URL
-            epPlayerRegEx: /https:\/\/(?:www\.)?miruro\.[^/]+\/watch\?id=.+ep=.+/,
+            epPlayerRegEx: /https:\/\/(?:www\.)?miruro\.[^/]+\/watch(?:\/\d+\/[^/]+\/episode-\d+|\?id=.+ep=.+)/,
             extractInfo: () => {
                 const titleElement = document.querySelector('.anime-title > a');
+
+                // Try path-based URL format first: /watch/104578/attack-on-titan-season-3-part-2/episode-1
+                const pathMatch = window.location.href.match(/watch\/(\d+)\/([^/]+)\/episode-(\d+)/);
+                if (pathMatch) {
+                    const [, anilistId, title, episode] = pathMatch;
+                    return {
+                        title: title,
+                        episode: episode,
+                        anilistId: parseInt(anilistId),
+                    };
+                }
+
+                // Fall back to URL params format: /watch?id=...&ep=...
                 const urlParams = new URLSearchParams(window.location.search);
                 const episodeString = urlParams.get('ep');
                 const anilistId = urlParams.get('id');
@@ -127,7 +140,7 @@ interface AnimeInfoResult {
     anilistId?: number;
 }
 
-export function getAnimeTitleAndEpisode(url: string, maxRetries = 10, delay = 1000): Promise<AnimeInfoResult> {
+export function getAnimeTitleAndEpisode(url: string, maxRetries = 5, delay = 1000): Promise<AnimeInfoResult> {
     return new Promise((resolve, reject) => {
         const attempt = (retryCount: number) => {
             const currentHost = normalizeHostname(new URL(url).hostname);
