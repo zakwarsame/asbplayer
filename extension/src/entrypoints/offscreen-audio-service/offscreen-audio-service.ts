@@ -9,6 +9,8 @@ import {
     StopRecordingErrorCode,
     StopRecordingResponse,
     EncodeMp3InServiceWorkerMessage,
+    CaptureRawAudioMessage,
+    RawAudioCapturedResponse,
 } from '@project/common';
 import AudioRecorder, { TimedRecordingInProgressError, NoRecordingInProgressError } from '@/services/audio-recorder';
 import { Mp3Encoder } from '@project/common/audio-clip';
@@ -46,6 +48,80 @@ const _stream: (streamId: string) => Promise<MediaStream> = async (streamId: str
             },
         },
     });
+};
+
+const _captureRawAudio = async (
+    streamId: string,
+    durationMs: number,
+    targetSampleRate: number
+): Promise<RawAudioCapturedResponse> => {
+    const stream = await _stream(streamId);
+
+    try {
+        const audioContext = new AudioContext({ sampleRate: targetSampleRate });
+        const source = audioContext.createMediaStreamSource(stream);
+
+        // Use ScriptProcessorNode for raw audio capture
+        // Note: ScriptProcessorNode is deprecated but still widely supported
+        const bufferSize = 4096;
+        const processor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+        const audioChunks: Float32Array[] = [];
+        const samplesNeeded = (durationMs / 1000) * audioContext.sampleRate;
+
+        return new Promise((resolve) => {
+            let samplesCollected = 0;
+
+            processor.onaudioprocess = (e) => {
+                const inputData = e.inputBuffer.getChannelData(0);
+                audioChunks.push(new Float32Array(inputData));
+                samplesCollected += inputData.length;
+
+                if (samplesCollected >= samplesNeeded) {
+                    // Stop recording
+                    processor.disconnect();
+                    source.disconnect();
+                    audioContext.close();
+                    stream.getTracks().forEach((t) => t.stop());
+
+                    // Concatenate all chunks
+                    const totalLength = audioChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                    const result = new Float32Array(totalLength);
+                    let offset = 0;
+                    for (const chunk of audioChunks) {
+                        result.set(chunk, offset);
+                        offset += chunk.length;
+                    }
+
+                    resolve({
+                        success: true,
+                        audioData: result.buffer,
+                        sampleRate: audioContext.sampleRate,
+                    });
+                }
+            };
+
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+
+            // Timeout after duration + buffer
+            setTimeout(() => {
+                if (samplesCollected < samplesNeeded) {
+                    processor.disconnect();
+                    source.disconnect();
+                    audioContext.close();
+                    stream.getTracks().forEach((t) => t.stop());
+                    resolve({
+                        success: false,
+                        error: 'Audio capture timeout',
+                    });
+                }
+            }, durationMs + 5000);
+        });
+    } catch (error) {
+        stream.getTracks().forEach((t) => t.stop());
+        throw error;
+    }
 };
 
 let currentRequestId: string | undefined;
@@ -152,6 +228,23 @@ window.onload = async () => {
                         .then((blob) => blob.arrayBuffer())
                         .then((buffer) => sendResponse(bufferToBase64(buffer)))
                         .catch(console.error);
+                    return true;
+                case 'capture-raw-audio':
+                    const captureRawAudioMessage = request.message as CaptureRawAudioMessage;
+                    _captureRawAudio(
+                        captureRawAudioMessage.streamId,
+                        captureRawAudioMessage.durationMs,
+                        captureRawAudioMessage.sampleRate
+                    )
+                        .then((result) => sendResponse(result))
+                        .catch((e) => {
+                            console.error('Raw audio capture failed:', e);
+                            const errorResponse: RawAudioCapturedResponse = {
+                                success: false,
+                                error: e instanceof Error ? e.message : String(e),
+                            };
+                            sendResponse(errorResponse);
+                        });
                     return true;
             }
         }

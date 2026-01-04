@@ -810,3 +810,18 @@ export interface SubtitleOffsetDetectedMessage extends Message {
     readonly drift?: number;
     readonly confidence: number;
 }
+
+// Raw audio capture for Whisper (offscreen document)
+export interface CaptureRawAudioMessage extends Message {
+    readonly command: 'capture-raw-audio';
+    readonly streamId: string;
+    readonly durationMs: number;
+    readonly sampleRate: number;
+}
+
+export interface RawAudioCapturedResponse {
+    readonly success: boolean;
+    readonly audioData?: ArrayBuffer;
+    readonly sampleRate?: number;
+    readonly error?: string;
+}

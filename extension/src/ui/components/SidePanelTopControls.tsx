@@ -3,9 +3,11 @@ import HistoryIcon from '@mui/icons-material/History';
 import LoadSubtitlesIcon from '@project/common/components/LoadSubtitlesIcon';
 import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
+import SyncIcon from '@mui/icons-material/Sync';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Fade from '@mui/material/Fade';
+import CircularProgress from '@mui/material/CircularProgress';
 import { ForwardedRef, useEffect, useState } from 'react';
 import React from 'react';
 import Tooltip from '@project/common/components/Tooltip';
@@ -18,7 +20,9 @@ interface Props {
     onDownloadSubtitles: () => void;
     onBulkExportSubtitles: () => void;
     onShowMiningHistory: () => void;
+    onAutoSyncSubtitles?: () => void;
     disableBulkExport?: boolean;
+    autoSyncInProgress?: boolean;
 }
 
 const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
@@ -29,7 +33,9 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
         onDownloadSubtitles,
         onBulkExportSubtitles,
         onShowMiningHistory,
+        onAutoSyncSubtitles,
         disableBulkExport,
+        autoSyncInProgress,
     }: Props,
     ref: ForwardedRef<HTMLDivElement>
 ) {
@@ -72,6 +78,27 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                                     </span>
                                 </Tooltip>
                             </Grid>
+                            {onAutoSyncSubtitles && (
+                                <Grid item>
+                                    <Tooltip
+                                        title={t('action.autoSyncSubtitles')!}
+                                        disabled={!!autoSyncInProgress}
+                                    >
+                                        <span>
+                                            <IconButton
+                                                onClick={onAutoSyncSubtitles}
+                                                disabled={!!autoSyncInProgress}
+                                            >
+                                                {autoSyncInProgress ? (
+                                                    <CircularProgress size={24} />
+                                                ) : (
+                                                    <SyncIcon />
+                                                )}
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                </Grid>
+                            )}
                         </>
                     )}
                     <Grid item>

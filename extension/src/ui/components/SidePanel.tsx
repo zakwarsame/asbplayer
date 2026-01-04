@@ -17,6 +17,7 @@ import {
     DownloadAudioMessage,
     PostMineAction,
     CardExportedMessage,
+    StartWhisperTranscriptionMessage,
 } from '@project/common';
 import type { Message } from '@project/common';
 import type { BulkExportStartedPayload } from '../../controllers/bulk-export-controller';
@@ -88,6 +89,7 @@ export default function SidePanel({ settings, extension }: Props) {
     const [syncedVideoTab, setSyncedVideoElement] = useState<VideoTabModel>();
     const [recordingAudio, setRecordingAudio] = useState<boolean>(false);
     const [viewingAsbplayer, setViewingAsbplayer] = useState<boolean>(false);
+    const [autoSyncInProgress, setAutoSyncInProgress] = useState<boolean>(false);
 
     const keyBinder = useAppKeyBinder(settings.keyBindSet, extension);
     const currentTabId = useCurrentTabId();
@@ -293,10 +295,40 @@ export default function SidePanel({ settings, extension }: Props) {
         browser.runtime.sendMessage(cancelCommand);
     }, [syncedVideoTab]);
 
+    const handleAutoSyncSubtitles = useCallback(async () => {
+        if (!syncedVideoTab) return;
+        setAutoSyncInProgress(true);
+        const syncCommand: AsbPlayerToVideoCommandV2<StartWhisperTranscriptionMessage> = {
+            sender: 'asbplayerv2',
+            message: {
+                command: 'start-whisper-transcription',
+                mode: 'full',
+                language: 'ja',
+            },
+            tabId: syncedVideoTab.id,
+            src: syncedVideoTab.src,
+        };
+        browser.runtime.sendMessage(syncCommand);
+    }, [syncedVideoTab]);
+
     // Local bulk export UI state
     const [bulkOpen, setBulkOpen] = useState<boolean>(false);
     const [bulkCurrent, setBulkCurrent] = useState<number>(0);
     const [bulkTotal, setBulkTotal] = useState<number>(0);
+
+    // Listen for auto-sync lifecycle messages
+    useEffect(() => {
+        const listener = (message: any) => {
+            if (message?.message?.command === 'subtitle-offset-detected') {
+                setAutoSyncInProgress(false);
+            } else if (message?.message?.command === 'whisper-transcription-error') {
+                setAutoSyncInProgress(false);
+                handleError(message.message.error);
+            }
+        };
+        browser.runtime.onMessage.addListener(listener);
+        return () => browser.runtime.onMessage.removeListener(listener);
+    }, [handleError]);
 
     // Listen for bulk export lifecycle messages from background
     useEffect(() => {
@@ -599,6 +631,8 @@ export default function SidePanel({ settings, extension }: Props) {
                                 onBulkExportSubtitles={handleBulkExportSubtitles}
                                 disableBulkExport={recordingAudio}
                                 onShowMiningHistory={handleShowCopyHistory}
+                                onAutoSyncSubtitles={handleAutoSyncSubtitles}
+                                autoSyncInProgress={autoSyncInProgress}
                             />
                             <SidePanelBottomControls
                                 disabled={currentTabId !== syncedVideoTab?.id}

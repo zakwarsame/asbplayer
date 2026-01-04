@@ -66,6 +66,9 @@ import ClearCopyHistoryHandler from '@/handlers/asbplayerv2/clear-copy-history-h
 import SaveCopyHistoryHandler from '@/handlers/asbplayerv2/save-copy-history-handler';
 import PageConfigHandler from '@/handlers/asbplayerv2/page-config-handler';
 import EncodeMp3Handler from '@/handlers/video/encode-mp3-handler';
+import WhisperTranscriptionHandler from '@/handlers/asbplayer/whisper-transcription-handler';
+import WhisperTranscriptionService from '@/services/whisper-transcription-service';
+import { whisperWorkerFactory } from '@/services/whisper-worker-factory';
 
 export default defineBackground(() => {
     if (!isFirefoxBuild) {
@@ -124,6 +127,7 @@ export default defineBackground(() => {
     );
     const imageCapturer = new ImageCapturer(settings);
     const cardPublisher = new CardPublisher(settings);
+    const whisperTranscriptionService = new WhisperTranscriptionService(whisperWorkerFactory);
 
     const handlers: CommandHandler[] = [
         new VideoHeartbeatHandler(tabRegistry),
@@ -165,6 +169,7 @@ export default defineBackground(() => {
         new ExtensionCommandsHandler(),
         new PageConfigHandler(),
         new AsbplayerV2ToVideoCommandForwardingHandler(),
+        new WhisperTranscriptionHandler(whisperTranscriptionService),
         new CaptureVisibleTabHandler(),
         new RequestModelHandler(),
         new CurrentTabHandler(),
