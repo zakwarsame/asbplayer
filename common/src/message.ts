@@ -767,3 +767,46 @@ export interface UpdateEpisodeMessage extends Message {
     readonly command: 'updateEpisode';
     readonly episode: number | '';
 }
+
+// Whisper transcription messages
+export interface StartWhisperTranscriptionMessage extends Message {
+    readonly command: 'start-whisper-transcription';
+    readonly mode: 'full' | 'segment';
+    readonly language?: string;
+    readonly modelId?: string;
+    readonly segmentStart?: number;
+    readonly segmentEnd?: number;
+}
+
+export interface WhisperTranscriptionProgressMessage extends Message {
+    readonly command: 'whisper-transcription-progress';
+    readonly progress: number;
+    readonly stage: 'loading-model' | 'transcribing' | 'complete';
+}
+
+export interface WhisperTranscriptionCompleteMessage extends Message {
+    readonly command: 'whisper-transcription-complete';
+    readonly segments: Array<{
+        text: string;
+        start: number;
+        end: number;
+    }>;
+    readonly language?: string;
+    readonly duration: number;
+}
+
+export interface WhisperTranscriptionErrorMessage extends Message {
+    readonly command: 'whisper-transcription-error';
+    readonly error: string;
+}
+
+export interface DetectSubtitleOffsetMessage extends Message {
+    readonly command: 'detect-subtitle-offset';
+}
+
+export interface SubtitleOffsetDetectedMessage extends Message {
+    readonly command: 'subtitle-offset-detected';
+    readonly offset: number;
+    readonly drift?: number;
+    readonly confidence: number;
+}
