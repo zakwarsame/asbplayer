@@ -4,6 +4,7 @@ import LoadSubtitlesIcon from '@project/common/components/LoadSubtitlesIcon';
 import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import SyncIcon from '@mui/icons-material/Sync';
+import CancelIcon from '@mui/icons-material/Cancel';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Fade from '@mui/material/Fade';
@@ -21,6 +22,7 @@ interface Props {
     onBulkExportSubtitles: () => void;
     onShowMiningHistory: () => void;
     onAutoSyncSubtitles?: () => void;
+    onCancelAutoSync?: () => void;
     disableBulkExport?: boolean;
     autoSyncInProgress?: boolean;
 }
@@ -34,6 +36,7 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
         onBulkExportSubtitles,
         onShowMiningHistory,
         onAutoSyncSubtitles,
+        onCancelAutoSync,
         disableBulkExport,
         autoSyncInProgress,
     }: Props,
@@ -80,23 +83,19 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                             </Grid>
                             {onAutoSyncSubtitles && (
                                 <Grid item>
-                                    <Tooltip
-                                        title={t('action.autoSyncSubtitles')!}
-                                        disabled={!!autoSyncInProgress}
-                                    >
-                                        <span>
-                                            <IconButton
-                                                onClick={onAutoSyncSubtitles}
-                                                disabled={!!autoSyncInProgress}
-                                            >
-                                                {autoSyncInProgress ? (
-                                                    <CircularProgress size={24} />
-                                                ) : (
-                                                    <SyncIcon />
-                                                )}
+                                    {autoSyncInProgress ? (
+                                        <Tooltip title="Cancel Auto-Sync">
+                                            <IconButton onClick={onCancelAutoSync}>
+                                                <CancelIcon color="error" />
                                             </IconButton>
-                                        </span>
-                                    </Tooltip>
+                                        </Tooltip>
+                                    ) : (
+                                        <Tooltip title={t('action.autoSyncSubtitles')!}>
+                                            <IconButton onClick={onAutoSyncSubtitles}>
+                                                <SyncIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
                                 </Grid>
                             )}
                         </>

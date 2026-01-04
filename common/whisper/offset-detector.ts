@@ -8,6 +8,12 @@ export interface OffsetDetectionOptions {
     matchThreshold?: number;
     /** Search window in seconds around expected position (default: 30) */
     searchWindowSeconds?: number;
+    /** Video playback time (in ms) when audio capture started.
+     * Whisper timestamps are relative to capture start, so we add this
+     * to convert them to absolute video timestamps. */
+    captureStartTimeMs?: number;
+    /** Duration of audio capture in ms (default: 30000) */
+    captureDurationMs?: number;
 }
 
 /**
@@ -24,31 +30,95 @@ export function detectOffset(
     transcription: WhisperTranscriptionResult,
     options?: OffsetDetectionOptions
 ): OffsetResult {
-    const { sampleCount = 3, matchThreshold = 0.6, searchWindowSeconds = 30 } = options || {};
+    const { sampleCount = 3, matchThreshold = 0.7, searchWindowSeconds = 30, captureStartTimeMs = 0 } = options || {};
 
     if (subtitles.length === 0 || transcription.segments.length === 0) {
         return { offset: 0, points: [], confidence: 0 };
     }
 
-    const whisperWords = flattenTranscription(transcription);
+    // Convert captureStartTimeMs to seconds for consistency with Whisper timestamps
+    const captureStartTimeSec = captureStartTimeMs / 1000;
+    const whisperWords = flattenTranscription(transcription, captureStartTimeSec);
 
     if (whisperWords.length === 0) {
         return { offset: 0, points: [], confidence: 0 };
     }
 
-    const sampleIndices = getSampleIndices(subtitles.length, sampleCount);
     const points: OffsetPoint[] = [];
 
-    for (const idx of sampleIndices) {
-        const subtitle = subtitles[idx];
-        const matchResult = findBestMatch(subtitle, whisperWords, matchThreshold, searchWindowSeconds);
+    if (captureStartTimeMs > 0) {
+        // Partial capture mode: search ALL subtitles against the Whisper transcription
+        // because we don't know which subtitles correspond to the captured audio segment.
+        const matches: { idx: number; result: MatchResult }[] = [];
 
-        if (matchResult) {
+        for (let i = 0; i < subtitles.length; i++) {
+            const subtitle = subtitles[i];
+            // Require minimum text length to avoid false positives
+            if (subtitle.text.length < 8) continue;
+
+            const matchResult = findBestMatch(subtitle, whisperWords, matchThreshold, Infinity);
+            if (matchResult) {
+                matches.push({ idx: i, result: matchResult });
+            }
+        }
+
+        if (matches.length === 0) {
+            return { offset: 0, points: [], confidence: 0 };
+        }
+
+        // Find the most common offset range using clustering
+        // First, sort by offset to find clusters
+        matches.sort((a, b) => a.result.offset - b.result.offset);
+
+        // Find the largest cluster of matches with similar offsets (within 5 seconds)
+        const CLUSTER_TOLERANCE = 5000; // 5 seconds
+        let bestClusterStart = 0;
+        let bestClusterSize = 0;
+
+        for (let i = 0; i < matches.length; i++) {
+            let clusterSize = 1;
+            for (let j = i + 1; j < matches.length; j++) {
+                if (Math.abs(matches[j].result.offset - matches[i].result.offset) <= CLUSTER_TOLERANCE) {
+                    clusterSize++;
+                } else {
+                    break;
+                }
+            }
+            if (clusterSize > bestClusterSize) {
+                bestClusterSize = clusterSize;
+                bestClusterStart = i;
+            }
+        }
+
+        // Use matches from the best cluster
+        const clusterMatches = matches.slice(bestClusterStart, bestClusterStart + bestClusterSize);
+
+        // Sort by confidence and take the best ones
+        clusterMatches.sort((a, b) => b.result.confidence - a.result.confidence);
+        const bestMatches = clusterMatches.slice(0, sampleCount);
+
+        for (const match of bestMatches) {
             points.push({
-                position: idx / Math.max(subtitles.length - 1, 1),
-                offset: matchResult.offset,
-                confidence: matchResult.confidence,
+                position: match.idx / Math.max(subtitles.length - 1, 1),
+                offset: match.result.offset,
+                confidence: match.result.confidence,
             });
+        }
+    } else {
+        // Full transcription mode: sample subtitles evenly by index position
+        const sampleIndices = getSampleIndices(subtitles.length, sampleCount);
+
+        for (const idx of sampleIndices) {
+            const subtitle = subtitles[idx];
+            const matchResult = findBestMatch(subtitle, whisperWords, matchThreshold, searchWindowSeconds);
+
+            if (matchResult) {
+                points.push({
+                    position: idx / Math.max(subtitles.length - 1, 1),
+                    offset: matchResult.offset,
+                    confidence: matchResult.confidence,
+                });
+            }
         }
     }
 
@@ -112,12 +182,19 @@ export function interpolateOffset(originalStartMs: number, totalDurationMs: numb
     return Math.round(sortedPoints[sortedPoints.length - 1].offset);
 }
 
-function flattenTranscription(transcription: WhisperTranscriptionResult): WhisperWord[] {
+function flattenTranscription(transcription: WhisperTranscriptionResult, captureStartTimeSec: number = 0): WhisperWord[] {
     const words: WhisperWord[] = [];
 
     for (const segment of transcription.segments) {
         if (segment.words && segment.words.length > 0) {
-            words.push(...segment.words);
+            // Adjust word timestamps to absolute video time
+            for (const word of segment.words) {
+                words.push({
+                    word: word.word,
+                    start: word.start + captureStartTimeSec,
+                    end: word.end + captureStartTimeSec,
+                });
+            }
         } else {
             // If no word-level timestamps, create pseudo-words from segment
             const segmentWords = tokenizeText(segment.text);
@@ -126,10 +203,11 @@ function flattenTranscription(transcription: WhisperTranscriptionResult): Whispe
                 const wordDuration = duration / segmentWords.length;
 
                 for (let i = 0; i < segmentWords.length; i++) {
+                    // Add captureStartTimeSec to convert relative timestamps to absolute
                     words.push({
                         word: segmentWords[i],
-                        start: segment.start + i * wordDuration,
-                        end: segment.start + (i + 1) * wordDuration,
+                        start: captureStartTimeSec + segment.start + i * wordDuration,
+                        end: captureStartTimeSec + segment.start + (i + 1) * wordDuration,
                     });
                 }
             }
@@ -202,10 +280,12 @@ function findBestMatch(
         );
 
         if (similarity > bestMatch.confidence && similarity >= threshold) {
-            // Offset = subtitle time - whisper time (in ms)
+            // Offset = whisper time - subtitle time (in ms)
+            // Positive offset means subtitles are early and need to be delayed
+            // Negative offset means subtitles are late and need to be advanced
             const whisperStartMs = candidateWords[0].start * 1000;
             bestMatch = {
-                offset: subtitle.originalStart - whisperStartMs,
+                offset: whisperStartMs - subtitle.originalStart,
                 confidence: similarity,
             };
         }

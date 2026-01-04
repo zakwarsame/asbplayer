@@ -391,6 +391,10 @@ export interface RequestCurrentSubtitleMessage extends Message {
     readonly command: 'request-current-subtitle';
 }
 
+export interface RequestVideoStateMessage extends Message {
+    readonly command: 'request-video-state';
+}
+
 export interface RequestSubtitlesFromAppMessage extends MessageWithId {
     readonly command: 'request-subtitles';
 }
@@ -698,6 +702,12 @@ export interface RequestCurrentSubtitleResponse {
     readonly currentSubtitleIndex: number | null;
 }
 
+export interface VideoStateResponse {
+    readonly currentTime: number;
+    readonly duration: number;
+    readonly paused: boolean;
+}
+
 export interface JumpToSubtitleMessage extends Message {
     readonly command: 'jump-to-subtitle';
     readonly subtitle: SubtitleModel;
@@ -823,5 +833,28 @@ export interface RawAudioCapturedResponse {
     readonly success: boolean;
     readonly audioData?: ArrayBuffer;
     readonly sampleRate?: number;
+    readonly error?: string;
+}
+
+// Combined capture + transcription (runs entirely in offscreen document)
+export interface CaptureAndTranscribeMessage extends Message {
+    readonly command: 'capture-and-transcribe';
+    readonly streamId: string;
+    readonly durationMs: number;
+    readonly sampleRate: number;
+    readonly language?: string;
+}
+
+export interface TranscriptionSegment {
+    text: string;
+    start: number;
+    end: number;
+}
+
+export interface CaptureAndTranscribeResponse {
+    readonly success: boolean;
+    readonly segments?: TranscriptionSegment[];
+    readonly language?: string;
+    readonly duration?: number;
     readonly error?: string;
 }

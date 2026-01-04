@@ -90,6 +90,7 @@ export default defineConfig({
                         'mp3-encoder-worker.js',
                         'pgs-parser-worker.js',
                         'whisper-worker.js',
+                        'onnx/*',
                         'video-data-sync-ui.js',
                         'video-select-ui.js',
                         'notification-ui.js',

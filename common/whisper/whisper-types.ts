@@ -33,7 +33,7 @@ export interface WhisperTranscriptionResult {
     /** Detected or specified language */
     language?: string;
     /** Total audio duration in seconds */
-    duration: number;
+    duration?: number;
 }
 
 /** A point used for offset/drift detection */

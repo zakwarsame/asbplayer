@@ -11,11 +11,14 @@ import {
     EncodeMp3InServiceWorkerMessage,
     CaptureRawAudioMessage,
     RawAudioCapturedResponse,
+    CaptureAndTranscribeMessage,
+    CaptureAndTranscribeResponse,
 } from '@project/common';
 import AudioRecorder, { TimedRecordingInProgressError, NoRecordingInProgressError } from '@/services/audio-recorder';
 import { Mp3Encoder } from '@project/common/audio-clip';
 import { base64ToBlob, bufferToBase64 } from '@project/common/base64';
 import { mp3WorkerFactory } from '@/services/mp3-worker-factory';
+import { pipeline, env } from '@huggingface/transformers';
 
 const audioRecorder = new AudioRecorder();
 
@@ -121,6 +124,86 @@ const _captureRawAudio = async (
     } catch (error) {
         stream.getTracks().forEach((t) => t.stop());
         throw error;
+    }
+};
+
+// Whisper transcription - runs directly in offscreen document
+// Configure transformers.js
+env.allowLocalModels = false;
+env.useBrowserCache = true;
+
+// Configure ONNX WASM paths to use bundled files
+if (env?.backends?.onnx?.wasm) {
+    env.backends.onnx.wasm.wasmPaths = chrome.runtime.getURL('/onnx/');
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let transcriber: any = null;
+const DEFAULT_MODEL = 'onnx-community/whisper-small';
+
+const _loadModel = async () => {
+    if (transcriber) return;
+
+    console.log('[Offscreen] Loading Whisper model...');
+    transcriber = await pipeline('automatic-speech-recognition', DEFAULT_MODEL, {
+        dtype: 'q8',
+        device: 'wasm', // WebGPU not available in offscreen documents
+    });
+    console.log('[Offscreen] Model loaded');
+};
+
+const _captureAndTranscribe = async (
+    streamId: string,
+    durationMs: number,
+    sampleRate: number,
+    language?: string
+): Promise<CaptureAndTranscribeResponse> => {
+    console.log('[Offscreen] Starting capture and transcribe...');
+
+    // Step 1: Capture raw audio
+    const audioResult = await _captureRawAudio(streamId, durationMs, sampleRate);
+    if (!audioResult.success || !audioResult.audioData) {
+        return { success: false, error: audioResult.error || 'Audio capture failed' };
+    }
+    console.log('[Offscreen] Audio captured:', audioResult.audioData.byteLength, 'bytes');
+
+    try {
+        // Step 2: Load model if needed
+        await _loadModel();
+
+        // Step 3: Run transcription
+        console.log('[Offscreen] Running transcription...');
+        const audioArray = new Float32Array(audioResult.audioData);
+
+        const result = await transcriber(audioArray, {
+            language: language || 'ja',
+            task: 'transcribe',
+            return_timestamps: true, // Segment-level timestamps (word-level requires output_attentions)
+            chunk_length_s: 30,
+            stride_length_s: 5,
+        });
+
+        const output = Array.isArray(result) ? result[0] : result;
+        const chunks = output.chunks || [];
+
+        console.log('[Offscreen] Transcription complete:', chunks.length, 'chunks');
+
+        return {
+            success: true,
+            segments: chunks.map((chunk: { text: string; timestamp: [number, number] }) => ({
+                text: chunk.text?.trim() || '',
+                start: chunk.timestamp?.[0] || 0,
+                end: chunk.timestamp?.[1] || 0,
+            })),
+            language: language,
+            duration: chunks.length > 0 ? chunks[chunks.length - 1]?.timestamp?.[1] || 0 : 0,
+        };
+    } catch (error) {
+        console.error('[Offscreen] Transcription error:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+        };
     }
 };
 
@@ -240,6 +323,27 @@ window.onload = async () => {
                         .catch((e) => {
                             console.error('Raw audio capture failed:', e);
                             const errorResponse: RawAudioCapturedResponse = {
+                                success: false,
+                                error: e instanceof Error ? e.message : String(e),
+                            };
+                            sendResponse(errorResponse);
+                        });
+                    return true;
+                case 'capture-and-transcribe':
+                    const captureAndTranscribeMessage = request.message as CaptureAndTranscribeMessage;
+                    _captureAndTranscribe(
+                        captureAndTranscribeMessage.streamId,
+                        captureAndTranscribeMessage.durationMs,
+                        captureAndTranscribeMessage.sampleRate,
+                        captureAndTranscribeMessage.language
+                    )
+                        .then((result) => {
+                            console.log('[Offscreen] Transcription result:', result.success, result.segments?.length);
+                            sendResponse(result);
+                        })
+                        .catch((e) => {
+                            console.error('[Offscreen] Capture and transcribe failed:', e);
+                            const errorResponse: CaptureAndTranscribeResponse = {
                                 success: false,
                                 error: e instanceof Error ? e.message : String(e),
                             };

@@ -5,6 +5,17 @@ import { WhisperWorkerRequest, WhisperWorkerResponse, WhisperTranscriptionResult
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
+// Configure ONNX WASM paths to use bundled files (required for Chrome extension CSP)
+// Chrome extensions cannot fetch WASM files from CDN at runtime
+if (env?.backends?.onnx?.wasm) {
+    // Use chrome.runtime.getURL since worker runs in extension context
+    const onnxPath =
+        typeof chrome !== 'undefined' && chrome.runtime?.getURL
+            ? chrome.runtime.getURL('/onnx/')
+            : '/onnx/';
+    env.backends.onnx.wasm.wasmPaths = onnxPath;
+}
+
 // Use 'any' for the pipeline to avoid complex union type issues
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let transcriber: any = null;

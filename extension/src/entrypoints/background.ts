@@ -67,8 +67,6 @@ import SaveCopyHistoryHandler from '@/handlers/asbplayerv2/save-copy-history-han
 import PageConfigHandler from '@/handlers/asbplayerv2/page-config-handler';
 import EncodeMp3Handler from '@/handlers/video/encode-mp3-handler';
 import WhisperTranscriptionHandler from '@/handlers/asbplayer/whisper-transcription-handler';
-import WhisperTranscriptionService from '@/services/whisper-transcription-service';
-import { whisperWorkerFactory } from '@/services/whisper-worker-factory';
 
 export default defineBackground(() => {
     if (!isFirefoxBuild) {
@@ -127,7 +125,6 @@ export default defineBackground(() => {
     );
     const imageCapturer = new ImageCapturer(settings);
     const cardPublisher = new CardPublisher(settings);
-    const whisperTranscriptionService = new WhisperTranscriptionService(whisperWorkerFactory);
 
     const handlers: CommandHandler[] = [
         new VideoHeartbeatHandler(tabRegistry),
@@ -168,8 +165,8 @@ export default defineBackground(() => {
         new OpenExtensionShortcutsHandler(),
         new ExtensionCommandsHandler(),
         new PageConfigHandler(),
+        new WhisperTranscriptionHandler(),
         new AsbplayerV2ToVideoCommandForwardingHandler(),
-        new WhisperTranscriptionHandler(whisperTranscriptionService),
         new CaptureVisibleTabHandler(),
         new RequestModelHandler(),
         new CurrentTabHandler(),
@@ -183,12 +180,21 @@ export default defineBackground(() => {
             return false;
         }
 
+        // Debug: log whisper-related messages
+        if (request?.message?.command === 'start-whisper-transcription') {
+            console.log('[Background] Received whisper message:', request);
+        }
+
         for (const handler of handlers) {
             if (
                 (typeof handler.sender === 'string' && handler.sender === request.sender) ||
                 (typeof handler.sender === 'object' && handler.sender.includes(request.sender))
             ) {
                 if (handler.command === null || handler.command === request.message.command) {
+                    // Debug: log handler match
+                    if (request?.message?.command === 'start-whisper-transcription') {
+                        console.log('[Background] Handler matched:', handler.constructor.name, handler.command);
+                    }
                     if (handler.handle(request, sender, sendResponse) === true) {
                         return true;
                     }

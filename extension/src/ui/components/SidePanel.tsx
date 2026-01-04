@@ -297,6 +297,7 @@ export default function SidePanel({ settings, extension }: Props) {
 
     const handleAutoSyncSubtitles = useCallback(async () => {
         if (!syncedVideoTab) return;
+        console.log('[SidePanel] Starting auto-sync for tab', syncedVideoTab.id);
         setAutoSyncInProgress(true);
         const syncCommand: AsbPlayerToVideoCommandV2<StartWhisperTranscriptionMessage> = {
             sender: 'asbplayerv2',
@@ -308,8 +309,14 @@ export default function SidePanel({ settings, extension }: Props) {
             tabId: syncedVideoTab.id,
             src: syncedVideoTab.src,
         };
+        console.log('[SidePanel] Sending message:', syncCommand);
         browser.runtime.sendMessage(syncCommand);
     }, [syncedVideoTab]);
+
+    const handleCancelAutoSync = useCallback(() => {
+        console.log('[SidePanel] Cancelling auto-sync');
+        setAutoSyncInProgress(false);
+    }, []);
 
     // Local bulk export UI state
     const [bulkOpen, setBulkOpen] = useState<boolean>(false);
@@ -632,6 +639,7 @@ export default function SidePanel({ settings, extension }: Props) {
                                 disableBulkExport={recordingAudio}
                                 onShowMiningHistory={handleShowCopyHistory}
                                 onAutoSyncSubtitles={handleAutoSyncSubtitles}
+                                onCancelAutoSync={handleCancelAutoSync}
                                 autoSyncInProgress={autoSyncInProgress}
                             />
                             <SidePanelBottomControls

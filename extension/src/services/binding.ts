@@ -648,6 +648,13 @@ export default class Binding {
                             currentSubtitleIndex: currentSubtitle?.index ?? null,
                         });
                         break;
+                    case 'request-video-state':
+                        sendResponse({
+                            currentTime: this.video.currentTime,
+                            duration: this.video.duration,
+                            paused: this.video.paused,
+                        });
+                        break;
                     case 'start-bulk-export':
                         this.bulkExportController.start();
                         break;
