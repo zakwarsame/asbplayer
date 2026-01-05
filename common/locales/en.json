@@ -206,6 +206,7 @@
             "asbplayerUrl": "App URL",
             "autoLoadDetectedSubs": "Auto-load detected subtitles",
             "autoLoadDetectedSubsFailure": "Prompt on failure to auto-load subtitles",
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)",
             "cleanScreenshot": "Clean screenshot when mining",
             "condensedPlaybackMinSkipInterval": "Condensed playback minimum skip interval",
             "cropScreenshot": "Crop screenshot when mining",

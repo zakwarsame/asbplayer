@@ -831,18 +831,9 @@ export interface CaptureRawAudioMessage extends Message {
 
 export interface RawAudioCapturedResponse {
     readonly success: boolean;
-    readonly audioData?: ArrayBuffer;
+    readonly audioBase64?: string; // Base64-encoded Float32Array
     readonly sampleRate?: number;
     readonly error?: string;
-}
-
-// Combined capture + transcription (runs entirely in offscreen document)
-export interface CaptureAndTranscribeMessage extends Message {
-    readonly command: 'capture-and-transcribe';
-    readonly streamId: string;
-    readonly durationMs: number;
-    readonly sampleRate: number;
-    readonly language?: string;
 }
 
 export interface TranscriptionSegment {
@@ -851,10 +842,17 @@ export interface TranscriptionSegment {
     end: number;
 }
 
-export interface CaptureAndTranscribeResponse {
+// Transcription request sent to sidepanel (WebGPU accelerated)
+export interface TranscribeAudioMessage extends Message {
+    readonly command: 'transcribe-audio';
+    readonly audioBase64: string; // Base64-encoded Float32Array
+    readonly sampleRate: number;
+    readonly language?: string;
+    readonly useWebGpu?: boolean;
+}
+
+export interface TranscribeAudioResponse {
     readonly success: boolean;
     readonly segments?: TranscriptionSegment[];
-    readonly language?: string;
-    readonly duration?: number;
     readonly error?: string;
 }

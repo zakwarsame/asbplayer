@@ -940,6 +940,7 @@ export default function SettingsForm({
         streamingSubsDragAndDrop,
         streamingAutoSync,
         streamingAutoSyncPromptOnFailure,
+        streamingUseWebGpuForWhisper,
         streamingCondensedPlaybackMinimumSkipIntervalMs,
         streamingScreenshotDelay,
         streamingSubtitleListPreference,
@@ -2755,6 +2756,19 @@ export default function SettingsForm({
                                     />
                                 }
                                 label={t('extension.settings.autoLoadDetectedSubsFailure')}
+                                labelPlacement="start"
+                            />
+                            <LabelWithHoverEffect
+                                className={classes.switchLabel}
+                                control={
+                                    <Switch
+                                        checked={streamingUseWebGpuForWhisper}
+                                        onChange={(e) =>
+                                            handleSettingChanged('streamingUseWebGpuForWhisper', e.target.checked)
+                                        }
+                                    />
+                                }
+                                label={t('extension.settings.useWebGpuForWhisper')}
                                 labelPlacement="start"
                             />
                         </FormGroup>

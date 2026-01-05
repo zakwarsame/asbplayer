@@ -12,20 +12,21 @@ import {
     VideoStateResponse,
     OffsetToVideoMessage,
     ExtensionToOffscreenDocumentCommand,
-    CaptureAndTranscribeMessage,
-    CaptureAndTranscribeResponse,
+    CaptureRawAudioMessage,
+    RawAudioCapturedResponse,
+    TranscribeAudioResponse,
+    TranscribeAudioMessage,
+    RequestActiveTabPermissionMessage,
 } from '@project/common';
+import { SettingsProvider } from '@project/common/settings';
 import { detectOffset } from '@project/common/whisper/offset-detector';
 import { ensureOffscreenAudioServiceDocument } from '../../services/offscreen-document';
+import { ExtensionSettingsStorage } from '../../services/extension-settings-storage';
 
-// Duration of audio to sample for transcription (in seconds)
 const SAMPLE_DURATION_SECONDS = 30;
-// Target sample rate for Whisper (16kHz)
 const WHISPER_SAMPLE_RATE = 16000;
 
 export default class WhisperTranscriptionHandler {
-    constructor() {}
-
     get sender() {
         return 'asbplayerv2';
     }
@@ -34,175 +35,182 @@ export default class WhisperTranscriptionHandler {
         return 'start-whisper-transcription';
     }
 
-    handle(command: Command<Message>, sender: Browser.runtime.MessageSender) {
-        console.log('[Whisper] Handler invoked!', command);
-
+    handle(command: Command<Message>, _sender: Browser.runtime.MessageSender) {
         const transcriptionCommand = command as AsbPlayerToVideoCommandV2<StartWhisperTranscriptionMessage>;
         const { tabId, src } = transcriptionCommand;
         const { language } = transcriptionCommand.message;
 
-        console.log('[Whisper] Starting auto-sync for tab', tabId, 'language:', language);
-
-        // Run async work without blocking
-        this._doTranscription(tabId, src, language).catch((error) => {
-            console.error('[Whisper] Unhandled error:', error);
-        });
-
-        return false; // Don't keep message channel open
+        console.log('[Whisper] Starting auto-sync for tab', tabId);
+        this._doTranscription(tabId, src, language).catch((e) => console.error('[Whisper] Error:', e));
+        return false;
     }
 
     private async _doTranscription(tabId: number, src: string, language?: string) {
         try {
-            // Step 1: Get current video position before capturing
-            console.log('[Whisper] Step 1: Getting video state...');
+            // Read settings
+            const settings = new SettingsProvider(new ExtensionSettingsStorage());
+            const useWebGpu = await settings.getSingle('streamingUseWebGpuForWhisper');
+
+            // Step 1: Get video position
+            console.log('[Whisper] Getting video state...');
             const videoState = await this._requestVideoState(tabId, src);
             const captureStartTimeMs = videoState.currentTime * 1000;
-            console.log('[Whisper] Video at', videoState.currentTime.toFixed(2), 'seconds');
+            console.log('[Whisper] Video at', videoState.currentTime.toFixed(2), 's');
 
-            // Step 2: Capture audio and transcribe via offscreen document
-            console.log('[Whisper] Step 2: Capturing and transcribing', SAMPLE_DURATION_SECONDS, 'seconds of audio...');
-            const transcription = await this._captureAndTranscribe(tabId, SAMPLE_DURATION_SECONDS * 1000, language);
-            console.log('[Whisper] Transcription complete:', transcription.segments.length, 'segments');
-            console.log('[Whisper] Transcription text:', transcription.segments.map((s) => s.text).join(' '));
+            // Step 2: Capture audio from offscreen document
+            console.log('[Whisper] Capturing audio...');
+            const audioBase64 = await this._captureAudio(tabId, SAMPLE_DURATION_SECONDS * 1000);
+            console.log('[Whisper] Captured', audioBase64.length, 'chars (base64)');
 
-            // Step 3: Get current subtitles from the video
-            console.log('[Whisper] Step 3: Fetching subtitles from video...');
+            // Step 3: Transcribe via sidepanel
+            console.log('[Whisper] Transcribing via sidepanel (WebGPU:', useWebGpu, ')...');
+            const transcription = await this._transcribeViaSidepanel(audioBase64, language, useWebGpu);
+            console.log('[Whisper] Got', transcription.segments.length, 'segments');
+            console.log('[Whisper] Text:', transcription.segments.map((s) => s.text).join(' '));
+
+            // Step 4: Get subtitles
+            console.log('[Whisper] Fetching subtitles...');
             const subtitles = await this._requestSubtitles(tabId, src);
+            if (!subtitles?.length) throw new Error('No subtitles loaded');
+            console.log('[Whisper] Got', subtitles.length, 'subtitles');
 
-            if (!subtitles || subtitles.length === 0) {
-                throw new Error('No subtitles loaded');
-            }
-            console.log('[Whisper] Got', subtitles.length, 'subtitle entries');
-
-            // Step 4: Detect offset (pass captureStartTimeMs to align timestamps)
-            console.log('[Whisper] Step 4: Detecting offset...');
+            // Step 5: Detect offset
+            console.log('[Whisper] Detecting offset...');
             const offsetResult = detectOffset(subtitles, transcription, { captureStartTimeMs });
-            console.log(
-                '[Whisper] Offset result:',
-                offsetResult.offset,
-                'ms, confidence:',
-                Math.round(offsetResult.confidence * 100) + '%',
-                'drift:',
-                offsetResult.drift
-            );
+            console.log('[Whisper] Offset:', offsetResult.offset, 'ms, confidence:', Math.round(offsetResult.confidence * 100) + '%');
 
             if (offsetResult.confidence < 0.3) {
-                throw new Error(`Low confidence offset detection (${Math.round(offsetResult.confidence * 100)}%)`);
+                throw new Error(`Low confidence (${Math.round(offsetResult.confidence * 100)}%)`);
             }
 
-            // Step 5: Apply the detected offset
-            console.log('[Whisper] Step 5: Applying offset', offsetResult.offset, 'ms');
-            const offsetCommand: ExtensionToVideoCommand<OffsetToVideoMessage> = {
+            // Step 6: Apply offset
+            console.log('[Whisper] Applying offset...');
+            await browser.tabs.sendMessage(tabId, {
                 sender: 'asbplayer-extension-to-video',
-                message: {
-                    command: 'offset',
-                    value: offsetResult.offset,
-                },
+                message: { command: 'offset', value: offsetResult.offset } as OffsetToVideoMessage,
                 src,
-            };
-            await browser.tabs.sendMessage(tabId, offsetCommand);
+            } as ExtensionToVideoCommand<OffsetToVideoMessage>);
 
-            // Step 6: Notify success
-            console.log('[Whisper] Auto-sync complete! Offset:', offsetResult.offset, 'ms');
-            const successCommand: ExtensionToVideoCommand<SubtitleOffsetDetectedMessage> = {
+            // Step 7: Notify success
+            console.log('[Whisper] Complete! Offset:', offsetResult.offset, 'ms');
+            browser.tabs.sendMessage(tabId, {
                 sender: 'asbplayer-extension-to-video',
                 message: {
                     command: 'subtitle-offset-detected',
                     offset: offsetResult.offset,
                     drift: offsetResult.drift,
                     confidence: offsetResult.confidence,
-                },
+                } as SubtitleOffsetDetectedMessage,
                 src,
-            };
-            browser.tabs.sendMessage(tabId, successCommand);
+            } as ExtensionToVideoCommand<SubtitleOffsetDetectedMessage>);
         } catch (error) {
-            console.error('[Whisper] Auto-sync failed:', error);
-            const errorCommand: ExtensionToVideoCommand<WhisperTranscriptionErrorMessage> = {
-                sender: 'asbplayer-extension-to-video',
+            console.error('[Whisper] Failed:', error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            // Check if this is an activeTab permission error
+            const isActiveTabError =
+                errorMessage.includes('Extension has not been invoked') ||
+                errorMessage.includes('activeTab permission');
+
+            if (isActiveTabError) {
+                // Show the "Enable audio recording" notification on video overlay
+                browser.tabs.sendMessage(tabId, {
+                    sender: 'asbplayer-extension-to-video',
+                    message: {
+                        command: 'request-active-tab-permission',
+                    } as RequestActiveTabPermissionMessage,
+                    src,
+                } as ExtensionToVideoCommand<RequestActiveTabPermissionMessage>);
+            } else {
+                // Generic error - notify video tab
+                browser.tabs.sendMessage(tabId, {
+                    sender: 'asbplayer-extension-to-video',
+                    message: {
+                        command: 'whisper-transcription-error',
+                        error: errorMessage,
+                    } as WhisperTranscriptionErrorMessage,
+                    src,
+                } as ExtensionToVideoCommand<WhisperTranscriptionErrorMessage>);
+            }
+
+            // Also notify sidepanel to stop spinner
+            browser.runtime.sendMessage({
+                sender: 'asbplayer-extension-to-sidepanel',
                 message: {
                     command: 'whisper-transcription-error',
-                    error: error instanceof Error ? error.message : String(error),
+                    error: errorMessage,
                 },
-                src,
-            };
-            browser.tabs.sendMessage(tabId, errorCommand);
+            });
         }
     }
 
-    private async _captureAndTranscribe(
-        tabId: number,
-        durationMs: number,
-        language?: string
-    ): Promise<{ segments: { text: string; start: number; end: number }[] }> {
-        console.log('[Whisper] Ensuring offscreen document...');
+    private async _captureAudio(tabId: number, durationMs: number): Promise<string> {
         await ensureOffscreenAudioServiceDocument();
-        console.log('[Whisper] Offscreen document ready');
 
-        // Get media stream ID for the tab
-        console.log('[Whisper] Getting media stream ID for tab', tabId);
         const streamId = await new Promise<string>((resolve, reject) => {
-            browser.tabCapture.getMediaStreamId(
-                {
-                    targetTabId: tabId,
-                },
-                (id: string) => {
-                    if (browser.runtime.lastError) {
-                        reject(new Error(browser.runtime.lastError.message));
-                    } else {
-                        resolve(id);
-                    }
-                }
-            );
+            browser.tabCapture.getMediaStreamId({ targetTabId: tabId }, (id: string) => {
+                if (browser.runtime.lastError) reject(new Error(browser.runtime.lastError.message));
+                else resolve(id);
+            });
         });
-        console.log('[Whisper] Got stream ID:', streamId?.substring(0, 20) + '...');
 
-        // Request capture and transcription from offscreen document
-        console.log('[Whisper] Requesting capture and transcription from offscreen document...');
-        const command: ExtensionToOffscreenDocumentCommand<CaptureAndTranscribeMessage> = {
+        const command: ExtensionToOffscreenDocumentCommand<CaptureRawAudioMessage> = {
             sender: 'asbplayer-extension-to-offscreen-document',
             message: {
-                command: 'capture-and-transcribe',
+                command: 'capture-raw-audio',
                 streamId,
                 durationMs,
                 sampleRate: WHISPER_SAMPLE_RATE,
-                language,
             },
         };
 
-        const response = (await browser.runtime.sendMessage(command)) as CaptureAndTranscribeResponse;
-        console.log('[Whisper] Transcription response:', response?.success, response?.error);
+        const response = (await browser.runtime.sendMessage(command)) as RawAudioCapturedResponse;
+        console.log('[Whisper] Offscreen response:', response);
+        if (!response?.success || !response?.audioBase64) {
+            throw new Error(response?.error || 'Audio capture failed');
+        }
+        return response.audioBase64;
+    }
 
+    private async _transcribeViaSidepanel(
+        audioBase64: string,
+        language?: string,
+        useWebGpu?: boolean
+    ): Promise<{ segments: { text: string; start: number; end: number }[] }> {
+        const command = {
+            sender: 'asbplayer-extension-to-sidepanel',
+            message: {
+                command: 'transcribe-audio',
+                audioBase64,
+                sampleRate: WHISPER_SAMPLE_RATE,
+                language,
+                useWebGpu,
+            } as TranscribeAudioMessage,
+        };
+
+        const response = (await browser.runtime.sendMessage(command)) as TranscribeAudioResponse;
         if (!response.success || !response.segments) {
             throw new Error(response.error || 'Transcription failed');
         }
-
         return { segments: response.segments };
     }
 
     private async _requestVideoState(tabId: number, src: string): Promise<VideoStateResponse> {
-        const message: ExtensionToVideoCommand<RequestVideoStateMessage> = {
+        const response = (await browser.tabs.sendMessage(tabId, {
             sender: 'asbplayer-extension-to-video',
-            message: {
-                command: 'request-video-state',
-            },
+            message: { command: 'request-video-state' } as RequestVideoStateMessage,
             src,
-        };
-        const response = (await browser.tabs.sendMessage(tabId, message)) as VideoStateResponse | undefined;
-        if (!response) {
-            throw new Error('Failed to get video state');
-        }
+        } as ExtensionToVideoCommand<RequestVideoStateMessage>)) as VideoStateResponse | undefined;
+        if (!response) throw new Error('Failed to get video state');
         return response;
     }
 
     private async _requestSubtitles(tabId: number, src: string) {
-        const message: ExtensionToVideoCommand<RequestSubtitlesMessage> = {
+        const response = (await browser.tabs.sendMessage(tabId, {
             sender: 'asbplayer-extension-to-video',
-            message: {
-                command: 'request-subtitles',
-            },
+            message: { command: 'request-subtitles' } as RequestSubtitlesMessage,
             src,
-        };
-        const response = (await browser.tabs.sendMessage(tabId, message)) as RequestSubtitlesResponse | undefined;
+        } as ExtensionToVideoCommand<RequestSubtitlesMessage>)) as RequestSubtitlesResponse | undefined;
         return response?.subtitles;
     }
 }

@@ -18,7 +18,10 @@ import {
     PostMineAction,
     CardExportedMessage,
     StartWhisperTranscriptionMessage,
+    TranscribeAudioMessage,
+    TranscribeAudioResponse,
 } from '@project/common';
+import { transcribeAudio } from '../../services/whisper-service';
 import type { Message } from '@project/common';
 import type { BulkExportStartedPayload } from '../../controllers/bulk-export-controller';
 import { AsbplayerSettings } from '@project/common/settings';
@@ -336,6 +339,25 @@ export default function SidePanel({ settings, extension }: Props) {
         browser.runtime.onMessage.addListener(listener);
         return () => browser.runtime.onMessage.removeListener(listener);
     }, [handleError]);
+
+    // Handle transcription requests from background (WebGPU accelerated)
+    useEffect(() => {
+        const listener = (
+            request: any,
+            _sender: Browser.runtime.MessageSender,
+            sendResponse: (response: TranscribeAudioResponse) => void
+        ) => {
+            if (request?.sender === 'asbplayer-extension-to-sidepanel' && request?.message?.command === 'transcribe-audio') {
+                const msg = request.message as TranscribeAudioMessage;
+                transcribeAudio(msg.audioBase64, msg.language, msg.useWebGpu)
+                    .then((result) => sendResponse({ success: true, segments: result.segments }))
+                    .catch((e) => sendResponse({ success: false, error: e instanceof Error ? e.message : String(e) }));
+                return true; // Keep channel open for async response
+            }
+        };
+        browser.runtime.onMessage.addListener(listener);
+        return () => browser.runtime.onMessage.removeListener(listener);
+    }, []);
 
     // Listen for bulk export lifecycle messages from background
     useEffect(() => {
