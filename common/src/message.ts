@@ -1192,6 +1192,15 @@ export interface WhisperTranscriptionErrorMessage extends Message {
     readonly error: string;
 }
 
+// VAD alignment messages
+export interface StartVadAlignmentMessage extends Message {
+    readonly command: 'start-vad-alignment';
+}
+
+export interface VadAlignmentErrorMessage extends Message {
+    readonly command: 'vad-alignment-error';
+    readonly error: string;
+}
 export interface TranscriptionSegment {
     text: string;
     start: number;
