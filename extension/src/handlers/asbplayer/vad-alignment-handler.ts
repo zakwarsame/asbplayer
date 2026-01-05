@@ -19,8 +19,8 @@ import {
 import { detectOffsetWithVAD, createSimpleVAD } from '../../services/vad';
 import { ensureOffscreenAudioServiceDocument } from '../../services/offscreen-document';
 
-const SAMPLE_DURATION_SECONDS = 30;
-const VAD_SAMPLE_RATE = 16000;
+const SAMPLE_DURATION_SECONDS = 10; // Reduced from 30s - 10s is usually enough
+const TARGET_SAMPLE_RATE = 16000; // Requested rate (actual may differ)
 
 export default class VadAlignmentHandler {
     get sender() {
@@ -48,12 +48,13 @@ export default class VadAlignmentHandler {
             console.log('[VAD] Video at', videoState.currentTime.toFixed(2), 's');
 
             console.log('[VAD] Capturing audio...');
-            const audioBase64 = await this._captureAudio(tabId, SAMPLE_DURATION_SECONDS * 1000);
-            console.log('[VAD] Captured', audioBase64.length, 'chars (base64)');
+            const { audioBase64, sampleRate } = await this._captureAudio(tabId, SAMPLE_DURATION_SECONDS * 1000);
+            console.log('[VAD] Captured', audioBase64.length, 'chars (base64), sample rate:', sampleRate);
 
             // Convert base64 to Float32Array
             const audioData = this._base64ToFloat32Array(audioBase64);
-            console.log('[VAD] Decoded', audioData.length, 'samples');
+            const actualDurationMs = (audioData.length / sampleRate) * 1000;
+            console.log('[VAD] Decoded', audioData.length, 'samples, duration:', (actualDurationMs / 1000).toFixed(2), 's');
 
             console.log('[VAD] Fetching subtitles...');
             const subtitles = await this._requestSubtitles(tabId, src);
@@ -62,9 +63,9 @@ export default class VadAlignmentHandler {
 
             console.log('[VAD] Running VAD alignment...');
             const vadEngine = createSimpleVAD();
-            const offsetResult = await detectOffsetWithVAD(subtitles, audioData, VAD_SAMPLE_RATE, vadEngine, {
+            const offsetResult = await detectOffsetWithVAD(subtitles, audioData, sampleRate, vadEngine, {
                 captureStartTimeMs,
-                captureDurationMs: SAMPLE_DURATION_SECONDS * 1000,
+                captureDurationMs: actualDurationMs,
             });
             console.log('[VAD] Offset:', offsetResult.offset, 'ms, confidence:', Math.round(offsetResult.confidence * 100) + '%');
 
@@ -147,7 +148,10 @@ export default class VadAlignmentHandler {
         return new Float32Array(bytes.buffer);
     }
 
-    private async _captureAudio(tabId: number, durationMs: number): Promise<string> {
+    private async _captureAudio(
+        tabId: number,
+        durationMs: number
+    ): Promise<{ audioBase64: string; sampleRate: number }> {
         await ensureOffscreenAudioServiceDocument();
 
         const streamId = await new Promise<string>((resolve, reject) => {
@@ -163,15 +167,15 @@ export default class VadAlignmentHandler {
                 command: 'capture-raw-audio',
                 streamId,
                 durationMs,
-                sampleRate: VAD_SAMPLE_RATE,
+                sampleRate: TARGET_SAMPLE_RATE,
             },
         };
 
         const response = (await browser.runtime.sendMessage(command)) as RawAudioCapturedResponse;
-        if (!response?.success || !response?.audioBase64) {
+        if (!response?.success || !response?.audioBase64 || !response?.sampleRate) {
             throw new Error(response?.error || 'Audio capture failed');
         }
-        return response.audioBase64;
+        return { audioBase64: response.audioBase64, sampleRate: response.sampleRate };
     }
 
     private async _requestVideoState(tabId: number, src: string): Promise<VideoStateResponse> {
