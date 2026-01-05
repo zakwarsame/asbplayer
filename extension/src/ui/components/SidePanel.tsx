@@ -17,6 +17,7 @@ import {
     DownloadAudioMessage,
     CardExportedMessage,
     StartWhisperTranscriptionMessage,
+    StartVadAlignmentMessage,
 } from '@project/common';
 import type { AsbplayerInstance, Command, Message, OpenStatisticsOverlayMessage } from '@project/common';
 import type { BulkExportStartedPayload } from '../../controllers/bulk-export-controller';
@@ -353,19 +354,19 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
 
     const handleAutoSyncSubtitles = useCallback(async () => {
         if (!syncedVideoTab) return;
-        console.log('[SidePanel] Starting auto-sync for tab', syncedVideoTab.id);
+        console.log('[SidePanel] Starting auto-sync (VAD) for tab', syncedVideoTab.id);
         setAutoSyncInProgress(true);
-        const syncCommand: AsbPlayerToVideoCommandV2<StartWhisperTranscriptionMessage> = {
+
+        // Use VAD alignment (faster, language-agnostic)
+        const syncCommand: AsbPlayerToVideoCommandV2<StartVadAlignmentMessage> = {
             sender: 'asbplayerv2',
             message: {
-                command: 'start-whisper-transcription',
-                mode: 'full',
-                language: 'ja',
+                command: 'start-vad-alignment',
             },
             tabId: syncedVideoTab.id,
             src: syncedVideoTab.src,
         };
-        console.log('[SidePanel] Sending message:', syncCommand);
+        console.log('[SidePanel] Sending VAD message:', syncCommand);
         browser.runtime.sendMessage(syncCommand);
     }, [syncedVideoTab]);
 
@@ -384,7 +385,10 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
         const listener = (message: any) => {
             if (message?.message?.command === 'subtitle-offset-detected') {
                 setAutoSyncInProgress(false);
-            } else if (message?.message?.command === 'whisper-transcription-error') {
+            } else if (
+                message?.message?.command === 'whisper-transcription-error' ||
+                message?.message?.command === 'vad-alignment-error'
+            ) {
                 setAutoSyncInProgress(false);
                 handleError(message.message.error);
             }
