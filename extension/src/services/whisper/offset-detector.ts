@@ -1,30 +1,45 @@
-import { SubtitleModel } from '../src/model';
-import { WhisperTranscriptionResult, WhisperWord, OffsetResult, OffsetPoint } from './whisper-types';
+import { SubtitleModel } from '@project/common';
+
+interface WhisperWord {
+    word: string;
+    start: number;
+    end: number;
+}
+
+interface WhisperSegment {
+    text: string;
+    start: number;
+    end: number;
+    words?: WhisperWord[];
+}
+
+export interface WhisperTranscriptionResult {
+    segments: WhisperSegment[];
+    language?: string;
+    duration?: number;
+}
+
+export interface OffsetPoint {
+    position: number;
+    offset: number;
+    confidence: number;
+}
+
+export interface OffsetResult {
+    offset: number;
+    drift?: number;
+    points: OffsetPoint[];
+    confidence: number;
+}
 
 export interface OffsetDetectionOptions {
-    /** Number of points to sample (default: 3) */
     sampleCount?: number;
-    /** Minimum similarity threshold for a match (default: 0.6) */
     matchThreshold?: number;
-    /** Search window in seconds around expected position (default: 30) */
     searchWindowSeconds?: number;
-    /** Video playback time (in ms) when audio capture started.
-     * Whisper timestamps are relative to capture start, so we add this
-     * to convert them to absolute video timestamps. */
     captureStartTimeMs?: number;
-    /** Duration of audio capture in ms (default: 30000) */
     captureDurationMs?: number;
 }
 
-/**
- * Detects the offset between loaded subtitles and Whisper transcription.
- * Samples multiple points to detect both constant offset and variable drift.
- *
- * @param subtitles - The loaded subtitle models
- * @param transcription - Whisper transcription result
- * @param options - Detection options
- * @returns Offset result with detected offset, drift, and confidence
- */
 export function detectOffset(
     subtitles: SubtitleModel[],
     transcription: WhisperTranscriptionResult,
@@ -36,7 +51,6 @@ export function detectOffset(
         return { offset: 0, points: [], confidence: 0 };
     }
 
-    // Convert captureStartTimeMs to seconds for consistency with Whisper timestamps
     const captureStartTimeSec = captureStartTimeMs / 1000;
     const whisperWords = flattenTranscription(transcription, captureStartTimeSec);
 
@@ -47,13 +61,11 @@ export function detectOffset(
     const points: OffsetPoint[] = [];
 
     if (captureStartTimeMs > 0) {
-        // Partial capture mode: search ALL subtitles against the Whisper transcription
-        // because we don't know which subtitles correspond to the captured audio segment.
+        // Partial capture: search all subtitles against transcription
         const matches: { idx: number; result: MatchResult }[] = [];
 
         for (let i = 0; i < subtitles.length; i++) {
             const subtitle = subtitles[i];
-            // Require minimum text length to avoid false positives
             if (subtitle.text.length < 8) continue;
 
             const matchResult = findBestMatch(subtitle, whisperWords, matchThreshold, Infinity);
@@ -66,12 +78,10 @@ export function detectOffset(
             return { offset: 0, points: [], confidence: 0 };
         }
 
-        // Find the most common offset range using clustering
-        // First, sort by offset to find clusters
+        // Cluster matches by similar offsets
         matches.sort((a, b) => a.result.offset - b.result.offset);
 
-        // Find the largest cluster of matches with similar offsets (within 5 seconds)
-        const CLUSTER_TOLERANCE = 5000; // 5 seconds
+        const CLUSTER_TOLERANCE = 5000;
         let bestClusterStart = 0;
         let bestClusterSize = 0;
 
@@ -90,10 +100,7 @@ export function detectOffset(
             }
         }
 
-        // Use matches from the best cluster
         const clusterMatches = matches.slice(bestClusterStart, bestClusterStart + bestClusterSize);
-
-        // Sort by confidence and take the best ones
         clusterMatches.sort((a, b) => b.result.confidence - a.result.confidence);
         const bestMatches = clusterMatches.slice(0, sampleCount);
 
@@ -105,7 +112,7 @@ export function detectOffset(
             });
         }
     } else {
-        // Full transcription mode: sample subtitles evenly by index position
+        // Full transcription: sample subtitles evenly
         const sampleIndices = getSampleIndices(subtitles.length, sampleCount);
 
         for (const idx of sampleIndices) {
@@ -132,7 +139,6 @@ export function detectOffset(
     let drift: number | undefined;
     if (points.length >= 2) {
         const calculatedDrift = calculateDrift(points);
-        // Only report drift if it's significant (> 10ms per unit position)
         if (Math.abs(calculatedDrift) > 10) {
             drift = calculatedDrift;
         }
@@ -148,23 +154,15 @@ export function detectOffset(
     };
 }
 
-/**
- * Applies offset correction using drift interpolation if available.
- * For subtitles with variable drift, this calculates the appropriate
- * offset at each subtitle's position.
- */
 export function interpolateOffset(originalStartMs: number, totalDurationMs: number, result: OffsetResult): number {
     if (!result.drift || result.points.length < 2) {
         return result.offset;
     }
 
     const position = totalDurationMs > 0 ? originalStartMs / totalDurationMs : 0;
-
-    // Linear interpolation based on position
     const { points } = result;
     const sortedPoints = [...points].sort((a, b) => a.position - b.position);
 
-    // Find surrounding points
     for (let i = 0; i < sortedPoints.length - 1; i++) {
         const p1 = sortedPoints[i];
         const p2 = sortedPoints[i + 1];
@@ -175,7 +173,6 @@ export function interpolateOffset(originalStartMs: number, totalDurationMs: numb
         }
     }
 
-    // Extrapolate from nearest endpoint
     if (position < sortedPoints[0].position) {
         return Math.round(sortedPoints[0].offset);
     }
@@ -187,7 +184,6 @@ function flattenTranscription(transcription: WhisperTranscriptionResult, capture
 
     for (const segment of transcription.segments) {
         if (segment.words && segment.words.length > 0) {
-            // Adjust word timestamps to absolute video time
             for (const word of segment.words) {
                 words.push({
                     word: word.word,
@@ -196,14 +192,12 @@ function flattenTranscription(transcription: WhisperTranscriptionResult, capture
                 });
             }
         } else {
-            // If no word-level timestamps, create pseudo-words from segment
             const segmentWords = tokenizeText(segment.text);
             if (segmentWords.length > 0) {
                 const duration = segment.end - segment.start;
                 const wordDuration = duration / segmentWords.length;
 
                 for (let i = 0; i < segmentWords.length; i++) {
-                    // Add captureStartTimeSec to convert relative timestamps to absolute
                     words.push({
                         word: segmentWords[i],
                         start: captureStartTimeSec + segment.start + i * wordDuration,
@@ -230,7 +224,6 @@ function getSampleIndices(length: number, count: number): number[] {
         return [0, length - 1];
     }
 
-    // For 3+ samples, include start, end, and evenly distributed middle points
     const indices: number[] = [0];
     for (let i = 1; i < count - 1; i++) {
         indices.push(Math.floor((i * (length - 1)) / (count - 1)));
@@ -257,12 +250,10 @@ function findBestMatch(
         return null;
     }
 
-    // Convert subtitle time to seconds for comparison
     const subtitleStartSec = subtitle.originalStart / 1000;
     const searchStart = Math.max(0, subtitleStartSec - searchWindowSeconds);
     const searchEnd = subtitleStartSec + searchWindowSeconds;
 
-    // Filter whisper words to search window
     const windowWords = whisperWords.filter((w) => w.start >= searchStart && w.start <= searchEnd);
 
     if (windowWords.length < subtitleWords.length) {
@@ -271,7 +262,6 @@ function findBestMatch(
 
     let bestMatch: MatchResult = { offset: 0, confidence: 0 };
 
-    // Sliding window search
     for (let i = 0; i <= windowWords.length - subtitleWords.length; i++) {
         const candidateWords = windowWords.slice(i, i + subtitleWords.length);
         const similarity = calculateSimilarity(
@@ -280,9 +270,6 @@ function findBestMatch(
         );
 
         if (similarity > bestMatch.confidence && similarity >= threshold) {
-            // Offset = whisper time - subtitle time (in ms)
-            // Positive offset means subtitles are early and need to be delayed
-            // Negative offset means subtitles are late and need to be advanced
             const whisperStartMs = candidateWords[0].start * 1000;
             bestMatch = {
                 offset: whisperStartMs - subtitle.originalStart,
@@ -294,10 +281,6 @@ function findBestMatch(
     return bestMatch.confidence >= threshold ? bestMatch : null;
 }
 
-/**
- * Tokenizes text into words, handling both space-separated languages
- * and character-based languages like Japanese/Chinese.
- */
 function tokenizeText(text: string): string[] {
     const normalized = normalizeText(text);
 
@@ -305,31 +288,23 @@ function tokenizeText(text: string): string[] {
         return [];
     }
 
-    // Check if text contains CJK characters (Japanese, Chinese, Korean)
     const hasCJK = /[\u3000-\u9fff\uac00-\ud7af]/.test(normalized);
 
     if (hasCJK) {
-        // For CJK text, split into individual characters (excluding spaces)
-        // This works well for Japanese where Whisper often outputs character-by-character
         return normalized.replace(/\s+/g, '').split('');
     }
 
-    // For space-separated languages
     return normalized.split(/\s+/).filter((w) => w.length > 0);
 }
 
 function normalizeText(text: string): string {
-    return (
-        text
-            .toLowerCase()
-            // Remove common subtitle formatting
-            .replace(/<[^>]*>/g, '') // HTML tags
-            .replace(/\{[^}]*\}/g, '') // ASS tags like {\an8}
-            .replace(/\\[nN]/g, ' ') // ASS newlines
-            // Remove punctuation but keep Unicode letters/numbers
-            .replace(/[^\p{L}\p{N}\s]/gu, '')
-            .trim()
-    );
+    return text
+        .toLowerCase()
+        .replace(/<[^>]*>/g, '')
+        .replace(/\{[^}]*\}/g, '')
+        .replace(/\\[nN]/g, ' ')
+        .replace(/[^\p{L}\p{N}\s]/gu, '')
+        .trim();
 }
 
 function calculateSimilarity(a: string[], b: string[]): number {
@@ -338,7 +313,6 @@ function calculateSimilarity(a: string[], b: string[]): number {
     }
 
     if (a.length !== b.length) {
-        // Use Levenshtein-like approach for different lengths
         return calculateSequenceSimilarity(a, b);
     }
 
@@ -353,7 +327,6 @@ function calculateSimilarity(a: string[], b: string[]): number {
 }
 
 function calculateSequenceSimilarity(a: string[], b: string[]): number {
-    // Longest Common Subsequence ratio
     const m = a.length;
     const n = b.length;
 
@@ -361,7 +334,6 @@ function calculateSequenceSimilarity(a: string[], b: string[]): number {
         return 0;
     }
 
-    // LCS dynamic programming
     const dp: number[][] = Array(m + 1)
         .fill(null)
         .map(() => Array(n + 1).fill(0));
@@ -398,7 +370,6 @@ function calculateDrift(points: OffsetPoint[]): number {
         return 0;
     }
 
-    // Linear regression: offset = slope * position + intercept
     let sumX = 0;
     let sumY = 0;
     let sumXY = 0;
@@ -417,6 +388,5 @@ function calculateDrift(points: OffsetPoint[]): number {
         return 0;
     }
 
-    const slope = (n * sumXY - sumX * sumY) / denominator;
-    return slope; // ms drift per unit position (0-1)
+    return (n * sumXY - sumX * sumY) / denominator;
 }

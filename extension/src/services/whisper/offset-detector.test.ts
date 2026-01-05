@@ -1,6 +1,5 @@
-import { detectOffset, interpolateOffset } from './offset-detector';
-import { WhisperTranscriptionResult } from './whisper-types';
-import { SubtitleModel } from '../src/model';
+import { detectOffset, interpolateOffset, WhisperTranscriptionResult } from './offset-detector';
+import { SubtitleModel } from '@project/common';
 
 function subtitle(text: string, start: number, end: number): SubtitleModel {
     return { text, start, end, originalStart: start, originalEnd: end, track: 0 };
@@ -38,27 +37,25 @@ describe('detectOffset', () => {
         expect(result.confidence).toBe(0);
     });
 
-    it('detects positive offset when subtitles are ahead of audio', () => {
-        // Subtitle says "hello world" at 5000ms
-        // Whisper detected "hello world" at 3 seconds (audio)
-        // Offset = 5000 - 3000 = +2000ms (subtitle is 2s ahead)
+    it('detects negative offset when subtitles are late (behind audio)', () => {
+        // Subtitle at 5000ms, audio at 3000ms = subtitles appear 2s AFTER audio
+        // Offset = whisper - subtitle = 3000 - 5000 = -2000
         const subs = [subtitle('hello world', 5000, 7000)];
         const trans = transcription([{ text: 'hello world', start: 3, end: 5 }]);
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(2000);
+        expect(result.offset).toBe(-2000);
         expect(result.confidence).toBeGreaterThan(0.5);
     });
 
-    it('detects negative offset when subtitles are behind audio', () => {
-        // Subtitle says "hello world" at 1000ms
-        // Whisper detected "hello world" at 3 seconds (audio)
-        // Offset = 1000 - 3000 = -2000ms (subtitle is 2s behind)
+    it('detects positive offset when subtitles are early (ahead of audio)', () => {
+        // Subtitle at 1000ms, audio at 3000ms = subtitles appear 2s BEFORE audio
+        // Offset = whisper - subtitle = 3000 - 1000 = +2000
         const subs = [subtitle('hello world', 1000, 3000)];
         const trans = transcription([{ text: 'hello world', start: 3, end: 5 }]);
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(-2000);
+        expect(result.offset).toBe(2000);
         expect(result.confidence).toBeGreaterThan(0.5);
     });
 
@@ -76,7 +73,7 @@ describe('detectOffset', () => {
         const trans = transcription([{ text: 'hello world', start: 3, end: 5 }]);
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(2000);
+        expect(result.offset).toBe(-2000);
     });
 
     it('ignores punctuation in matching', () => {
@@ -84,10 +81,11 @@ describe('detectOffset', () => {
         const trans = transcription([{ text: 'hello world', start: 3, end: 5 }]);
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(2000);
+        expect(result.offset).toBe(-2000);
     });
 
     it('handles multiple sample points for consistent offset', () => {
+        // All subtitles are 2s late (offset = whisper - subtitle = -2000)
         const subs = [
             subtitle('first line', 2000, 4000),
             subtitle('second line', 12000, 14000),
@@ -100,17 +98,17 @@ describe('detectOffset', () => {
         ]);
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(2000); // Consistent 2s offset
+        expect(result.offset).toBe(-2000);
         expect(result.points.length).toBeGreaterThanOrEqual(2);
-        expect(result.drift).toBeUndefined(); // No significant drift
+        expect(result.drift).toBeUndefined();
     });
 
     it('detects variable drift when offset changes over time', () => {
-        // Offset increases: 2s at start, 4s at middle, 6s at end
+        // Drift: offset goes from -2000 to -4000 to -6000
         const subs = [
-            subtitle('first line', 2000, 4000), // +2s offset
-            subtitle('second line', 14000, 16000), // +4s offset
-            subtitle('third line', 26000, 28000), // +6s offset
+            subtitle('first line', 2000, 4000),
+            subtitle('second line', 14000, 16000),
+            subtitle('third line', 26000, 28000),
         ];
         const trans = transcription([
             { text: 'first line', start: 0, end: 2 },
@@ -121,7 +119,7 @@ describe('detectOffset', () => {
         const result = detectOffset(subs, trans);
         expect(result.points.length).toBe(3);
         expect(result.drift).toBeDefined();
-        expect(result.drift).toBeGreaterThan(0); // Positive drift (increasing offset)
+        expect(result.drift).toBeLessThan(0); // Negative drift (increasing delay)
     });
 
     it('returns low confidence when no matches found', () => {
@@ -136,9 +134,8 @@ describe('detectOffset', () => {
 
 describe('detectOffset with Japanese text', () => {
     it('handles Japanese character-by-character matching', () => {
-        // Japanese subtitle at 5000ms
+        // Subtitle at 5000ms, audio at 3000ms = -2000ms offset
         const subs = [subtitle('こんにちは', 5000, 7000)];
-        // Whisper output at 3s
         const trans: WhisperTranscriptionResult = {
             segments: [
                 {
@@ -158,7 +155,7 @@ describe('detectOffset with Japanese text', () => {
         };
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(2000);
+        expect(result.offset).toBe(-2000);
         expect(result.confidence).toBeGreaterThan(0.5);
     });
 
@@ -183,7 +180,7 @@ describe('detectOffset with Japanese text', () => {
         };
 
         const result = detectOffset(subs, trans);
-        expect(result.offset).toBe(2000);
+        expect(result.offset).toBe(-2000);
     });
 });
 
@@ -202,8 +199,8 @@ describe('interpolateOffset', () => {
 
     it('interpolates between sample points with drift', () => {
         const result = {
-            offset: 3000, // Median
-            drift: 2000, // 2s drift over full content
+            offset: 3000,
+            drift: 2000,
             points: [
                 { position: 0, offset: 2000, confidence: 0.9 },
                 { position: 1, offset: 4000, confidence: 0.9 },
@@ -211,13 +208,8 @@ describe('interpolateOffset', () => {
             confidence: 0.9,
         };
 
-        // At position 0 (start), offset should be 2000
         expect(interpolateOffset(0, 60000, result)).toBe(2000);
-
-        // At position 0.5 (middle), offset should be 3000
         expect(interpolateOffset(30000, 60000, result)).toBe(3000);
-
-        // At position 1 (end), offset should be 4000
         expect(interpolateOffset(60000, 60000, result)).toBe(4000);
     });
 
@@ -234,9 +226,9 @@ describe('interpolateOffset', () => {
         };
 
         expect(interpolateOffset(0, 60000, result)).toBe(2000);
-        expect(interpolateOffset(15000, 60000, result)).toBe(2500); // 0.25 position
+        expect(interpolateOffset(15000, 60000, result)).toBe(2500);
         expect(interpolateOffset(30000, 60000, result)).toBe(3000);
-        expect(interpolateOffset(45000, 60000, result)).toBe(3500); // 0.75 position
+        expect(interpolateOffset(45000, 60000, result)).toBe(3500);
         expect(interpolateOffset(60000, 60000, result)).toBe(4000);
     });
 });

@@ -19,7 +19,7 @@ import {
     RequestActiveTabPermissionMessage,
 } from '@project/common';
 import { SettingsProvider } from '@project/common/settings';
-import { detectOffset } from '@project/common/whisper/offset-detector';
+import { detectOffset } from '../../services/whisper/offset-detector';
 import { ensureOffscreenAudioServiceDocument } from '../../services/offscreen-document';
 import { ExtensionSettingsStorage } from '../../services/extension-settings-storage';
 
@@ -47,34 +47,28 @@ export default class WhisperTranscriptionHandler {
 
     private async _doTranscription(tabId: number, src: string, language?: string) {
         try {
-            // Read settings
             const settings = new SettingsProvider(new ExtensionSettingsStorage());
             const useWebGpu = await settings.getSingle('streamingUseWebGpuForWhisper');
 
-            // Step 1: Get video position
             console.log('[Whisper] Getting video state...');
             const videoState = await this._requestVideoState(tabId, src);
             const captureStartTimeMs = videoState.currentTime * 1000;
             console.log('[Whisper] Video at', videoState.currentTime.toFixed(2), 's');
 
-            // Step 2: Capture audio from offscreen document
             console.log('[Whisper] Capturing audio...');
             const audioBase64 = await this._captureAudio(tabId, SAMPLE_DURATION_SECONDS * 1000);
             console.log('[Whisper] Captured', audioBase64.length, 'chars (base64)');
 
-            // Step 3: Transcribe via sidepanel
-            console.log('[Whisper] Transcribing via sidepanel (WebGPU:', useWebGpu, ')...');
+            console.log('[Whisper] Transcribing (WebGPU:', useWebGpu, ')...');
             const transcription = await this._transcribeViaSidepanel(audioBase64, language, useWebGpu);
             console.log('[Whisper] Got', transcription.segments.length, 'segments');
             console.log('[Whisper] Text:', transcription.segments.map((s) => s.text).join(' '));
 
-            // Step 4: Get subtitles
             console.log('[Whisper] Fetching subtitles...');
             const subtitles = await this._requestSubtitles(tabId, src);
             if (!subtitles?.length) throw new Error('No subtitles loaded');
             console.log('[Whisper] Got', subtitles.length, 'subtitles');
 
-            // Step 5: Detect offset
             console.log('[Whisper] Detecting offset...');
             const offsetResult = detectOffset(subtitles, transcription, { captureStartTimeMs });
             console.log('[Whisper] Offset:', offsetResult.offset, 'ms, confidence:', Math.round(offsetResult.confidence * 100) + '%');
@@ -83,7 +77,6 @@ export default class WhisperTranscriptionHandler {
                 throw new Error(`Low confidence (${Math.round(offsetResult.confidence * 100)}%)`);
             }
 
-            // Step 6: Apply offset
             console.log('[Whisper] Applying offset...');
             await browser.tabs.sendMessage(tabId, {
                 sender: 'asbplayer-extension-to-video',
@@ -91,7 +84,6 @@ export default class WhisperTranscriptionHandler {
                 src,
             } as ExtensionToVideoCommand<OffsetToVideoMessage>);
 
-            // Step 7: Notify success
             console.log('[Whisper] Complete! Offset:', offsetResult.offset, 'ms');
             browser.tabs.sendMessage(tabId, {
                 sender: 'asbplayer-extension-to-video',
@@ -103,6 +95,15 @@ export default class WhisperTranscriptionHandler {
                 } as SubtitleOffsetDetectedMessage,
                 src,
             } as ExtensionToVideoCommand<SubtitleOffsetDetectedMessage>);
+
+            // Notify sidepanel to stop spinner
+            browser.runtime.sendMessage({
+                sender: 'asbplayer-extension-to-sidepanel',
+                message: {
+                    command: 'subtitle-offset-detected',
+                    offset: offsetResult.offset,
+                },
+            });
         } catch (error) {
             console.error('[Whisper] Failed:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -165,7 +166,6 @@ export default class WhisperTranscriptionHandler {
         };
 
         const response = (await browser.runtime.sendMessage(command)) as RawAudioCapturedResponse;
-        console.log('[Whisper] Offscreen response:', response);
         if (!response?.success || !response?.audioBase64) {
             throw new Error(response?.error || 'Audio capture failed');
         }
