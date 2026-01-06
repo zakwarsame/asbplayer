@@ -19,7 +19,7 @@ import {
 import { detectOffsetWithVAD, createSimpleVAD } from '../../services/vad';
 import { ensureOffscreenAudioServiceDocument } from '../../services/offscreen-document';
 
-const SAMPLE_DURATION_SECONDS = 10; // Reduced from 30s - 10s is usually enough
+const SAMPLE_DURATION_SECONDS = 30; // 30s for more speech signal density
 const TARGET_SAMPLE_RATE = 16000; // Requested rate (actual may differ)
 
 export default class VadAlignmentHandler {
