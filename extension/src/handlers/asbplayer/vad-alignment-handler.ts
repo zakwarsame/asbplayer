@@ -31,9 +31,15 @@ export default class VadAlignmentHandler {
         return 'start-vad-alignment';
     }
 
-    handle(command: Command<Message>, _sender: Browser.runtime.MessageSender) {
+    handle(command: Command<Message>, sender: Browser.runtime.MessageSender) {
         const alignmentCommand = command as AsbPlayerToVideoCommandV2<StartVadAlignmentMessage>;
-        const { tabId, src } = alignmentCommand;
+        const tabId = alignmentCommand.tabId ?? sender.tab?.id;
+        const { src } = alignmentCommand;
+
+        if (tabId === undefined) {
+            console.error('[VAD] No tabId available');
+            return false;
+        }
 
         console.log('[VAD] Starting auto-sync for tab', tabId);
         this._doAlignment(tabId, src).catch((e) => console.error('[VAD] Error:', e));
