@@ -232,6 +232,7 @@ export default class VideoDataSyncController {
     }
 
     private async _buildModel(additionalFields: Partial<VideoDataUiModel>) {
+        await this.checkIfAnimeSite();
         const subtitleTrackChoices = this._syncedData?.subtitles ?? [];
         const subs = this._matchLastSyncedWithAvailableTracks();
         const autoSelectedTracks: VideoDataSubtitleTrack[] = subs.autoSelectedTracks;
@@ -251,7 +252,6 @@ export default class VideoDataSyncController {
         const hasSeenFtue = globalState.ftueHasSeenSubtitleTrackSelector;
         const onlineSubtitleSourceConfig = globalState.onlineSubtitleSourceConfig;
         const hideRememberTrackPreferenceToggle = this._isTutorial || (await this._pageHidesTrackPrefToggle());
-        await this.checkIfAnimeSite();
         let title = '';
         let episode = '';
         let autoSelectBasedOnLastSavedSub = autoSelectedTrackIds;
@@ -841,13 +841,14 @@ export default class VideoDataSyncController {
                 return;
             }
 
+            const allSubtitles = await this._mergeWithCCTracks(fetchedSubtitles);
             client.updateState({
-                subtitles: fetchedSubtitles, // Use fetchedSubtitles directly
+                subtitles: allSubtitles,
                 isLoading: false,
                 episode: message.episode,
                 open: true,
                 suggestedName: title,
-                selectedSubtitle: fetchedSubtitles.length > 0 ? [`fetched-0`, '-', '-'] : ['-', '-', '-'],
+                selectedSubtitle: allSubtitles.length > 0 ? [allSubtitles[0].id, '-', '-'] : ['-', '-', '-'],
             });
         } catch (error) {
             // Keep dialog open when showing error
@@ -868,6 +869,24 @@ export default class VideoDataSyncController {
                 resolve();
             });
         });
+    }
+
+    private async _mergeWithCCTracks(subtitles: VideoDataSubtitleTrack[]): Promise<VideoDataSubtitleTrack[]> {
+        if (!this._isAnimeSite) return subtitles;
+        try {
+            const ccTracks: Array<{ url: string; label: string; language: string; base64: string }> =
+                (await browser.runtime.sendMessage({ command: 'get-cc-tracks' })) || [];
+            const ccSubtitles: VideoDataSubtitleTrack[] = ccTracks.map((t) => ({
+                id: `cc:${t.language}:${t.label}:${t.url}`,
+                label: `[CC] ${t.label}`,
+                language: t.language,
+                url: `data:text/vtt;base64,${t.base64}`,
+                extension: 'vtt',
+            }));
+            return [...subtitles, ...ccSubtitles];
+        } catch {
+            return subtitles;
+        }
     }
 
     private async obtainTitleAndEpisode(): Promise<{ title: string; episode: string }> {
