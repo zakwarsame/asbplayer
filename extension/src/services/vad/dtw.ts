@@ -118,6 +118,11 @@ export function alignBinaryDTW(seq1: boolean[], seq2: boolean[], options?: DTWOp
  * Cross-correlation for finding optimal lag between two binary sequences.
  * More efficient than DTW when only looking for constant offset.
  *
+ * Based on ffsubsync's approach:
+ * - Only score positions where VAD (target) detects speech
+ * - +1 when both have speech, -1 when VAD has speech but subtitle doesn't
+ * - Silence is uninformative and ignored
+ *
  * @param reference The reference sequence (e.g., from subtitles)
  * @param target The target sequence (e.g., from VAD)
  * @param maxLagSamples Maximum lag to search in either direction
@@ -130,40 +135,51 @@ export function crossCorrelate(
 ): { lag: number; score: number; confidence: number } {
     let bestLag = 0;
     let bestScore = -Infinity;
+    let bestVadSpeechCount = 0;
 
     const refLength = reference.length;
     const targetLength = target.length;
 
     for (let lag = -maxLagSamples; lag <= maxLagSamples; lag++) {
-        let matches = 0;
-        let mismatches = 0;
-        let count = 0;
+        let speechMatches = 0; // Both have speech
+        let speechMismatches = 0; // VAD has speech, subtitle doesn't
+        let vadSpeechCount = 0; // Total speech frames in VAD overlap
 
         for (let i = 0; i < refLength; i++) {
             const j = i + lag;
             if (j >= 0 && j < targetLength) {
-                if (reference[i] === target[j]) {
-                    matches++;
-                } else {
-                    mismatches++;
+                if (target[j]) {
+                    // VAD detected speech at this position
+                    vadSpeechCount++;
+                    if (reference[i]) {
+                        speechMatches++; // Both have speech
+                    } else {
+                        speechMismatches++; // VAD speech, subtitle silence
+                    }
                 }
-                count++;
+                // If VAD is silence, we don't care what subtitle says
             }
         }
 
-        if (count > 0) {
-            // Score: matches - mismatches, normalized by overlap
-            const score = (matches - mismatches) / count;
+        if (vadSpeechCount > 0) {
+            // Score: (matches - mismatches) / total VAD speech
+            const score = (speechMatches - speechMismatches) / vadSpeechCount;
             // Break ties in favor of smaller absolute lag (prefer lag=0)
             if (score > bestScore || (score === bestScore && Math.abs(lag) < Math.abs(bestLag))) {
                 bestScore = score;
                 bestLag = lag;
+                bestVadSpeechCount = vadSpeechCount;
             }
         }
     }
 
-    // Confidence based on how much better the best score is than random (0)
-    // and the absolute score value
+    // If no speech was detected in VAD, confidence is 0
+    if (bestVadSpeechCount === 0) {
+        return { lag: 0, score: 0, confidence: 0 };
+    }
+
+    // Confidence: score of 1.0 = perfect match, 0 = random, -1 = inverse
+    // Map [-1, 1] to [0, 1]
     const confidence = Math.max(0, Math.min(1, (bestScore + 1) / 2));
 
     return { lag: bestLag, score: bestScore, confidence };
