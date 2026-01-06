@@ -16,8 +16,7 @@ import {
     DownloadImageMessage,
     DownloadAudioMessage,
     CardExportedMessage,
-    StartWhisperTranscriptionMessage,
-    StartVadAlignmentMessage,
+    StartSubtitleSyncMessage,
 } from '@project/common';
 import type { AsbplayerInstance, Command, Message, OpenStatisticsOverlayMessage } from '@project/common';
 import type { BulkExportStartedPayload } from '../../controllers/bulk-export-controller';
@@ -354,19 +353,18 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
 
     const handleAutoSyncSubtitles = useCallback(async () => {
         if (!syncedVideoTab) return;
-        console.log('[SidePanel] Starting auto-sync (VAD) for tab', syncedVideoTab.id);
-        setAutoSyncInProgress(true);
+        console.log('[SidePanel] Opening sync modal for tab', syncedVideoTab.id);
 
-        // Use VAD alignment (faster, language-agnostic)
-        const syncCommand: AsbPlayerToVideoCommandV2<StartVadAlignmentMessage> = {
+        // Open the subtitle sync modal
+        const syncCommand: AsbPlayerToVideoCommandV2<StartSubtitleSyncMessage> = {
             sender: 'asbplayerv2',
             message: {
-                command: 'start-vad-alignment',
+                command: 'start-subtitle-sync',
             },
             tabId: syncedVideoTab.id,
             src: syncedVideoTab.src,
         };
-        console.log('[SidePanel] Sending VAD message:', syncCommand);
+        console.log('[SidePanel] Sending start-subtitle-sync message:', syncCommand);
         browser.runtime.sendMessage(syncCommand);
     }, [syncedVideoTab]);
 

@@ -1225,3 +1225,22 @@ export interface TranscribeAudioResponse {
     readonly segments?: TranscriptionSegment[];
     readonly error?: string;
 }
+
+// Subtitle sync modal messages
+export interface StartSubtitleSyncMessage extends Message {
+    readonly command: 'start-subtitle-sync';
+}
+
+export interface SubtitleSyncUiBridgeCloseMessage extends Message {
+    readonly command: 'close';
+}
+
+export interface SubtitleSyncUiBridgeUseAudioMessage extends Message {
+    readonly command: 'use-audio';
+}
+
+export interface SubtitleSyncUiBridgeSyncMessage extends Message {
+    readonly command: 'sync';
+    readonly primarySubtitle?: SerializedSubtitleFile;
+    readonly referenceSubtitle?: SerializedSubtitleFile;
+}

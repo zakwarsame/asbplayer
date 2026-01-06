@@ -334,3 +334,20 @@ export enum ControlType {
 export interface BrowserFeatures {
     sidePanel: boolean;
 }
+
+// Subtitle sync modal model
+export interface SubtitleSyncSubtitleTrack {
+    id: string;
+    label: string;
+    fileName?: string;
+}
+
+export interface SubtitleSyncUiModel {
+    open?: boolean;
+    isLoading?: boolean;
+    loadedSubtitles?: SubtitleSyncSubtitleTrack[];
+    selectedPrimarySubtitleId?: string;
+    selectedReferenceSubtitleId?: string;
+    error?: string;
+    themeType?: string;
+}
