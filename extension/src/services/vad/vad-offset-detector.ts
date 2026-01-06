@@ -90,9 +90,28 @@ export function detectOffsetVAD(
 
     const subtitleTimeline = subtitlesToTimeline(adjustedSubtitles, captureDurationSec * 1000, frameSizeMs);
 
-    // Calculate maximum lag in samples - limit to timeline length for efficiency
-    const requestedMaxLag = Math.ceil((maxOffsetSeconds * 1000) / frameSizeMs);
-    const maxLagSamples = Math.min(requestedMaxLag, Math.max(subtitleTimeline.length, vadTimeline.length));
+    // Check signal density - need enough speech in both timelines for reliable correlation
+    const vadSpeechCount = vadTimeline.filter((x) => x).length;
+    const subSpeechCount = subtitleTimeline.filter((x) => x).length;
+    const vadSpeechRatio = vadTimeline.length > 0 ? vadSpeechCount / vadTimeline.length : 0;
+    const subSpeechRatio = subtitleTimeline.length > 0 ? subSpeechCount / subtitleTimeline.length : 0;
+
+    console.log('[VAD] Timeline stats:', {
+        vadFrames: vadTimeline.length,
+        vadSpeechRatio: (vadSpeechRatio * 100).toFixed(1) + '%',
+        subFrames: subtitleTimeline.length,
+        subSpeechRatio: (subSpeechRatio * 100).toFixed(1) + '%',
+    });
+
+    // Need at least 10% speech in both timelines for reliable correlation
+    if (vadSpeechRatio < 0.1 || subSpeechRatio < 0.1) {
+        console.log('[VAD] Insufficient speech density, returning low confidence');
+        return { offset: 0, points: [], confidence: 0 };
+    }
+
+    // Limit search range to capture duration - can't meaningfully search beyond
+    const captureFrames = Math.ceil((captureDurationSec * 1000) / frameSizeMs);
+    const maxLagSamples = captureFrames;
 
     let offsetMs: number;
     let confidence: number;
@@ -172,6 +191,16 @@ export async function detectOffsetWithVAD(
         mode: 2, // Medium aggressiveness
         frameSizeMs: options?.frameSizeMs ?? 10,
     });
+
+    // Debug: Log what VAD detected
+    const speechDuration = vadResult.segments.reduce((sum, s) => sum + (s.end - s.start), 0);
+    console.log(
+        '[VAD] Detected',
+        vadResult.segments.length,
+        'segments,',
+        speechDuration.toFixed(2) + 's speech in',
+        vadResult.duration.toFixed(2) + 's capture'
+    );
 
     // Detect offset
     return detectOffsetVAD(subtitles, vadResult, options);
