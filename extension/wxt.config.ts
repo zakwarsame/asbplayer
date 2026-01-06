@@ -115,6 +115,7 @@ export default defineConfig({
                         'mp3-encoder-worker.js',
                         'pgs-parser-worker.js',
                         'video-data-sync-ui.js',
+                        'subtitle-sync-ui.js',
                         'video-select-ui.js',
                         'notification-ui.js',
                         'mobile-video-overlay-ui.html',
