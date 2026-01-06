@@ -82,6 +82,7 @@ import NotificationController from '../controllers/notification-controller';
 import SubtitleController from '../controllers/subtitle-controller';
 import BulkExportController from '../controllers/bulk-export-controller';
 import VideoDataSyncController from '../controllers/video-data-sync-controller';
+import SubtitleSyncController from '../controllers/subtitle-sync-controller';
 import AudioRecorder, { TimedRecordingInProgressError } from './audio-recorder';
 import { isMobile } from '@project/common/device-detection/mobile';
 import { OffsetAnchor } from './element-overlay';
@@ -160,6 +161,7 @@ export default class Binding {
     readonly hasPageScript: boolean;
     readonly subtitleController: SubtitleController;
     readonly videoDataSyncController: VideoDataSyncController;
+    readonly subtitleSyncController: SubtitleSyncController;
     readonly controlsController: ControlsController;
     readonly dragController: DragController;
     readonly ankiUiController: AnkiUiController;
@@ -223,6 +225,7 @@ export default class Binding {
         this.settings = new SettingsProvider(new ExtensionSettingsStorage());
         this.subtitleController = new SubtitleController(this, this.dictionary, this.settings);
         this.videoDataSyncController = new VideoDataSyncController(this, this.settings);
+        this.subtitleSyncController = new SubtitleSyncController(this, this.settings);
         this.controlsController = new ControlsController(video);
         this.dragController = new DragController(video);
         this.keyBindings = new KeyBindings();
@@ -979,6 +982,16 @@ export default class Binding {
                     case 'load-subtitles':
                         this.showVideoDataDialog(false);
                         break;
+                    case 'start-subtitle-sync':
+                        this.subtitleSyncController.show();
+                        break;
+                    case 'vad-alignment-error':
+                        const vadErrorMessage = request.message as { error: string };
+                        this.subtitleController.notification('info.error', { message: vadErrorMessage.error });
+                        break;
+                    case 'subtitle-offset-detected':
+                        // Already handled by the offset case above
+                        break;
                     case 'start-recording-audio-with-timeout':
                         const startRecordingAudioWithTimeoutMessage =
                             request.message as StartRecordingAudioWithTimeoutViaCaptureStreamMessage;
@@ -1237,6 +1250,7 @@ export default class Binding {
         this.dragController.unbind();
         this.keyBindings.unbind();
         this.videoDataSyncController.unbind();
+        this.subtitleSyncController.unbind();
         this.mobileVideoOverlayController.unbind();
         this.mobileGestureController.unbind();
         this.notificationController.unbind();
@@ -1851,5 +1865,18 @@ export default class Binding {
         }
 
         return window.location !== window.parent.location ? document.referrer : document.location.href;
+    }
+
+    triggerVadAlignment() {
+        // Send message to background to trigger VAD alignment
+        const command = {
+            sender: 'asbplayerv2',
+            message: {
+                command: 'start-vad-alignment',
+            },
+            tabId: undefined, // Will be filled by background
+            src: this.video.src,
+        };
+        browser.runtime.sendMessage(command);
     }
 }
