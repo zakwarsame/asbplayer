@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Sous-titres automatiques",
         "cancel": "Annuler",
         "close": "Close",
         "copy": "Copier",
@@ -36,6 +37,16 @@
         "search": "Search",
         "reload": "Reload",
         "findPlaceholder": "Search by text or /regex/"
+    },
+    "autoSubsDialog": {
+        "title": "Sous-titres automatiques",
+        "selectSubtitles": "Sélectionner les sous-titres",
+        "load": "Charger les sous-titres",
+        "animeTitle": "Titre",
+        "episode": "Épisode",
+        "search": "Rechercher",
+        "selectSubtitle": "Sélectionner un sous-titre",
+        "apiKey": "Clé API"
     },
     "about": {
         "title": "À propos d'asbplayer",
@@ -257,7 +268,9 @@
             "selectSubtitles": "Sélectionner des sous-titres",
             "subtitleTrack": "Piste de sous-titre",
             "videoName": "Nom de la vidéo",
-            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files."
+            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files.",
+            "episode": "Épisode",
+            "search": "Rechercher"
         },
         "videoSelect": {
             "multipleVideoElements": "Plusieurs éléments vidéo détectés",
@@ -473,7 +486,8 @@
         "missingFieldError": "Le champ \"{{field}}\" est introuvable dans le type de note",
         "webSocketClientEnabled": "Activer le client WebSocket",
         "webSocketServerUrl": "URL du serveur WebSocket",
-        "firefoxExtensionShortcutHelp": "Modifiez ce raccourci depuis le gestionnaire d’extensions à l’adresse about:addons.",
+        "apiKey": "Clé API",
+        "firefoxExtensionShortcutHelp": "Modifiez ce raccourci depuis le gestionnaire d'extensions à l'adresse about:addons.",
         "postMinePlayback": "État de lecture après minage",
         "pauseOnHoverMode": "Pause automatique au survol des sous-titres",
         "createTestCard": "Créer une carte de test",

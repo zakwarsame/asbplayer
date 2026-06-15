@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Automaattiset tekstitykset",
         "cancel": "Peruuta",
         "close": "Close",
         "copy": "Kopioi",
@@ -36,6 +37,16 @@
         "search": "Search",
         "reload": "Reload",
         "findPlaceholder": "Search by text or /regex/"
+    },
+    "autoSubsDialog": {
+        "title": "Automaattiset tekstitykset",
+        "selectSubtitles": "Valitse tekstitykset",
+        "load": "Lataa tekstitys",
+        "animeTitle": "Otsikko",
+        "episode": "Jakso",
+        "search": "Haku",
+        "selectSubtitle": "Valitse tekstitys",
+        "apiKey": "API-avain"
     },
     "about": {
         "title": "Tietoja asbplayeristä",
@@ -257,7 +268,9 @@
             "selectSubtitles": "Valitse tekstitys",
             "subtitleTrack": "Tekstitysraita",
             "videoName": "Videonnimi",
-            "ftue": "Automaattisesti havaitut tekstitysraidat voidaan valita täällä. asbplayer ei osaa havaita tekstityksiä jokaisella sivustolla. Voit aina ladata omia tekstitystiedostoja."
+            "ftue": "Automaattisesti havaitut tekstitysraidat voidaan valita täällä. asbplayer ei osaa havaita tekstityksiä jokaisella sivustolla. Voit aina ladata omia tekstitystiedostoja.",
+            "episode": "Jakso",
+            "search": "Haku"
         },
         "videoSelect": {
             "multipleVideoElements": "Useita video-elementtejä havaittu",
@@ -473,6 +486,7 @@
         "missingFieldError": "Kenttä \"{{field}}\" ei löydy merkintätyypistä",
         "webSocketClientEnabled": "Ota WebSocket asiakasohjelma käyttöön",
         "webSocketServerUrl": "WebSocket-palvelimen URL",
+        "apiKey": "API-avain",
         "firefoxExtensionShortcutHelp": "Muokkaa tätä pikakuvaketta Plugin managerilta about:addons.",
         "postMinePlayback": "Jatka Ankiin lähettämisen jälkeen",
         "pauseOnHoverMode": "Pysäytä automaattisesti kun hiiri on tekstitysten päällä",

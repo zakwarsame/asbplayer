@@ -673,6 +673,9 @@ const settingsSchema = {
         subtitleAboveThumbnail: {
             type: 'boolean',
         },
+        apiKey: {
+            type: 'string',
+        },
         _schema: {
             type: 'number',
         },
@@ -681,6 +684,7 @@ const settingsSchema = {
 
 const ignoreKeys: (keyof AsbplayerSettings)[] = [
     'streamingPages', // Ignored due to security risk (e.g. disable CSP)
+    'apiKey', // avoid conflict with upstream import/exports
 ];
 
 const withIgnoredKeysRemoved = (settings: any) => {

@@ -16,6 +16,7 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     ActiveProfileMessage,
+    VideoDataSearchMessage,
 } from '@project/common';
 import type { OnlineSubtitleSourceConfig } from '@project/common/global-state';
 import { createTheme } from '@project/common/theme';
@@ -120,6 +121,9 @@ export default function VideoDataSyncUi({ bridge }: Props) {
     const trackedLocalObjectUrlsRef = useRef(new Set<string>());
     // Previous render's local blob URLs to detect removed/replaced tracks.
     const previousLocalObjectUrlsRef = useRef(new Set<string>());
+    const [episode, setEpisode] = useState<number | ''>('');
+
+    const [isAnimeSite, setIsAnimeSite] = useState<boolean>(false);
 
     const theme = useMemo(() => createTheme((themeType || 'dark') as PaletteMode), [themeType]);
 
@@ -229,6 +233,14 @@ export default function VideoDataSyncUi({ bridge }: Props) {
 
             if (model.onlineSubtitleSourceConfig !== undefined) {
                 setOnlineSubtitleSourceConfig(model.onlineSubtitleSourceConfig);
+            }
+
+            if (model.episode !== undefined) {
+                setEpisode(model.episode);
+            }
+
+            if (model.isAnimeSite !== undefined) {
+                setIsAnimeSite(model.isAnimeSite);
             }
         });
     }, [bridge, t]);
@@ -407,6 +419,19 @@ export default function VideoDataSyncUi({ bridge }: Props) {
         [bridge]
     );
 
+    const handleSearch = useCallback(
+        (title: string, episode: number | '') => {
+            const message: VideoDataSearchMessage = {
+                command: 'search',
+                title,
+                episode,
+            };
+            bridge.sendMessageFromServer(message);
+            setOpen(true);
+        },
+        [bridge]
+    );
+
     return (
         <StyledEngineProvider injectFirst>
             <ThemeProvider theme={theme}>
@@ -433,6 +458,9 @@ export default function VideoDataSyncUi({ bridge }: Props) {
                     onConfirm={handleConfirm}
                     onSetActiveProfile={handleSetActiveProfile}
                     onDismissFtue={handleDismissFtue}
+                    isAnimeSite={isAnimeSite}
+                    episode={episode}
+                    onSearch={handleSearch}
                 />
                 <OnlineSubtitleSourceDialog
                     open={onlineDialogOpen}
