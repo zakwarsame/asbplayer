@@ -4,10 +4,13 @@ import LoadSubtitlesIcon from '@project/common/components/LoadSubtitlesIcon';
 import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import SyncIcon from '@mui/icons-material/Sync';
+import CancelIcon from '@mui/icons-material/Cancel';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Fade from '@mui/material/Fade';
 import Badge from '@mui/material/Badge';
+import CircularProgress from '@mui/material/CircularProgress';
 import { ForwardedRef, useEffect, useState } from 'react';
 import React from 'react';
 import Tooltip from '@project/common/components/Tooltip';
@@ -22,7 +25,10 @@ interface Props {
     onShowMiningHistory: () => void;
     miningHistoryCount: number;
     onShowStatistics: () => void;
+    onAutoSyncSubtitles?: () => void;
+    onCancelAutoSync?: () => void;
     disableBulkExport?: boolean;
+    autoSyncInProgress?: boolean;
 }
 
 const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
@@ -35,7 +41,10 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
         onShowMiningHistory,
         miningHistoryCount,
         onShowStatistics,
+        onAutoSyncSubtitles,
+        onCancelAutoSync,
         disableBulkExport,
+        autoSyncInProgress,
     }: Props,
     ref: ForwardedRef<HTMLDivElement>
 ) {
@@ -76,6 +85,23 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                                     </span>
                                 </Tooltip>
                             </Grid>
+                            {onAutoSyncSubtitles && (
+                                <Grid item>
+                                    {autoSyncInProgress ? (
+                                        <Tooltip title="Cancel Auto-Sync">
+                                            <IconButton onClick={onCancelAutoSync}>
+                                                <CancelIcon color="error" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    ) : (
+                                        <Tooltip title={t('action.autoSyncSubtitles')!}>
+                                            <IconButton onClick={onAutoSyncSubtitles}>
+                                                <SyncIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </Grid>
+                            )}
                         </>
                     )}
                     <Grid item>

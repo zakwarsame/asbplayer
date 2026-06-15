@@ -35,7 +35,8 @@
         "userGuide": "Panduan Pengguna",
         "search": "Search",
         "reload": "Reload",
-        "autoSubs": "Automatic Subs"
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "Tentang asbplayer",
@@ -242,7 +243,8 @@
                 "youtube": {
                     "targetLanguages": "Kode bahasa target untuk terjemahan mesin"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "Kosong",

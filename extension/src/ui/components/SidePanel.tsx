@@ -16,7 +16,11 @@ import {
     DownloadImageMessage,
     DownloadAudioMessage,
     CardExportedMessage,
+    StartWhisperTranscriptionMessage,
+    TranscribeAudioMessage,
+    TranscribeAudioResponse,
 } from '@project/common';
+import { transcribeAudio } from '../../services/whisper-service';
 import type { AsbplayerInstance, Command, Message, OpenStatisticsOverlayMessage } from '@project/common';
 import type { BulkExportStartedPayload } from '../../controllers/bulk-export-controller';
 import { AsbplayerSettings, SettingsProvider } from '@project/common/settings';
@@ -124,6 +128,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     const [syncedVideoTab, setSyncedVideoElement] = useState<VideoTabModel>();
     const [recordingAudio, setRecordingAudio] = useState<boolean>(false);
     const [viewingAsbplayer, setViewingAsbplayer] = useState<AsbplayerInstance>();
+    const [autoSyncInProgress, setAutoSyncInProgress] = useState<boolean>(false);
 
     const keyBinder = useAppKeyBinder(settings.keyBindSet, extension);
     const currentTabId = useCurrentTabId();
@@ -349,10 +354,69 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
         browser.runtime.sendMessage(cancelCommand);
     }, [syncedVideoTab]);
 
+    const handleAutoSyncSubtitles = useCallback(async () => {
+        if (!syncedVideoTab) return;
+        console.log('[SidePanel] Starting auto-sync for tab', syncedVideoTab.id);
+        setAutoSyncInProgress(true);
+        const syncCommand: AsbPlayerToVideoCommandV2<StartWhisperTranscriptionMessage> = {
+            sender: 'asbplayerv2',
+            message: {
+                command: 'start-whisper-transcription',
+                mode: 'full',
+                language: 'ja',
+            },
+            tabId: syncedVideoTab.id,
+            src: syncedVideoTab.src,
+        };
+        console.log('[SidePanel] Sending message:', syncCommand);
+        browser.runtime.sendMessage(syncCommand);
+    }, [syncedVideoTab]);
+
+    const handleCancelAutoSync = useCallback(() => {
+        console.log('[SidePanel] Cancelling auto-sync');
+        setAutoSyncInProgress(false);
+    }, []);
+
     // Local bulk export UI state
     const [bulkOpen, setBulkOpen] = useState<boolean>(false);
     const [bulkCurrent, setBulkCurrent] = useState<number>(0);
     const [bulkTotal, setBulkTotal] = useState<number>(0);
+
+    // Listen for auto-sync lifecycle messages
+    useEffect(() => {
+        const listener = (message: any) => {
+            if (message?.message?.command === 'subtitle-offset-detected') {
+                setAutoSyncInProgress(false);
+            } else if (message?.message?.command === 'whisper-transcription-error') {
+                setAutoSyncInProgress(false);
+                handleError(message.message.error);
+            }
+        };
+        browser.runtime.onMessage.addListener(listener);
+        return () => browser.runtime.onMessage.removeListener(listener);
+    }, [handleError]);
+
+    // Handle transcription requests from background (WebGPU accelerated)
+    useEffect(() => {
+        const listener = (
+            request: any,
+            _sender: Browser.runtime.MessageSender,
+            sendResponse: (response: TranscribeAudioResponse) => void
+        ) => {
+            if (
+                request?.sender === 'asbplayer-extension-to-sidepanel' &&
+                request?.message?.command === 'transcribe-audio'
+            ) {
+                const msg = request.message as TranscribeAudioMessage;
+                transcribeAudio(msg.audioBase64, msg.language, msg.useWebGpu)
+                    .then((result) => sendResponse({ success: true, segments: result.segments }))
+                    .catch((e) => sendResponse({ success: false, error: e instanceof Error ? e.message : String(e) }));
+                return true; // Keep channel open for async response
+            }
+        };
+        browser.runtime.onMessage.addListener(listener);
+        return () => browser.runtime.onMessage.removeListener(listener);
+    }, []);
 
     // Listen for bulk export lifecycle messages from background
     useEffect(() => {
@@ -732,6 +796,9 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 onShowMiningHistory={handleShowCopyHistory}
                                 miningHistoryCount={copyHistoryItems.length}
                                 onShowStatistics={handleShowStatistics}
+                                onAutoSyncSubtitles={handleAutoSyncSubtitles}
+                                onCancelAutoSync={handleCancelAutoSync}
+                                autoSyncInProgress={autoSyncInProgress}
                             />
                             <SidePanelBottomControls
                                 disabled={currentTabId !== syncedVideoTab?.id}

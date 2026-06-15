@@ -1,6 +1,7 @@
 {
     "action": {
         "autoSubs": "자동 자막",
+        "autoSyncSubtitles": "자막 자동 동기화",
         "cancel": "취소",
         "close": "Close",
         "copy": "복사",
@@ -240,6 +241,7 @@
             "takeScreenshot": "자막 추출시 스크린샷 촬영",
             "updateAvailable": "업데이트 내용",
             "enableOverlay": "화면 위에 재생 컨트롤 패널 표시",
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)",
             "pages": {
                 "overridesWarning": "These settings have been modified.",
                 "host": "Host regex",
