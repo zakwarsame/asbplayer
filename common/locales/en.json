@@ -11,6 +11,7 @@
         "downloadImage": "Download Image",
         "downloadSubtitlesAsSrt": "Download Subtitles as SRT",
         "bulkExportSubtitles": "Bulk Export Subtitles",
+        "autoSyncSubtitles": "Auto-Sync Subtitles",
         "jumpTo": "Jump To",
         "ok": "OK",
         "mineSubtitle": "Mine Subtitle",
@@ -222,6 +223,7 @@
             "asbplayerUrl": "App URL",
             "autoLoadDetectedSubs": "Auto-load detected subtitles",
             "autoLoadDetectedSubsFailure": "Prompt on failure to auto-load subtitles",
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)",
             "cleanScreenshot": "Clean screenshot when mining",
             "condensedPlaybackMinSkipInterval": "Condensed playback minimum skip interval",
             "cropScreenshot": "Crop screenshot when mining",
@@ -686,7 +688,7 @@
             "noDeckBreakdown": "No matching Anki cards were found for this media.",
             "info": {
                 "ankiStatistics": "How your Anki cards match up with the words in this media.",
-                "projectedCards": "Preview your stats by treating past cards or new cards (in the order they will be introduced) as Mature."
+                "projectedCards": "Preview your stats by treating past cards or new cards (in the order they will be introduced) as Mature." 
             }
         },
         "waniKani": {

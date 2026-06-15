@@ -78,6 +78,7 @@ import BrowserFeaturesHandler from '@/handlers/asbplayerv2/browser-features-hand
 import OpenStatisticsHandler from '@/handlers/video/open-statistics-handler';
 import StatisticsOverlayForwarderHandler from '@/handlers/statistics-overlay/statistics-overlay-forwarder-handler';
 import OpenStatisticsOverlayHandler from '@/handlers/open-statistics-overlay-handler';
+import WhisperTranscriptionHandler from '@/handlers/asbplayer/whisper-transcription-handler';
 
 export default defineBackground(() => {
     if (!isFirefoxBuild) {
@@ -218,6 +219,7 @@ export default defineBackground(() => {
         new ExtensionCommandsHandler(),
         new PageConfigHandler(),
         new BrowserFeaturesHandler(),
+        new WhisperTranscriptionHandler(),
         new AsbplayerV2ToVideoCommandForwardingHandler(),
         new CaptureVisibleTabHandler(),
         new RequestModelHandler(),
@@ -233,12 +235,21 @@ export default defineBackground(() => {
             return false;
         }
 
+        // Debug: log whisper-related messages
+        if (request?.message?.command === 'start-whisper-transcription') {
+            console.log('[Background] Received whisper message:', request);
+        }
+
         for (const handler of handlers) {
             if (
                 (typeof handler.sender === 'string' && handler.sender === request.sender) ||
                 (typeof handler.sender === 'object' && handler.sender.includes(request.sender))
             ) {
                 if (handler.command === null || handler.command === request.message.command) {
+                    // Debug: log handler match
+                    if (request?.message?.command === 'start-whisper-transcription') {
+                        console.log('[Background] Handler matched:', handler.constructor.name, handler.command);
+                    }
                     if (handler.handle(request, sender, sendResponse) === true) {
                         return true;
                     }

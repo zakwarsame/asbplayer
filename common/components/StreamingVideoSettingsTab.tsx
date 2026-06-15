@@ -60,6 +60,7 @@ const StreamingVideoSettingsTab: React.FC<Props> = ({
         streamingAutoSync,
         streamingAutoSyncPromptOnFailure,
         streamingCondensedPlaybackMinimumSkipIntervalMs,
+        streamingUseWebGpuForWhisper,
         streamingAppUrl,
         streamingPages,
     } = settings;
@@ -222,6 +223,16 @@ const StreamingVideoSettingsTab: React.FC<Props> = ({
                             endAdornment: <InputAdornment position="end">ms</InputAdornment>,
                         },
                     }}
+                />
+                <SwitchLabelWithHoverEffect
+                    control={
+                        <Switch
+                            checked={streamingUseWebGpuForWhisper}
+                            onChange={(e) => onSettingChanged('streamingUseWebGpuForWhisper', e.target.checked)}
+                        />
+                    }
+                    label={t('extension.settings.useWebGpuForWhisper')}
+                    labelPlacement="start"
                 />
                 {pageConfigs && (
                     <>

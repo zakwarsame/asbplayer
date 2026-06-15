@@ -114,6 +114,7 @@ export default defineConfig({
                         'anki-ui.js',
                         'mp3-encoder-worker.js',
                         'pgs-parser-worker.js',
+                        'onnx/*',
                         'video-data-sync-ui.js',
                         'video-select-ui.js',
                         'notification-ui.js',
@@ -191,6 +192,9 @@ export default defineConfig({
                 ...key,
                 minimum_chrome_version: '116',
                 commands,
+                content_security_policy: {
+                    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+                },
             };
         }
 
