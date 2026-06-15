@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function json_to_csv() {
     jq -r '[paths(scalars) as $path | {"key": $path | join("."), "value": getpath($path)}] | .[] | "\"\(.key)\",\"\",\"\",\"\(.value)\""' $1
