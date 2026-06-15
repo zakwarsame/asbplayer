@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ -z $CROWDIN_API_TOKEN ]; then
     echo "CROWDIN_API_TOKEN not defined"
