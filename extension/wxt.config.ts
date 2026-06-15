@@ -29,6 +29,9 @@ const extName = 'asbplayer';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
+    webExt: {
+        chromiumArgs: ['--user-data-dir=./.wxt/chrome-data'],
+    },
     modules: ['@wxt-dev/module-react'],
     srcDir: 'src',
     vite: () => ({
@@ -61,15 +64,15 @@ export default defineConfig({
         },
     },
     manifest: ({ browser, mode }) => {
-        const version = '1.18.0';
+        const version = '1.1.0';
         const isDev = mode === 'development';
         const devLabel = isDev ? ' (Dev)' : '';
         const title = `${extName}${devLabel}`;
-        const name = `${title}: Language-learning with subtitles`;
+        const name = 'API subs for asbplayer';
 
         let manifest: UserManifest = {
             name,
-            description: '__MSG_extensionDescription__',
+            description: 'API subs for asbplayer',
             version,
             action: { default_title: title },
             default_locale: 'en',
@@ -206,7 +209,7 @@ export default defineConfig({
                       id: `${extName}-dev-${version}@example.com`,
                   }
                 : {
-                      id: '{e4b27483-2e73-4762-b2ec-8d988a143a40}',
+                      id: '{3e0b3d41-1618-4764-b3a5-3f38f47b6d0a}',
                   };
 
             manifest = {
@@ -227,7 +230,7 @@ export default defineConfig({
 
             const geckoId = isDev
                 ? `${extName}-android-dev-${version}@example.com`
-                : '{49de9206-c73e-4829-be4d-bda770d7f4b5}';
+                : '{a2f16d07-b655-4c1a-9873-c2e52d5a146f}';
 
             manifest = {
                 ...manifest,

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DEVICE=$(adb devices | awk '{print $1}' | grep -v List | grep -Ex "([a-zA-Z0-9]+)")
 
