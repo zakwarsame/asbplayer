@@ -44,10 +44,6 @@ export const useMobileVideoOverlayModel = ({ location }: Params) => {
 
                 await requestModel();
             } catch (e) {
-                console.log(
-                    'Failed to request overlay model, retrying in 1s. Message: ' +
-                        (e instanceof Error ? e.message : String(e))
-                );
                 timeout = setTimeout(() => init(), 1000);
             }
         };

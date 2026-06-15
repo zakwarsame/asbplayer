@@ -241,6 +241,7 @@ export const defaultSettings: AsbplayerSettings = {
     pauseOnHoverMode: 0,
     lastSelectedAnkiExportMode: 'default',
     dictionaryTracks: [defaultDictionaryTrackSettings, defaultDictionaryTrackSettings, defaultDictionaryTrackSettings],
+    apiKey: '',
 };
 
 export const NUM_DICTIONARY_TRACKS = defaultSettings.dictionaryTracks.length;

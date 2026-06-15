@@ -84,6 +84,7 @@ const MiscSettingTab: React.FC<Props> = ({
         webSocketServerUrl,
         subtitleAboveThumbnail,
         thumbnailPreview,
+        apiKey,
     } = settings;
     const validRegex = useMemo(() => regexIsValid(subtitleRegexFilter), [subtitleRegexFilter]);
     const [webSocketConnectionSucceeded, setWebSocketConnectionSucceeded] = useState<boolean>();
@@ -463,6 +464,13 @@ const MiscSettingTab: React.FC<Props> = ({
                         onChange={(event) => onSettingChanged('tabName', event.target.value)}
                     />
                 )}
+                <SettingsTextField
+                    label={t('settings.apiKey')}
+                    fullWidth
+                    color="secondary"
+                    value={apiKey}
+                    onChange={(event) => onSettingChanged('apiKey', event.target.value)}
+                />
                 <SettingsSection>{t('settings.title')}</SettingsSection>
                 <Stack direction="row" spacing={1}>
                     <Button variant="contained" color="primary" style={{ flex: 1 }} onClick={handleImportSettings}>

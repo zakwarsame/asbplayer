@@ -12,6 +12,8 @@ import {
     VideoDataUiModel,
     VideoDataUiOpenReason,
     VideoToExtensionCommand,
+    VideoDataSearchMessage,
+    UpdateEpisodeMessage,
 } from '@project/common';
 import { AsbplayerSettings, SettingsProvider } from '@project/common/settings';
 import { base64ToBlob, bufferToBase64 } from '@project/common/base64';
@@ -23,6 +25,8 @@ import i18n from 'i18next';
 import { ExtensionGlobalStateProvider } from '@/services/extension-global-state-provider';
 import { isOnTutorialPage } from '@/services/tutorial';
 import { extractExtension } from '@/pages/util';
+import { fetchAnilistInfo } from '../services/anilist';
+import { fetchSubtitles } from '../services/subtitle';
 
 declare global {
     function cloneInto(obj: any, targetScope: any, options?: any): any;
@@ -84,6 +88,10 @@ export default class VideoDataSyncController {
     private _autoSyncAttempted: boolean = false;
     private _dataReceivedListener?: (event: Event) => void;
     private _isTutorial: boolean;
+    private _episode: number | '' = '';
+    private _isAnimeSite: boolean = false;
+    private _pageLoadSynced: boolean = false;
+    private _lastConfirmedTrackIds?: string[];
 
     constructor(context: Binding, settings: SettingsProvider) {
         this._context = context;
@@ -100,6 +108,9 @@ export default class VideoDataSyncController {
         this._domain = new URL(window.location.href).host;
         this._frame = uiFrameForHtml(html);
         this._isTutorial = isOnTutorialPage();
+        this._pageLoadSynced = false;
+        this._isAnimeSite = false;
+        this.checkIfAnimeSite();
     }
 
     private get lastLanguagesSynced(): string[] {
@@ -151,10 +162,6 @@ export default class VideoDataSyncController {
     }
 
     async requestSubtitles() {
-        if (!this._context.hasPageScript) {
-            return;
-        }
-
         // While the picker is open on the same location, skip refresh so
         // player events do not clobber an in-progress user selection. On a
         // true soft-navigation, dismiss the stale picker and continue.
@@ -166,24 +173,31 @@ export default class VideoDataSyncController {
             }
         }
 
+        const hasPageScript = this._context.hasPageScript;
         const pageDelegate = await currentPageDelegate();
-
-        if (!pageDelegate?.isVideoPage()) {
+        const isVideoPage = pageDelegate?.isVideoPage();
+        if ((!hasPageScript || !isVideoPage) && !this._isAnimeSite) {
             return;
         }
 
-        this._syncedData = undefined;
-        this._autoSyncAttempted = false;
+        // Only clear synced data if we don't have any subtitle data yet
+        if (!this._hasSubtitles()) {
+            this._syncedData = undefined;
+            this._autoSyncAttempted = false;
+        }
 
         if (!this._dataReceivedListener) {
             this._dataReceivedListener = (event: Event) => {
                 const data = (event as CustomEvent).detail as VideoData;
+                if (data?.reAttempt) {
+                    this._autoSyncAttempted = false;
+                }
                 this._setSyncedData(data);
             };
             document.addEventListener('asbplayer-synced-data', this._dataReceivedListener, false);
         }
 
-        if (pageDelegate.config.key === 'youtube') {
+        if (pageDelegate?.config.key === 'youtube') {
             const targetTranslationLanguageCodes =
                 (await this._settings.getSingle('streamingPages')).youtube.targetLanguages ?? [];
             let payload = { targetTranslationLanguageCodes };
@@ -192,7 +206,12 @@ export default class VideoDataSyncController {
             }
             document.dispatchEvent(new CustomEvent('asbplayer-get-synced-data', { detail: payload }));
         } else {
-            document.dispatchEvent(new CustomEvent('asbplayer-get-synced-data'));
+            // If we already have subtitle data, show the dialog directly
+            if (this._hasSubtitles()) {
+                this.show({ reason: VideoDataUiOpenReason.userRequested });
+            } else {
+                document.dispatchEvent(new CustomEvent('asbplayer-get-synced-data'));
+            }
         }
     }
 
@@ -232,28 +251,42 @@ export default class VideoDataSyncController {
         const hasSeenFtue = globalState.ftueHasSeenSubtitleTrackSelector;
         const onlineSubtitleSourceConfig = globalState.onlineSubtitleSourceConfig;
         const hideRememberTrackPreferenceToggle = this._isTutorial || (await this._pageHidesTrackPrefToggle());
+        await this.checkIfAnimeSite();
+        let title = '';
+        let episode = '';
+        let autoSelectBasedOnLastSavedSub = autoSelectedTrackIds;
+        if (this._isAnimeSite) {
+            autoSelectBasedOnLastSavedSub =
+                this._lastConfirmedTrackIds ??
+                (subtitleTrackChoices.length > 0 ? [subtitleTrackChoices[0].id, '-', '-'] : autoSelectedTrackIds);
+            ({ title, episode } = await this.obtainTitleAndEpisode());
+        }
+
         return this._syncedData
             ? {
                   isLoading: this._syncedData.subtitles === undefined,
-                  suggestedName: this._syncedData.basename,
-                  selectedSubtitle: autoSelectedTrackIds,
+                  suggestedName: title ? title : this._syncedData.basename,
+                  selectedSubtitle: autoSelectBasedOnLastSavedSub,
                   subtitles: subtitleTrackChoices,
                   error: this._syncedData.error,
                   defaultCheckboxState: defaultCheckboxState,
                   openedFromAsbplayerId: '',
                   settings: {
-                      themeType: themeType,
+                      themeType,
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
                   hasSeenFtue,
                   hideRememberTrackPreferenceToggle,
                   onlineSubtitleSourceConfig,
+                  //  todo: put these in one state object
+                  episode: episode ? episode : this._episode,
+                  isAnimeSite: this._isAnimeSite,
                   ...additionalFields,
               }
             : {
                   isLoading: this._context.hasPageScript,
-                  suggestedName: document.title,
+                  suggestedName: title ? title : document.title,
                   selectedSubtitle: autoSelectedTrackIds,
                   error: '',
                   showSubSelect: true,
@@ -261,13 +294,15 @@ export default class VideoDataSyncController {
                   defaultCheckboxState: defaultCheckboxState,
                   openedFromAsbplayerId: '',
                   settings: {
-                      themeType: themeType,
+                      themeType,
                       profiles: await profilesPromise,
                       activeProfile: (await activeProfilePromise)?.name,
                   },
                   hasSeenFtue,
                   hideRememberTrackPreferenceToggle,
                   onlineSubtitleSourceConfig,
+                  episode: this._episode,
+                  isAnimeSite: this._isAnimeSite,
                   ...additionalFields,
               };
     }
@@ -327,8 +362,24 @@ export default class VideoDataSyncController {
                 this._autoSyncAttempted = true;
                 const subs = this._matchLastSyncedWithAvailableTracks();
 
-                if (subs.completeMatch && !this.pickerVisible) {
-                    const autoSelectedTracks: VideoDataSubtitleTrack[] = subs.autoSelectedTracks;
+                // Only auto-sync if we truly have subtitles to sync (- means "No subtitle")
+                const isAnimeSite = this._isAnimeSite;
+                const hasAvailableSubtitles = this._syncedData.subtitles.length > 0;
+
+                // For anime sites with available subtitles, always auto-load
+                // For other sites, follow the normal language matching logic
+                const shouldAutoSync = isAnimeSite ? hasAvailableSubtitles : subs.completeMatch;
+
+                if (shouldAutoSync && !this.pickerVisible) {
+                    let autoSelectedTracks: VideoDataSubtitleTrack[];
+
+                    if (isAnimeSite && this._syncedData.subtitles.length > 0) {
+                        // For anime sites, auto-select the first available subtitle
+                        autoSelectedTracks = [this._syncedData.subtitles[0], this._emptySubtitle, this._emptySubtitle];
+                    } else {
+                        autoSelectedTracks = subs.autoSelectedTracks;
+                    }
+
                     await this._syncData(autoSelectedTracks);
                 } else if (!subs.completeMatch && !this.pickerVisible) {
                     const shouldPrompt = await this._settings.getSingle('streamingAutoSyncPromptOnFailure');
@@ -344,6 +395,10 @@ export default class VideoDataSyncController {
         } else if (!this.pickerVisible || wasLoading) {
             this._frame.clientIfLoaded?.updateState(await this._buildModel({}));
         }
+    }
+
+    private _hasSubtitles(): boolean {
+        return (this._syncedData?.subtitles?.length || 0) > 0;
     }
 
     private async _canAutoSync(): Promise<boolean> {
@@ -424,6 +479,9 @@ export default class VideoDataSyncController {
                 if ('confirm' === message.command) {
                     const confirmMessage = message as VideoDataUiBridgeConfirmMessage;
 
+                    // Store the actual track IDs that were confirmed
+                    this._lastConfirmedTrackIds = confirmMessage.data.map((track) => track.id || '-');
+
                     if (confirmMessage.shouldRememberTrackChoices) {
                         this.lastLanguagesSynced = confirmMessage.data
                             .map((track) => track.language)
@@ -448,6 +506,15 @@ export default class VideoDataSyncController {
                             await this._reportError(e.message);
                         }
                     }
+                } else if ('updateEpisode' === message.command) {
+                    const updateEpisodeMessage = message as UpdateEpisodeMessage;
+                    this._episode = updateEpisodeMessage.episode;
+                    client.updateState({ episode: this._episode, open: true });
+                    dataWasSynced = false;
+                } else if ('search' === message.command) {
+                    const searchSubtitlesMessage = message as VideoDataSearchMessage;
+                    await this._handleSearch(searchSubtitlesMessage);
+                    dataWasSynced = false;
                 }
 
                 if (dataWasSynced) {
@@ -460,8 +527,28 @@ export default class VideoDataSyncController {
         return client;
     }
 
-    private _prepareShow() {
+    private async _prepareShow() {
         this._openedLocation = window.location.href;
+        const client = await this._client();
+        await this.checkIfAnimeSite();
+        const { title, episode } = await this.obtainTitleAndEpisode();
+
+        if (this._isAnimeSite && title && episode && !this._autoSyncAttempted) {
+            await this._handleSearch({
+                command: 'search',
+                title: title,
+                episode: parseInt(episode),
+            });
+            return;
+        }
+
+        client.updateState({
+            isAnimeSite: this._isAnimeSite,
+            suggestedName: title || this._syncedData?.basename || document.title,
+            episode: episode ? parseInt(episode) : '',
+            open: true,
+        });
+
         this._wasPaused = this._wasPaused ?? this._context.video.paused;
         this._context.pause();
 
@@ -703,6 +790,95 @@ export default class VideoDataSyncController {
             showSubSelect: true,
             error,
             themeType: themeType,
+        });
+    }
+
+    private async _handleSearch(message: VideoDataSearchMessage) {
+        const client = await this._client();
+        client.updateState({ isLoading: true, error: null, open: true });
+
+        const apiKey = await this._context.settings.getSingle('apiKey');
+
+        try {
+            const { anilistId } = await fetchAnilistInfo(message.title);
+            if (!anilistId) {
+                throw new Error('Unable to find Anilist ID for the given title');
+            }
+
+            const subtitles = await fetchSubtitles(anilistId, message.episode || 0, apiKey || '');
+            if (typeof subtitles === 'string') {
+                throw new Error(subtitles);
+            }
+
+            const fetchedSubtitles = subtitles
+                .map((sub, index) => {
+                    const url = new URL(sub.url);
+                    const extension = url.pathname.split('.').pop() || 'srt';
+                    return {
+                        id: `fetched-${index}`,
+                        language: 'ja',
+                        url: sub.url,
+                        label: sub.name,
+                        extension: extension,
+                    };
+                })
+                .filter((sub) => sub.url && sub.label);
+
+            const { title } = await this.obtainTitleAndEpisode();
+
+            // Only store fetched subtitles, no empty tracks
+            this._syncedData = {
+                ...this._syncedData,
+                subtitles: fetchedSubtitles,
+            } as VideoData;
+
+            // Only auto-load subtitles and hide the dialog if triggered by page load
+            if (fetchedSubtitles.length > 0 && this._autoSync && !this._pageLoadSynced) {
+                this._pageLoadSynced = true;
+                await this._syncData([fetchedSubtitles[0]]);
+                client.updateState({ open: false });
+                this._hideAndResume();
+                return;
+            }
+
+            client.updateState({
+                subtitles: fetchedSubtitles, // Use fetchedSubtitles directly
+                isLoading: false,
+                episode: message.episode,
+                open: true,
+                suggestedName: title,
+                selectedSubtitle: fetchedSubtitles.length > 0 ? [`fetched-0`, '-', '-'] : ['-', '-', '-'],
+            });
+        } catch (error) {
+            // Keep dialog open when showing error
+            client.updateState({
+                error: error instanceof Error ? error.message : 'An error occurred while fetching subtitles',
+                episode: message.episode || '',
+                isLoading: false,
+                open: true,
+            });
+        }
+    }
+
+    private async checkIfAnimeSite(): Promise<void> {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({ command: 'check-if-anime-site' }, (response) => {
+                this._isAnimeSite = response.isAnimeSite;
+
+                resolve();
+            });
+        });
+    }
+
+    private async obtainTitleAndEpisode(): Promise<{ title: string; episode: string }> {
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({ command: 'get-anime-title-and-episode' }, (response) => {
+                if (response.error) {
+                    reject({ title: '', episode: '' });
+                } else {
+                    resolve({ title: response.title, episode: response.episode?.toString() });
+                }
+            });
         });
     }
 }
