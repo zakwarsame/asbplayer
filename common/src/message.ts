@@ -431,6 +431,10 @@ export interface SubtitlesUpdatedFromVideoMessage extends Message {
     readonly updatedSubtitles: RichSubtitleModel[];
 }
 
+export interface RequestVideoStateMessage extends Message {
+    readonly command: 'request-video-state';
+}
+
 export interface RequestSubtitlesFromAppMessage extends MessageWithId {
     readonly command: 'request-subtitles';
 }
@@ -534,6 +538,12 @@ export interface VideoDataUiBridgeOpenFileMessage extends Message {
 export interface VideoDataUiBridgeSetOnlineSubtitleSourceConfigMessage extends Message {
     readonly command: 'setOnlineSubtitleSourceConfig';
     readonly state: Partial<OnlineSubtitleSourceConfig>;
+}
+
+export interface VideoDataSearchMessage extends Message {
+    readonly command: 'search';
+    readonly title: string;
+    readonly episode: number | '';
 }
 
 export interface CropAndResizeMessage extends Message, ImageCaptureParams {
@@ -754,6 +764,12 @@ export interface RequestSubtitlesResponse {
 export interface RequestCurrentSubtitleResponse {
     readonly currentSubtitle: SubtitleModel | null;
     readonly currentSubtitleIndex: number | null;
+}
+
+export interface VideoStateResponse {
+    readonly currentTime: number;
+    readonly duration: number;
+    readonly paused: boolean;
 }
 
 export interface JumpToSubtitleMessage extends Message {
@@ -1110,4 +1126,9 @@ export interface MoveStatisticsOverlayMessage extends Message {
 export interface CloseStatisticsOverlayMessage extends Message {
     readonly command: 'close-statistics-overlay';
     readonly mediaId: string;
+}
+
+export interface UpdateEpisodeMessage extends Message {
+    readonly command: 'updateEpisode';
+    readonly episode: number | '';
 }

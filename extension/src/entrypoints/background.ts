@@ -1,4 +1,5 @@
 import TabRegistry, { Asbplayer } from '@/services/tab-registry';
+import { isAnimeSite } from '@/services/anime-sites';
 import ImageCapturer from '@/services/image-capturer';
 import VideoHeartbeatHandler from '@/handlers/video/video-heartbeat-handler';
 import RecordMediaHandler from '@/handlers/video/record-media-handler';
@@ -225,7 +226,13 @@ export default defineBackground(() => {
         new StatisticsOverlayForwarderHandler(),
     ];
 
-    browser.runtime.onMessage.addListener((request: Command<Message>, sender, sendResponse) => {
+    browser.runtime.onMessage.addListener((request: Command<Message> | any, sender, sendResponse) => {
+        // Handle logging messages
+        if (request.command === 'asbplayer-log') {
+            console.log(request.message, request.data);
+            return false;
+        }
+
         for (const handler of handlers) {
             if (
                 (typeof handler.sender === 'string' && handler.sender === request.sender) ||
@@ -239,6 +246,34 @@ export default defineBackground(() => {
                     break;
                 }
             }
+        }
+    });
+
+    function getAnimeTitleAndEpisode(
+        tabId: number,
+        url: string
+    ): Promise<{ title: string; episode: number } | { error: string }> {
+        return new Promise((resolve) => {
+            browser.tabs.sendMessage(tabId, { action: 'getTitleAndEp', url: url }, (response) => {
+                if (browser.runtime.lastError) {
+                    resolve({ error: browser.runtime.lastError.message ?? 'Unknown error' });
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    }
+
+    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.command === 'get-anime-title-and-episode' && sender.tab?.id) {
+            getAnimeTitleAndEpisode(sender.tab.id, sender.tab.url ?? '')
+                .then(sendResponse)
+                .catch((error) => sendResponse({ error: error.message }));
+            return true;
+        }
+        if (message.command === 'check-if-anime-site') {
+            sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
+            return true;
         }
     });
 

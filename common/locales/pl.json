@@ -34,7 +34,8 @@
         "revert": "Revert",
         "userGuide": "User guide",
         "search": "Search",
-        "reload": "Reload"
+        "reload": "Reload",
+        "autoSubs": "Automatic Subs"
     },
     "about": {
         "title": "About asbplayer",
@@ -251,7 +252,9 @@
             "selectSubtitles": "Wybierz napisy",
             "subtitleTrack": "Ścieżka napisów",
             "videoName": "Nazwa wideo",
-            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files."
+            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files.",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Wykryto wiele elementów wideo",
@@ -636,7 +639,8 @@
         "webSocketInterface": "WebSocket interface",
         "yomitanHelperText": "Instructions to setup Yomitan API are <0>here<0>.",
         "seekableTracks": "Subtitle tracks affected by playback modes and keyboard shortcuts",
-        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy"
+        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "Statistics",
@@ -729,5 +733,15 @@
         "searchCategory": "Search category",
         "categoryAnime": "Anime",
         "categoryDrama": "Drama"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }

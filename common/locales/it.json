@@ -34,7 +34,8 @@
         "revert": "Ripristina",
         "userGuide": "Guida Utente",
         "search": "Cerca",
-        "reload": "Ricarica"
+        "reload": "Ricarica",
+        "autoSubs": "Automatic Subs"
     },
     "about": {
         "title": "A proposito di asbplayer",
@@ -251,7 +252,9 @@
             "selectSubtitles": "Seleziona sottotitoli",
             "subtitleTrack": "Traccia sottotitoli",
             "videoName": "Nome video",
-            "ftue": "Qui è possibile selezionare le tracce dei sottotitoli rilevate automaticamente. asbplayer non sa come rilevare i sottotitoli su tutti i siti. Puoi sempre caricare i tuoi file di sottotitoli."
+            "ftue": "Qui è possibile selezionare le tracce dei sottotitoli rilevate automaticamente. asbplayer non sa come rilevare i sottotitoli su tutti i siti. Puoi sempre caricare i tuoi file di sottotitoli.",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Rilevati più elementi video",
@@ -636,7 +639,8 @@
         "webSocketInterface": "Interfaccia WebSocket",
         "yomitanHelperText": "Le istruzioni per configurare l'API Yomitan sono <0>qui</0>.",
         "seekableTracks": "Tracce dei sottotitoli influenzate dalle modalità di riproduzione e dalle scorciatoie da tastiera",
-        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy"
+        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "Statistiche",
@@ -729,5 +733,15 @@
         "searchCategory": "Search category",
         "categoryAnime": "Anime",
         "categoryDrama": "Drama"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }

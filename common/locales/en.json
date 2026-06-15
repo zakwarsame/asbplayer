@@ -1,5 +1,6 @@
 {
     "action": {
+        "autoSubs": "Automatic Subs",
         "cancel": "Cancel",
         "close": "Close",
         "copy": "Copy",
@@ -63,6 +64,16 @@
     },
     "videoSubtitleSplitBehavior": {
         "autoMaximizeVideo": "Auto-maximize local video"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     },
     "ankiDialog": {
         "applySelection": "Apply Selection",
@@ -251,7 +262,9 @@
             "selectSubtitles": "Select Subtitles",
             "subtitleTrack": "Subtitle Track",
             "videoName": "Video Name",
-            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files."
+            "ftue": "Auto-detected subtitle tracks can be selected here. asbplayer does not know how to detect subtitles on every site. You can always load your own subtitle files.",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Multiple Video Elements Detected",
@@ -467,6 +480,7 @@
         "missingFieldError": "Field \"{{field}}\" not found in note type",
         "webSocketClientEnabled": "Enable WebSocket client",
         "webSocketServerUrl": "WebSocket Server URL",
+        "apiKey": "API Key",
         "firefoxExtensionShortcutHelp": "Edit this shortcut from the Plugin manager at about:addons.",
         "postMinePlayback": "Post-mining playback state",
         "pauseOnHoverMode": "Auto-pause when mousing over subtitles",

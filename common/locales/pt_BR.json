@@ -34,7 +34,8 @@
         "revert": "Reverter",
         "userGuide": "Guia de usuario",
         "search": "Search",
-        "reload": "Reload"
+        "reload": "Reload",
+        "autoSubs": "Automatic Subs"
     },
     "about": {
         "title": "Sobre o asbplayer",
@@ -251,7 +252,9 @@
             "selectSubtitles": "Selecionar legenda",
             "subtitleTrack": "Selecionar faixa",
             "videoName": "Nome do vídeo",
-            "ftue": "As faixas de legendas detectadas automaticamente podem ser selecionadas aqui. O asbplayer não sabe como detectar legendas em todo site. Você sempre pode carregar seus próprios arquivos de legenda."
+            "ftue": "As faixas de legendas detectadas automaticamente podem ser selecionadas aqui. O asbplayer não sabe como detectar legendas em todo site. Você sempre pode carregar seus próprios arquivos de legenda.",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Detectados Múltiplos Elementos de Vídeo",
@@ -636,7 +639,8 @@
         "webSocketInterface": "WebSocket interface",
         "yomitanHelperText": "As instruções para configurar a API do Yomitan estão <0>aqui<0>.",
         "seekableTracks": "Subtitle tracks affected by playback modes and keyboard shortcuts",
-        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy"
+        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "Statistics",
@@ -729,5 +733,15 @@
         "searchCategory": "Search category",
         "categoryAnime": "Anime",
         "categoryDrama": "Drama"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }

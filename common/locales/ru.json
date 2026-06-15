@@ -34,7 +34,8 @@
         "revert": "Revert",
         "userGuide": "User guide",
         "search": "Search",
-        "reload": "Reload"
+        "reload": "Reload",
+        "autoSubs": "Automatic Subs"
     },
     "about": {
         "title": "О asbplayer",
@@ -251,7 +252,9 @@
             "selectSubtitles": "Выбрать субтитры",
             "subtitleTrack": "Выбрать дорожку субтитров",
             "videoName": "Название видео",
-            "ftue": "Здесь можно выбрать дорожки субтитров найденные автоматически. Автоматическая загрузка субтитров не работает на каждом сайте - вы всегда можете загрузить свои собственные файлы с субтитрами."
+            "ftue": "Здесь можно выбрать дорожки субтитров найденные автоматически. Автоматическая загрузка субтитров не работает на каждом сайте - вы всегда можете загрузить свои собственные файлы с субтитрами.",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Обнаружено несколько видеоэлементов",
@@ -636,7 +639,8 @@
         "webSocketInterface": "WebSocket interface",
         "yomitanHelperText": "Instructions to setup Yomitan API are <0>here<0>.",
         "seekableTracks": "Subtitle tracks affected by playback modes and keyboard shortcuts",
-        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy"
+        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "Statistics",
@@ -729,5 +733,15 @@
         "searchCategory": "Search category",
         "categoryAnime": "Anime",
         "categoryDrama": "Drama"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }
