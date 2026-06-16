@@ -35,7 +35,8 @@
         "userGuide": "User guide",
         "search": "Search",
         "reload": "Reload",
-        "autoSubs": "Automatic Subs"
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "О asbplayer",
@@ -243,7 +244,8 @@
                 "youtube": {
                     "targetLanguages": "Target language codes for machine translation"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "Пусто",
