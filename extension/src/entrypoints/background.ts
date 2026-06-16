@@ -45,6 +45,7 @@ import ToggleSidePanelHandler from '@/handlers/video/toggle-side-panel-handler';
 import CopySubtitleHandler from '@/handlers/asbplayerv2/copy-subtitle-handler';
 import { RequestingActiveTabPermissionHandler } from '@/handlers/video/requesting-active-tab-permission';
 import { CardPublisher } from '@/services/card-publisher';
+import NetworkSubtitleCapture from '@/services/network-subtitle-capture';
 import CardUpdatedDialogHandler from '@/handlers/asbplayerv2/card-updated-dialog-handler';
 import CardExportedDialogHandler from '@/handlers/asbplayerv2/card-exported-dialog-handler';
 import AckMessageHandler from '@/handlers/video/ack-message-handler';
@@ -85,14 +86,7 @@ export default defineBackground(() => {
     }
 
     const settings = new SettingsProvider(new ExtensionSettingsStorage());
-
-    const ccTracksByTab = new Map<number, Array<{ url: string; label: string; language: string; base64: string }>>();
-
-    const langCodeToName: Record<string, string> = {
-        en: 'English', eng: 'English', ja: 'Japanese', jpn: 'Japanese', de: 'German', ger: 'German',
-        es: 'Spanish', spa: 'Spanish', fr: 'French', fre: 'French', it: 'Italian', ita: 'Italian',
-        pt: 'Portuguese', por: 'Portuguese', ru: 'Russian', rus: 'Russian', zh: 'Chinese', ko: 'Korean',
-    };
+    const networkSubtitleCapture = new NetworkSubtitleCapture(settings);
 
     const startListener = async () => {
         primeLocalization(await settings.getSingle('language'));
@@ -283,42 +277,11 @@ export default defineBackground(() => {
             sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
             return true;
         }
-        if (message.command === 'get-cc-tracks' && sender.tab?.id) {
-            const tracks = ccTracksByTab.get(sender.tab.id) || [];
-            sendResponse(tracks);
+        if (message.command === 'get-network-subtitles' && sender.tab?.id) {
+            sendResponse(networkSubtitleCapture.getTracks(sender.tab.id));
             return true;
         }
     });
-
-    // Clean up CC tracks when tab closes
-    browser.tabs.onRemoved.addListener((tabId) => {
-        ccTracksByTab.delete(tabId);
-    });
-
-    if (browser.webRequest?.onCompleted) {
-        browser.webRequest.onCompleted.addListener(
-            async (details) => {
-                if (!/\.(vtt|srt|ass)(\?|$)/i.test(details.url) || /thumbnail/i.test(details.url)) return;
-                if (details.tabId < 1) return;
-                if ((ccTracksByTab.get(details.tabId) || []).some((t) => t.url === details.url)) return;
-                try {
-                    const response = await fetch(details.url);
-                    if (!response.ok) return;
-                    const buffer = await response.arrayBuffer();
-                    if (buffer.byteLength < 50) return;
-                    const filename = new URL(details.url).pathname.split('/').pop() || '';
-                    const match = filename.match(/^([a-z]{2,3})(?:[_-]?\d+)?\.(?:vtt|srt|ass)$/i);
-                    const label = match ? (langCodeToName[match[1].toLowerCase()] || match[1]) : 'CC';
-                    // Re-fetch tracks AFTER async operations to avoid race condition
-                    const tracks = ccTracksByTab.get(details.tabId) || [];
-                    if (tracks.some((t) => t.url === details.url)) return;
-                    tracks.push({ url: details.url, label, language: 'und', base64: btoa(String.fromCharCode(...new Uint8Array(buffer))) });
-                    ccTracksByTab.set(details.tabId, tracks);
-                } catch {}
-            },
-            { urls: ['<all_urls>'] }
-        );
-    }
 
     browser.runtime.onInstalled.addListener(() => {
         browser.contextMenus?.create({

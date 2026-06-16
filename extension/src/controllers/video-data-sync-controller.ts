@@ -24,9 +24,10 @@ import { fetchLocalization } from '../services/localization-fetcher';
 import i18n from 'i18next';
 import { ExtensionGlobalStateProvider } from '@/services/extension-global-state-provider';
 import { isOnTutorialPage } from '@/services/tutorial';
-import { extractExtension } from '@/pages/util';
+import { extractExtension, trackFromDef } from '@/pages/util';
 import { fetchAnilistInfo } from '../services/anilist';
 import { fetchSubtitles } from '../services/subtitle';
+import type { CapturedSubtitle } from '@/services/network-subtitle-capture';
 
 declare global {
     function cloneInto(obj: any, targetScope: any, options?: any): any;
@@ -233,7 +234,7 @@ export default class VideoDataSyncController {
 
     private async _buildModel(additionalFields: Partial<VideoDataUiModel>) {
         await this.checkIfAnimeSite();
-        const subtitleTrackChoices = this._syncedData?.subtitles ?? [];
+        const subtitleTrackChoices = await this._withCapturedSubtitles(this._syncedData?.subtitles ?? []);
         const subs = this._matchLastSyncedWithAvailableTracks();
         const autoSelectedTracks: VideoDataSubtitleTrack[] = subs.autoSelectedTracks;
         const autoSelectedTrackIds = this._isTutorial
@@ -811,22 +812,18 @@ export default class VideoDataSyncController {
             }
 
             const fetchedSubtitles = subtitles
-                .map((sub, index) => {
-                    const url = new URL(sub.url);
-                    const extension = url.pathname.split('.').pop() || 'srt';
-                    return {
-                        id: `fetched-${index}`,
+                .filter((sub) => sub.url && sub.name)
+                .map((sub) =>
+                    trackFromDef({
+                        label: sub.name,
                         language: 'ja',
                         url: sub.url,
-                        label: sub.name,
-                        extension: extension,
-                    };
-                })
-                .filter((sub) => sub.url && sub.label);
+                        extension: extractExtension(sub.url, 'srt'),
+                    })
+                );
 
             const { title } = await this.obtainTitleAndEpisode();
 
-            // Only store fetched subtitles, no empty tracks
             this._syncedData = {
                 ...this._syncedData,
                 subtitles: fetchedSubtitles,
@@ -841,23 +838,19 @@ export default class VideoDataSyncController {
                 return;
             }
 
-            const allSubtitles = await this._mergeWithCCTracks(fetchedSubtitles);
-            client.updateState({
-                subtitles: allSubtitles,
-                isLoading: false,
-                episode: message.episode,
-                open: true,
-                suggestedName: title,
-                selectedSubtitle: allSubtitles.length > 0 ? [allSubtitles[0].id, '-', '-'] : ['-', '-', '-'],
-            });
+            client.updateState(
+                await this._buildModel({ open: true, episode: message.episode, suggestedName: title })
+            );
         } catch (error) {
-            // Keep dialog open when showing error
-            client.updateState({
-                error: error instanceof Error ? error.message : 'An error occurred while fetching subtitles',
-                episode: message.episode || '',
-                isLoading: false,
-                open: true,
-            });
+            const errorMessage =
+                error instanceof Error ? error.message : 'An error occurred while fetching subtitles';
+            this._syncedData = {
+                ...this._syncedData,
+                // Keep subtitles defined so _buildModel shows the error rather than a loading state.
+                subtitles: this._syncedData?.subtitles ?? [],
+                error: errorMessage,
+            } as VideoData;
+            client.updateState(await this._buildModel({ open: true, episode: message.episode || '' }));
         }
     }
 
@@ -871,19 +864,24 @@ export default class VideoDataSyncController {
         });
     }
 
-    private async _mergeWithCCTracks(subtitles: VideoDataSubtitleTrack[]): Promise<VideoDataSubtitleTrack[]> {
-        if (!this._isAnimeSite) return subtitles;
+    private async _withCapturedSubtitles(
+        subtitles: VideoDataSubtitleTrack[]
+    ): Promise<VideoDataSubtitleTrack[]> {
+        if (!(await this._context.settings.getSingle('streamingCaptureSiteSubtitles'))) {
+            return subtitles;
+        }
         try {
-            const ccTracks: Array<{ url: string; label: string; language: string; base64: string }> =
-                (await browser.runtime.sendMessage({ command: 'get-cc-tracks' })) || [];
-            const ccSubtitles: VideoDataSubtitleTrack[] = ccTracks.map((t) => ({
-                id: `cc:${t.language}:${t.label}:${t.url}`,
-                label: `[CC] ${t.label}`,
-                language: t.language,
-                url: `data:text/vtt;base64,${t.base64}`,
-                extension: 'vtt',
-            }));
-            return [...subtitles, ...ccSubtitles];
+            const captured: CapturedSubtitle[] =
+                (await browser.runtime.sendMessage({ command: 'get-network-subtitles' })) || [];
+            const capturedTracks = captured.map((c) =>
+                trackFromDef({
+                    label: `[Site] ${c.label}`,
+                    language: c.language,
+                    url: `data:text/vtt;base64,${c.base64}`,
+                    extension: 'vtt',
+                })
+            );
+            return [...subtitles, ...capturedTracks];
         } catch {
             return subtitles;
         }
