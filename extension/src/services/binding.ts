@@ -542,7 +542,6 @@ export default class Binding {
 
         this.mobileGestureController.onSwipeLeft = () => seek(false);
         this.mobileGestureController.onSwipeRight = () => seek(true);
-
     }
 
     _notifyReady() {
