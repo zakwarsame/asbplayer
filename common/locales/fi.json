@@ -280,6 +280,14 @@
             "selectVideo": "Valitse videoelementti synkronoidaksesi sen asbplayerin kanssa.",
             "syncBeforeMine": "Video-elementti on synkronoitava asbplayerin kanssa, ennen kuin sitä voidaan louhita. Valitse videoelementti synkronoidaksesi sen asbplayerin kanssa.",
             "videoElement": "Videon elementti"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {

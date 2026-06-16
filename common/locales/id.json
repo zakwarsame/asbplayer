@@ -265,6 +265,14 @@
             "selectVideo": "Pilih elemen video untuk disinkronkan dengan asbplayer.",
             "syncBeforeMine": "Video harus disinkronkan dengan asbplayer sebelum dapat ditambang. Pilih elemen video untuk disinkronkan.",
             "videoElement": "Elemen Video"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {

@@ -265,6 +265,14 @@
             "selectVideo": "Выберите видеоэлемент для синхронизации с asbplayer.",
             "syncBeforeMine": "Видеоэлемент должен быть синхронизирован с asbplayer перед началом майнинга. Выберите видеоэлемент для синхронизации с asbplayer.",
             "videoElement": "Видеоэлемент"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {
