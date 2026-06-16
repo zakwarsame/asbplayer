@@ -867,7 +867,8 @@ export default class VideoDataSyncController {
     private async _withCapturedSubtitles(
         subtitles: VideoDataSubtitleTrack[]
     ): Promise<VideoDataSubtitleTrack[]> {
-        if (!(await this._context.settings.getSingle('streamingCaptureSiteSubtitles'))) {
+        const enabled = await this._context.settings.getSingle('streamingCaptureSiteSubtitles');
+        if (!enabled && !this._isAnimeSite) {
             return subtitles;
         }
         try {

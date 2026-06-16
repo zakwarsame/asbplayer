@@ -1,4 +1,5 @@
 import { SettingsProvider } from '@project/common/settings';
+import { isAnimeSite } from '@/services/anime-sites';
 
 export interface CapturedSubtitle {
     url: string;
@@ -36,7 +37,7 @@ function isImageCueTrack(base64: string): boolean {
 }
 
 // Captures subtitle files a site serves over the network so they can be offered in the subtitle
-// picker. Site-agnostic; gated behind the streamingCaptureSiteSubtitles setting (no-ops while off).
+// picker. Always on for anime sites; elsewhere gated behind the streamingCaptureSiteSubtitles setting.
 export default class NetworkSubtitleCapture {
     private readonly _settings: SettingsProvider;
     private readonly _tracksByTab = new Map<number, CapturedSubtitle[]>();
@@ -87,13 +88,23 @@ export default class NetworkSubtitleCapture {
         this._enabled = await this._settings.getSingle('streamingCaptureSiteSubtitles');
     }
 
+    private async _isAnimeTab(tabId: number): Promise<boolean> {
+        try {
+            const { url } = await browser.tabs.get(tabId);
+            return url ? isAnimeSite(url) : false;
+        } catch {
+            return false;
+        }
+    }
+
     private async _onCompleted(details: Browser.webRequest.OnCompletedDetails) {
-        if (!this._enabled) return;
         if (!subtitleUrlRegex.test(details.url) || /thumbnail/i.test(details.url)) return;
         if (details.tabId < 1) return; // not tied to a tab
 
         const key = details.tabId + ':' + details.url;
         if (this._requested.has(key)) return;
+        // Anime sites always capture; other sites only when the setting is on.
+        if (!this._enabled && !(await this._isAnimeTab(details.tabId))) return;
         this._requested.add(key); // mark before fetching — our own fetch re-triggers this listener
 
         // Fetched in-frame by the content script; a background service-worker fetch is 403'd.
