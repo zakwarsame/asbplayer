@@ -273,6 +273,14 @@
             "selectVideo": "asbplayer에 동기화할 영상 요소를 선택하세요.",
             "syncBeforeMine": "자막 추출을 시작하려면 먼저 영상과 asbplayer를 동기화해야 합니다.\n동기화할 영상을 선택해 주세요.",
             "videoElement": "영상 요소"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {
