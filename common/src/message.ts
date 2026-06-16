@@ -1136,3 +1136,30 @@ export interface UpdateEpisodeMessage extends Message {
     readonly command: 'updateEpisode';
     readonly episode: number | '';
 }
+
+// Shared audio-capture + offset-detection messages (used by sync providers)
+export interface DetectSubtitleOffsetMessage extends Message {
+    readonly command: 'detect-subtitle-offset';
+}
+
+export interface SubtitleOffsetDetectedMessage extends Message {
+    readonly command: 'subtitle-offset-detected';
+    readonly offset: number;
+    readonly drift?: number;
+    readonly confidence: number;
+}
+
+// Raw audio capture (offscreen document)
+export interface CaptureRawAudioMessage extends Message {
+    readonly command: 'capture-raw-audio';
+    readonly streamId: string;
+    readonly durationMs: number;
+    readonly sampleRate: number;
+}
+
+export interface RawAudioCapturedResponse {
+    readonly success: boolean;
+    readonly audioBase64?: string; // Base64-encoded Float32Array
+    readonly sampleRate?: number;
+    readonly error?: string;
+}
