@@ -274,6 +274,14 @@
             "selectVideo": "Sélectionnez un élément vidéo pour le synchroniser avec asbplayer.",
             "syncBeforeMine": "Un élément vidéo doit être synchronisé avec asbplayer avant de pouvoir être extrait. Sélectionnez un élément vidéo pour le synchroniser avec asbplayer.",
             "videoElement": "Élément vidéo"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {

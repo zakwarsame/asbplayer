@@ -264,6 +264,14 @@
             "selectVideo": "选择需同步的视频元素。",
             "syncBeforeMine": "必须先同步视频元素才能进行挖掘，请选择一个视频元素。",
             "videoElement": "视频元素"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {
