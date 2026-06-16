@@ -35,7 +35,8 @@
         "userGuide": "Guida Utente",
         "search": "Cerca",
         "reload": "Ricarica",
-        "autoSubs": "Automatic Subs"
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "A proposito di asbplayer",
@@ -243,7 +244,8 @@
                 "youtube": {
                     "targetLanguages": "Codici lingua destinazione per la traduzione automatica"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "Vuota",

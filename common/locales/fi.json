@@ -1,6 +1,7 @@
 {
     "action": {
         "autoSubs": "Automaattiset tekstitykset",
+        "autoSyncSubtitles": "Synkronoi tekstitykset automaattisesti",
         "cancel": "Peruuta",
         "close": "Close",
         "copy": "Kopioi",
@@ -241,6 +242,7 @@
             "takeScreenshot": "Rajaa kuvakaappausta louhimassa",
             "updateAvailable": "Päivitys on saatavilla!",
             "enableOverlay": "Ota hallintaoikeudet käyttöön",
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)",
             "pages": {
                 "overridesWarning": "These settings have been modified.",
                 "host": "Host regex",

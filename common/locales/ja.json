@@ -35,7 +35,8 @@
         "userGuide": "ユーザーガイド",
         "search": "検索",
         "reload": "再読み込み",
-        "autoSubs": "Automatic Subs"
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "asbplayerについて",
@@ -243,7 +244,8 @@
                 "youtube": {
                     "targetLanguages": "機械翻訳の対象言語コード"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "空",

@@ -35,7 +35,8 @@
         "userGuide": "用户指南",
         "search": "Search",
         "reload": "Reload",
-        "autoSubs": "Automatic Subs"
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "关于 asbplayer",
@@ -243,7 +244,8 @@
                 "youtube": {
                     "targetLanguages": "机器翻译的目标语言代码"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "空轨道",
