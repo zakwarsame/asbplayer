@@ -274,6 +274,14 @@
             "selectVideo": "Wähle ein Video-Element zum synchronisieren aus",
             "syncBeforeMine": "Ein Video muss mit absplayer synchronisiert werden",
             "videoElement": "Video-Element"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {

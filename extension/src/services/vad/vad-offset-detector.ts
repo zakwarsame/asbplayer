@@ -17,7 +17,7 @@
  */
 
 import { SubtitleModel } from '@project/common';
-import { OffsetPoint, OffsetResult } from '../whisper/offset-detector';
+import { OffsetPoint, OffsetResult } from '../sync/offset-detector';
 import { crossCorrelate, crossCorrelateMultiRes, alignBinaryDTW } from './dtw';
 import { VADEngine, VADResult, vadResultToTimeline, subtitlesToTimeline } from './vad-interface';
 

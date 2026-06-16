@@ -7,7 +7,7 @@ import {
 } from '@project/common';
 import { SettingsProvider } from '@project/common/settings';
 import Binding from '../services/binding';
-import UiFrame from '../services/ui-frame';
+import UiFrame, { uiFrameForHtml } from '../services/ui-frame';
 import { fetchLocalization } from '../services/localization-fetcher';
 
 async function html(lang: string) {
@@ -41,7 +41,7 @@ export default class SubtitleSyncController {
     constructor(context: Binding, settings: SettingsProvider) {
         this._context = context;
         this._settings = settings;
-        this._frame = new UiFrame(html);
+        this._frame = uiFrameForHtml(html);
     }
 
     unbind() {
@@ -69,7 +69,7 @@ export default class SubtitleSyncController {
     }
 
     private _getLoadedSubtitles(): SubtitleSyncSubtitleTrack[] {
-        const subtitleFileNames = this._context.subtitleController.subtitleFileNames;
+        const subtitleFileNames = this._context.subtitleController.subtitleFileNames ?? [];
         return subtitleFileNames.map((name, index) => ({
             id: `loaded-${index}`,
             label: name,

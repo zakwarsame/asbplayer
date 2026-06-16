@@ -7,7 +7,8 @@
  * - Smaller bundle size (~200KB vs 150MB)
  */
 
-export { VADEngine, VADResult, VADSegment, VADOptions, vadResultToTimeline, subtitlesToTimeline } from './vad-interface';
+export type { VADEngine, VADResult, VADSegment, VADOptions } from './vad-interface';
+export { vadResultToTimeline, subtitlesToTimeline } from './vad-interface';
 export { detectOffsetVAD, detectOffsetWithVAD, analyzeVADQuality } from './vad-offset-detector';
 export type { VADOffsetOptions } from './vad-offset-detector';
 export { SimpleEnergyVAD, createSimpleVAD } from './simple-vad';

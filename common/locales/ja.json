@@ -264,6 +264,14 @@
             "selectVideo": "asbplayer と同期する動画埋め込み要素を選択してください。",
             "syncBeforeMine": "動画埋め込み要素のマイニングを開始する前に、動画と asbplayer を同期してください。選択した動画埋め込み要素を asbplayer と同期します。",
             "videoElement": "動画埋め込み要素を選択"
+        },
+        "subtitleSync": {
+            "title": "Subtitle Sync",
+            "primarySubtitle": "Primary Subtitle",
+            "referenceSubtitle": "Reference Subtitle (optional)",
+            "none": "None",
+            "useAudio": "Use Audio",
+            "sync": "Sync"
         }
     },
     "ftue": {
