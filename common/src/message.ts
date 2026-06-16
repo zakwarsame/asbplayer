@@ -1163,3 +1163,56 @@ export interface RawAudioCapturedResponse {
     readonly sampleRate?: number;
     readonly error?: string;
 }
+
+// Whisper transcription messages
+export interface StartWhisperTranscriptionMessage extends Message {
+    readonly command: 'start-whisper-transcription';
+    readonly mode: 'full' | 'segment';
+    readonly language?: string;
+    readonly modelId?: string;
+    readonly segmentStart?: number;
+    readonly segmentEnd?: number;
+}
+
+export interface WhisperTranscriptionProgressMessage extends Message {
+    readonly command: 'whisper-transcription-progress';
+    readonly progress: number;
+    readonly stage: 'loading-model' | 'transcribing' | 'complete';
+}
+
+export interface WhisperTranscriptionCompleteMessage extends Message {
+    readonly command: 'whisper-transcription-complete';
+    readonly segments: Array<{
+        text: string;
+        start: number;
+        end: number;
+    }>;
+    readonly language?: string;
+    readonly duration: number;
+}
+
+export interface WhisperTranscriptionErrorMessage extends Message {
+    readonly command: 'whisper-transcription-error';
+    readonly error: string;
+}
+
+export interface TranscriptionSegment {
+    text: string;
+    start: number;
+    end: number;
+}
+
+// Transcription request sent to sidepanel (WebGPU accelerated)
+export interface TranscribeAudioMessage extends Message {
+    readonly command: 'transcribe-audio';
+    readonly audioBase64: string; // Base64-encoded Float32Array
+    readonly sampleRate: number;
+    readonly language?: string;
+    readonly useWebGpu?: boolean;
+}
+
+export interface TranscribeAudioResponse {
+    readonly success: boolean;
+    readonly segments?: TranscriptionSegment[];
+    readonly error?: string;
+}

@@ -1,6 +1,7 @@
 {
     "action": {
         "autoSubs": "Sous-titres automatiques",
+        "autoSyncSubtitles": "Synchronisation automatique des sous-titres",
         "cancel": "Annuler",
         "close": "Close",
         "copy": "Copier",
@@ -247,6 +248,7 @@
             "takeScreenshot": "Prendre une capture d’écran lors de l’extraction",
             "updateAvailable": "Mise à jour disponible",
             "enableOverlay": "Activer la superposition des commandes",
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)",
             "pages": {
                 "overridesWarning": "These settings have been modified.",
                 "host": "Host regex",
