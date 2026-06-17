@@ -14,7 +14,7 @@ import {
     RawAudioCapturedResponse,
     RequestActiveTabPermissionMessage,
     StartVadAlignmentMessage,
-    VadAlignmentErrorMessage,
+    SubtitleSyncErrorMessage,
 } from '@project/common';
 import { detectOffsetWithVAD, createSimpleVAD } from '../../services/vad';
 import { ensureOffscreenAudioServiceDocument } from '../../services/offscreen-document';
@@ -60,12 +60,20 @@ export default class VadAlignmentHandler {
             // Convert base64 to Float32Array
             const audioData = this._base64ToFloat32Array(audioBase64);
             const actualDurationMs = (audioData.length / sampleRate) * 1000;
-            console.log('[VAD] Decoded', audioData.length, 'samples, duration:', (actualDurationMs / 1000).toFixed(2), 's');
+            console.log(
+                '[VAD] Decoded',
+                audioData.length,
+                'samples, duration:',
+                (actualDurationMs / 1000).toFixed(2),
+                's'
+            );
 
             console.log('[VAD] Fetching subtitles...');
             const subtitles = await this._requestSubtitles(tabId, src);
             if (!subtitles?.length) throw new Error('No subtitles loaded');
             console.log('[VAD] Got', subtitles.length, 'subtitles');
+
+            const previousOffset = subtitles[0].start - subtitles[0].originalStart;
 
             console.log('[VAD] Running VAD alignment...');
             const vadEngine = createSimpleVAD();
@@ -73,7 +81,12 @@ export default class VadAlignmentHandler {
                 captureStartTimeMs,
                 captureDurationMs: actualDurationMs,
             });
-            console.log('[VAD] Offset:', offsetResult.offset, 'ms, confidence:', Math.round(offsetResult.confidence * 100) + '%');
+            console.log(
+                '[VAD] Offset:',
+                offsetResult.offset,
+                'ms, confidence:',
+                Math.round(offsetResult.confidence * 100) + '%'
+            );
 
             if (offsetResult.confidence < 0.3) {
                 throw new Error(`Low confidence (${Math.round(offsetResult.confidence * 100)}%)`);
@@ -93,17 +106,21 @@ export default class VadAlignmentHandler {
                     command: 'subtitle-offset-detected',
                     offset: offsetResult.offset,
                     confidence: offsetResult.confidence,
+                    referenceLabel: 'Audio',
+                    previousOffset,
                 } as SubtitleOffsetDetectedMessage,
                 src,
             } as ExtensionToVideoCommand<SubtitleOffsetDetectedMessage>);
 
-            // Notify sidepanel to stop spinner
             browser.runtime.sendMessage({
                 sender: 'asbplayer-extension-to-sidepanel',
                 message: {
                     command: 'subtitle-offset-detected',
                     offset: offsetResult.offset,
-                },
+                    confidence: offsetResult.confidence,
+                    referenceLabel: 'Audio',
+                    previousOffset,
+                } as SubtitleOffsetDetectedMessage,
             });
         } catch (error) {
             console.error('[VAD] Failed:', error);
@@ -111,7 +128,8 @@ export default class VadAlignmentHandler {
 
             // Check if this is an activeTab permission error
             const isActiveTabError =
-                errorMessage.includes('Extension has not been invoked') || errorMessage.includes('activeTab permission');
+                errorMessage.includes('Extension has not been invoked') ||
+                errorMessage.includes('activeTab permission');
 
             if (isActiveTabError) {
                 // Show the "Enable audio recording" notification on video overlay
@@ -127,18 +145,17 @@ export default class VadAlignmentHandler {
                 browser.tabs.sendMessage(tabId, {
                     sender: 'asbplayer-extension-to-video',
                     message: {
-                        command: 'vad-alignment-error',
+                        command: 'subtitle-sync-error',
                         error: errorMessage,
-                    } as VadAlignmentErrorMessage,
+                    } as SubtitleSyncErrorMessage,
                     src,
-                } as ExtensionToVideoCommand<VadAlignmentErrorMessage>);
+                } as ExtensionToVideoCommand<SubtitleSyncErrorMessage>);
             }
 
-            // Also notify sidepanel to stop spinner
             browser.runtime.sendMessage({
                 sender: 'asbplayer-extension-to-sidepanel',
                 message: {
-                    command: 'vad-alignment-error',
+                    command: 'subtitle-sync-error',
                     error: errorMessage,
                 },
             });
