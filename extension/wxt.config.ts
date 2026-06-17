@@ -188,11 +188,14 @@ export default defineConfig({
                 'webRequest',
             ];
 
-            const key = isDev
-                ? {}
-                : {
+            // Omit the Chrome key by default so `wxt zip` is Web-Store-ready (the published item's
+            // key is managed by Google; an embedded mismatched key is rejected on upload). Set
+            // SELF_HOSTED=1 to embed it for a stable-ID self-hosted / unpacked build.
+            const key = process.env.SELF_HOSTED
+                ? {
                       key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxmdAa3ymqAjLms43ympXqtyuJnC2bSYh70+5ZZmtyx/MsnGhTEdfbqtsp3BKxHbv0rPd49+Joacm1Shik5/mCppZ0h4I4ISMm983X01H6p/hfAzQYAcnvw/ZQNHAv1QgY9JiuyTBirCDoYB50Fxol/kI/0EviYXuX83KoYpjB0VGP/ssY9ocT//fQUbRmeLDJnciry8y6MduWXHzseOP99axQIjeVsNTE30L4fRN+ppX3aOkG/RFJNx0eI02qbLul3qw5dUuBK5GgMbYftwjHnDoOegnZYFr1sxRO1zsgmxdp/6du75RiDPRJOkPCz2GTrw4CX2FCywbDZlqaIpwqQIDAQAB',
-                  };
+                  }
+                : {};
 
             manifest = {
                 ...manifest,
@@ -219,6 +222,15 @@ export default defineConfig({
                   }
                 : {
                       id: '{3e0b3d41-1618-4764-b3a5-3f38f47b6d0a}',
+                      // Self-distributed (unlisted, AMO-signed) builds auto-update from this hosted
+                      // manifest. Omitted for AMO-listed builds — AMO manages updates and rejects
+                      // update_url on listed uploads.
+                      ...(process.env.SELF_HOSTED
+                          ? {
+                                update_url:
+                                    'https://zakwarsame.github.io/asbplayer/firefox-extension-updates.json',
+                            }
+                          : {}),
                   };
 
             manifest = {
