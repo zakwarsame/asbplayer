@@ -18,7 +18,7 @@
 
 import { SubtitleModel } from '@project/common';
 import { OffsetPoint, OffsetResult } from '../sync/offset-detector';
-import { crossCorrelate, crossCorrelateMultiRes, alignBinaryDTW } from './dtw';
+import { crossCorrelate, alignBinaryDTW } from './dtw';
 import { VADEngine, VADResult, vadResultToTimeline, subtitlesToTimeline } from './vad-interface';
 
 export interface VADOffsetOptions {
@@ -163,6 +163,101 @@ export function detectOffsetVAD(
     return {
         offset: Math.round(offsetMs),
         points,
+        confidence,
+    };
+}
+
+export interface SubtitleSyncOffsetOptions {
+    /** Coarse frame size for timeline conversion (ms). Default: 100 */
+    coarseFrameMs?: number;
+    /** Maximum offset to search in seconds. Default: 120 */
+    maxOffsetSec?: number;
+    /** Minimum confidence threshold to return a non-zero offset. Default: 0.3 */
+    minConfidence?: number;
+}
+
+/**
+ * Detect the constant offset (ms) to apply to a primary subtitle track so its cue timing aligns
+ * to a reference track. Language-agnostic: compares timing only. Runs coarse (~100ms frames) so a
+ * full episode scores in milliseconds.
+ */
+export function detectOffsetBetweenSubtitles(
+    primary: { originalStart: number; originalEnd: number }[],
+    reference: { originalStart: number; originalEnd: number }[],
+    options?: SubtitleSyncOffsetOptions
+): OffsetResult {
+    const { coarseFrameMs = 100, maxOffsetSec = 120, minConfidence = 0.3 } = options || {};
+
+    if (primary.length === 0 || reference.length === 0) {
+        return { offset: 0, points: [], confidence: 0 };
+    }
+
+    const maxEnd = (subs: { originalEnd: number }[]) => subs.reduce((m, c) => Math.max(m, c.originalEnd), 0);
+    const span = Math.max(maxEnd(primary), maxEnd(reference));
+
+    if (!isFinite(span) || span <= 0) {
+        return { offset: 0, points: [], confidence: 0 };
+    }
+
+    const toCues = (subs: { originalStart: number; originalEnd: number }[]) =>
+        subs.map((c) => ({ start: c.originalStart, end: c.originalEnd }));
+
+    const primaryTimeline = subtitlesToTimeline(toCues(primary), span, coarseFrameMs);
+    const referenceTimeline = subtitlesToTimeline(toCues(reference), span, coarseFrameMs);
+
+    // Too-sparse tracks (signs/songs) can't be correlated reliably.
+    const density = (t: boolean[]) => (t.length > 0 ? t.filter((x) => x).length / t.length : 0);
+    if (density(primaryTimeline) < 0.1 || density(referenceTimeline) < 0.1) {
+        return { offset: 0, points: [], confidence: 0 };
+    }
+
+    const frameCount = primaryTimeline.length;
+    const maxLag = Math.min(Math.ceil((maxOffsetSec * 1000) / coarseFrameMs), frameCount - 1);
+    const primaryActiveTotal = primaryTimeline.filter((x) => x).length;
+    const referenceActiveTotal = referenceTimeline.filter((x) => x).length;
+    // Without this, a coincidental 1-frame overlap at an extreme lag scores a perfect Jaccard of 1.
+    const minActiveOverlap = Math.max(3, Math.floor(0.2 * Math.min(primaryActiveTotal, referenceActiveTotal)));
+
+    let bestLag = 0;
+    let bestScore = 0;
+
+    // Positive lag => reference is ahead of the primary, so the primary shifts forward to match.
+    for (let lag = -maxLag; lag <= maxLag; lag++) {
+        const iStart = Math.max(0, -lag);
+        const iEnd = Math.min(frameCount, frameCount - lag);
+        let both = 0;
+        let primaryActive = 0;
+        let referenceActive = 0;
+
+        for (let i = iStart; i < iEnd; i++) {
+            const p = primaryTimeline[i];
+            const r = referenceTimeline[i + lag];
+            if (p) primaryActive++;
+            if (r) referenceActive++;
+            if (p && r) both++;
+        }
+
+        if (both < minActiveOverlap) {
+            continue;
+        }
+
+        const union = primaryActive + referenceActive - both;
+        const score = union > 0 ? both / union : 0;
+        if (score > bestScore || (score === bestScore && Math.abs(lag) < Math.abs(bestLag))) {
+            bestScore = score;
+            bestLag = lag;
+        }
+    }
+
+    const confidence = bestScore;
+    if (confidence < minConfidence) {
+        return { offset: 0, points: [], confidence };
+    }
+
+    const offset = bestLag * coarseFrameMs;
+    return {
+        offset,
+        points: [{ position: 0.5, offset, confidence }],
         confidence,
     };
 }
