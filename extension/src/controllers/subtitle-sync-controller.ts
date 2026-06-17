@@ -1,4 +1,4 @@
-import { SubtitleSyncCandidate, SubtitleSyncUiBridgeSyncMessage, SubtitleSyncUiModel } from '@project/common';
+import { SubtitleSyncCandidate, SubtitleSyncUiBridgeSyncMessage } from '@project/common';
 import { SettingsProvider } from '@project/common/settings';
 import Binding from '../services/binding';
 import UiFrame, { uiFrameForHtml } from '../services/ui-frame';
@@ -54,47 +54,56 @@ export default class SubtitleSyncController {
     }
 
     async show() {
-        const client = await this._client();
         const themeType = await this._settings.getSingle('themeType');
-        const subtitles = this._context.subtitleController.subtitles;
+        const subtitles = this._context.subtitleController.subtitles ?? [];
         const fileNames = this._context.subtitleController.subtitleFileNames ?? [];
+        const hasSubtitles = subtitles.length > 0;
+        const primaryTrack = hasSubtitles ? subtitles.reduce((min, s) => Math.min(min, s.track), Infinity) : 0;
 
-        if (!subtitles || subtitles.length === 0) {
-            this._prepareShow();
-            client.updateState({ open: true, isLoading: false, candidates: [], themeType });
-            return;
-        }
-
-        const primaryTrack = subtitles.reduce((min, s) => Math.min(min, s.track), Infinity);
         this._primaryCues = subtitles
             .filter((s) => s.track === primaryTrack)
             .map((s) => ({ originalStart: s.originalStart, originalEnd: s.originalEnd }));
+        this._candidatesById = new Map();
 
-        const references = await gatherReferenceCandidates(this._context, primaryTrack);
-        this._candidatesById = new Map(references.map((c) => [c.id, c]));
-
-        const candidates: SubtitleSyncCandidate[] = references
-            .map((c) => ({
-                id: c.id,
-                label: c.label,
-                origin: c.origin,
-                confidence: detectOffsetBetweenSubtitles(this._primaryCues, c.cues).confidence,
-            }))
-            .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
-
-        const best = candidates.find((c) => (c.confidence ?? 0) >= MIN_SUBTITLE_SYNC_CONFIDENCE);
-
-        const model: SubtitleSyncUiModel = {
-            open: true,
-            isLoading: false,
-            primaryLabel: fileNames[primaryTrack] ?? fileNames[0],
-            candidates,
-            selectedReferenceId: best ? best.id : 'audio',
-            themeType,
-        };
-
+        // Open the modal right away so the overlay never blocks the page while references are scored.
+        const client = await this._client();
         this._prepareShow();
-        client.updateState(model);
+        client.updateState({
+            open: true,
+            isLoading: hasSubtitles,
+            primaryLabel: hasSubtitles ? (fileNames[primaryTrack] ?? fileNames[0]) : undefined,
+            candidates: [],
+            selectedReferenceId: 'audio',
+            themeType,
+        });
+
+        if (!hasSubtitles) {
+            return;
+        }
+
+        try {
+            const references = await gatherReferenceCandidates(this._context, primaryTrack);
+            this._candidatesById = new Map(references.map((c) => [c.id, c]));
+
+            const candidates: SubtitleSyncCandidate[] = references
+                .map((c) => ({
+                    id: c.id,
+                    label: c.label,
+                    origin: c.origin,
+                    confidence: detectOffsetBetweenSubtitles(this._primaryCues, c.cues).confidence,
+                }))
+                .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+
+            const best = candidates.find((c) => (c.confidence ?? 0) >= MIN_SUBTITLE_SYNC_CONFIDENCE);
+            client.updateState({ isLoading: false, candidates, selectedReferenceId: best ? best.id : 'audio' });
+        } catch (error) {
+            browser.runtime.sendMessage({
+                command: 'asbplayer-log',
+                message: '[SubtitleSync] Failed to gather references',
+                data: { error },
+            });
+            client.updateState({ isLoading: false, candidates: [] });
+        }
     }
 
     private async _client() {

@@ -986,10 +986,22 @@ export default class Binding {
                         this.showVideoDataDialog(false);
                         break;
                     case 'auto-sync-subtitles':
-                        this.autoSyncSubtitles();
+                        this.autoSyncSubtitles().catch((error) =>
+                            browser.runtime.sendMessage({
+                                command: 'asbplayer-log',
+                                message: '[SubtitleSync] auto-sync failed',
+                                data: { error },
+                            })
+                        );
                         break;
                     case 'start-subtitle-sync':
-                        this.subtitleSyncController.show();
+                        this.subtitleSyncController.show().catch((error) =>
+                            browser.runtime.sendMessage({
+                                command: 'asbplayer-log',
+                                message: '[SubtitleSync] show failed',
+                                data: { error },
+                            })
+                        );
                         break;
                     case 'subtitle-sync-error':
                         const syncErrorMessage = request.message as { error: string };
