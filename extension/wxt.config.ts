@@ -220,18 +220,19 @@ export default defineConfig({
                 ? {
                       id: `${extName}-dev-${version}@example.com`,
                   }
-                : {
-                      id: '{3e0b3d41-1618-4764-b3a5-3f38f47b6d0a}',
-                      // Self-distributed (unlisted, AMO-signed) builds auto-update from this hosted
-                      // manifest. Omitted for AMO-listed builds — AMO manages updates and rejects
-                      // update_url on listed uploads.
-                      ...(process.env.SELF_HOSTED
-                          ? {
-                                update_url:
-                                    'https://zakwarsame.github.io/asbplayer/firefox-extension-updates.json',
-                            }
-                          : {}),
-                  };
+                : process.env.SELF_HOSTED
+                  ? {
+                        // Self-distributed (unlisted, AMO-signed) build. Its OWN add-on id, kept
+                        // separate from the AMO-listed id below so the same version can ship on
+                        // both channels — AMO requires version strings to be unique per add-on id.
+                        // Auto-updates from the hosted manifest (keyed by this id).
+                        id: '{01d81209-c5c1-4658-9f18-cca2a78c2f59}',
+                        update_url: 'https://zakwarsame.github.io/asbplayer/firefox-extension-updates.json',
+                    }
+                  : {
+                        // AMO-listed add-on — AMO manages updates and rejects update_url on listed uploads.
+                        id: '{3e0b3d41-1618-4764-b3a5-3f38f47b6d0a}',
+                    };
 
             manifest = {
                 ...manifest,
