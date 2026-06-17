@@ -17,6 +17,9 @@ import {
     DownloadAudioMessage,
     CardExportedMessage,
     StartSubtitleSyncMessage,
+    AutoSyncSubtitlesMessage,
+    OffsetToVideoMessage,
+    SubtitleOffsetDetectedMessage,
 } from '@project/common';
 import type { AsbplayerInstance, Command, Message, OpenStatisticsOverlayMessage } from '@project/common';
 import type { BulkExportStartedPayload } from '../../controllers/bulk-export-controller';
@@ -30,6 +33,8 @@ import Player from '@project/common/app/components/Player';
 import { PlaybackPreferences } from '@project/common/app';
 import { AlertColor } from '@mui/material/Alert';
 import Alert from '@project/common/app/components/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import Button from '@mui/material/Button';
 import { LocalizedError } from '@project/common/app';
 import { useTranslation } from 'react-i18next';
 import SidePanelHome from './SidePanelHome';
@@ -353,23 +358,28 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
 
     const handleAutoSyncSubtitles = useCallback(async () => {
         if (!syncedVideoTab) return;
-        console.log('[SidePanel] Opening sync modal for tab', syncedVideoTab.id);
-
-        // Open the subtitle sync modal
-        const syncCommand: AsbPlayerToVideoCommandV2<StartSubtitleSyncMessage> = {
+        setAutoSyncInProgress(true);
+        const command: AsbPlayerToVideoCommandV2<AutoSyncSubtitlesMessage> = {
             sender: 'asbplayerv2',
-            message: {
-                command: 'start-subtitle-sync',
-            },
+            message: { command: 'auto-sync-subtitles' },
             tabId: syncedVideoTab.id,
             src: syncedVideoTab.src,
         };
-        console.log('[SidePanel] Sending start-subtitle-sync message:', syncCommand);
-        browser.runtime.sendMessage(syncCommand);
+        browser.runtime.sendMessage(command);
+    }, [syncedVideoTab]);
+
+    const handleOpenSyncChooser = useCallback(() => {
+        if (!syncedVideoTab) return;
+        const command: AsbPlayerToVideoCommandV2<StartSubtitleSyncMessage> = {
+            sender: 'asbplayerv2',
+            message: { command: 'start-subtitle-sync' },
+            tabId: syncedVideoTab.id,
+            src: syncedVideoTab.src,
+        };
+        browser.runtime.sendMessage(command);
     }, [syncedVideoTab]);
 
     const handleCancelAutoSync = useCallback(() => {
-        console.log('[SidePanel] Cancelling auto-sync');
         setAutoSyncInProgress(false);
     }, []);
 
@@ -377,15 +387,30 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
     const [bulkOpen, setBulkOpen] = useState<boolean>(false);
     const [bulkCurrent, setBulkCurrent] = useState<number>(0);
     const [bulkTotal, setBulkTotal] = useState<number>(0);
+    const [syncResult, setSyncResult] = useState<SubtitleOffsetDetectedMessage>();
+
+    const handleUndoSync = useCallback(() => {
+        if (syncedVideoTab && syncResult?.previousOffset !== undefined) {
+            const command: AsbPlayerToVideoCommandV2<OffsetToVideoMessage> = {
+                sender: 'asbplayerv2',
+                message: { command: 'offset', value: syncResult.previousOffset, echo: true },
+                tabId: syncedVideoTab.id,
+                src: syncedVideoTab.src,
+            };
+            browser.runtime.sendMessage(command);
+        }
+        setSyncResult(undefined);
+    }, [syncedVideoTab, syncResult]);
 
     // Listen for auto-sync lifecycle messages
     useEffect(() => {
         const listener = (message: any) => {
             if (message?.message?.command === 'subtitle-offset-detected') {
                 setAutoSyncInProgress(false);
+                setSyncResult(message.message as SubtitleOffsetDetectedMessage);
             } else if (
                 message?.message?.command === 'whisper-transcription-error' ||
-                message?.message?.command === 'vad-alignment-error'
+                message?.message?.command === 'subtitle-sync-error'
             ) {
                 setAutoSyncInProgress(false);
                 handleError(message.message.error);
@@ -659,6 +684,27 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
             <Alert open={alertOpen} onClose={handleAlertClosed} autoHideDuration={3000} severity={alertSeverity}>
                 {alert}
             </Alert>
+            <Snackbar
+                open={syncResult !== undefined}
+                autoHideDuration={6000}
+                onClose={() => setSyncResult(undefined)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                message={
+                    syncResult &&
+                    t('extension.subtitleSync.synced', {
+                        reference: syncResult.referenceLabel ?? '',
+                        offset: `${(syncResult.offset / 1000).toFixed(2)}s`,
+                        confidence: Math.round((syncResult.confidence ?? 0) * 100),
+                    })
+                }
+                action={
+                    syncResult?.previousOffset !== undefined ? (
+                        <Button color="secondary" size="small" onClick={handleUndoSync}>
+                            {t('extension.subtitleSync.undo')}
+                        </Button>
+                    ) : undefined
+                }
+            />
             {viewingAsbplayer && (appRequestedLocation === 'mining-history' || appRequestedLocation === undefined) && (
                 <CopyHistory
                     open={true}
@@ -774,6 +820,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
                                 miningHistoryCount={copyHistoryItems.length}
                                 onShowStatistics={handleShowStatistics}
                                 onAutoSyncSubtitles={handleAutoSyncSubtitles}
+                                onOpenSyncChooser={handleOpenSyncChooser}
                                 onCancelAutoSync={handleCancelAutoSync}
                                 autoSyncInProgress={autoSyncInProgress}
                             />
