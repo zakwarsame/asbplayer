@@ -6,18 +6,15 @@ import SubtitleSyncDialog from './SubtitleSyncDialog';
 import Bridge from '../bridge';
 import {
     Message,
-    SerializedSubtitleFile,
-    SubtitleSyncSubtitleTrack,
+    SubtitleSyncCandidate,
     SubtitleSyncUiBridgeCloseMessage,
     SubtitleSyncUiBridgeSyncMessage,
-    SubtitleSyncUiBridgeUseAudioMessage,
     SubtitleSyncUiModel,
     UpdateStateMessage,
 } from '@project/common';
 import { createTheme } from '@project/common/theme';
 import { type PaletteMode } from '@mui/material/styles';
 import { bufferToBase64 } from '@project/common/base64';
-import { useTranslation } from 'react-i18next';
 import { StyledEngineProvider } from '@mui/material/styles';
 
 interface Props {
@@ -25,19 +22,18 @@ interface Props {
 }
 
 export default function SubtitleSyncUi({ bridge }: Props) {
-    const { t } = useTranslation();
     const [open, setOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [subtitleTracks, setSubtitleTracks] = useState<SubtitleSyncSubtitleTrack[]>([]);
-    const [selectedPrimarySubtitleId, setSelectedPrimarySubtitleId] = useState<string>('-');
-    const [selectedReferenceSubtitleId, setSelectedReferenceSubtitleId] = useState<string>('-');
+    const [primaryLabel, setPrimaryLabel] = useState<string>();
+    const [candidates, setCandidates] = useState<SubtitleSyncCandidate[]>([]);
+    const [selectedReferenceId, setSelectedReferenceId] = useState<string>('audio');
     const [error, setError] = useState<string>();
     const [themeType, setThemeType] = useState<string>('dark');
-    const [uploadTarget, setUploadTarget] = useState<'primary' | 'reference'>('primary');
 
     const theme = useMemo(() => createTheme(themeType as PaletteMode), [themeType]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const uploadsRef = useRef<Map<string, { name: string; base64: string }>>(new Map());
 
     useEffect(() => {
         bridge.addClientMessageListener((message: Message) => {
@@ -50,36 +46,27 @@ export default function SubtitleSyncUi({ bridge }: Props) {
             if (model.open !== undefined) {
                 setOpen(model.open);
             }
-
             if (model.isLoading !== undefined) {
                 setIsLoading(model.isLoading);
             }
-
-            if (model.loadedSubtitles !== undefined) {
-                setSubtitleTracks(model.loadedSubtitles);
-                // Auto-select first subtitle as primary if available
-                if (model.loadedSubtitles.length > 0 && selectedPrimarySubtitleId === '-') {
-                    setSelectedPrimarySubtitleId(model.loadedSubtitles[0].id);
-                }
+            if (model.primaryLabel !== undefined) {
+                setPrimaryLabel(model.primaryLabel);
             }
-
-            if (model.selectedPrimarySubtitleId !== undefined) {
-                setSelectedPrimarySubtitleId(model.selectedPrimarySubtitleId);
+            if (model.candidates !== undefined) {
+                uploadsRef.current.clear();
+                setCandidates(model.candidates);
             }
-
-            if (model.selectedReferenceSubtitleId !== undefined) {
-                setSelectedReferenceSubtitleId(model.selectedReferenceSubtitleId);
+            if (model.selectedReferenceId !== undefined) {
+                setSelectedReferenceId(model.selectedReferenceId);
             }
-
             if (model.error !== undefined) {
                 setError(model.error);
             }
-
             if (model.themeType !== undefined) {
                 setThemeType(model.themeType);
             }
         });
-    }, [bridge, selectedPrimarySubtitleId]);
+    }, [bridge]);
 
     const handleClose = useCallback(() => {
         setOpen(false);
@@ -87,13 +74,9 @@ export default function SubtitleSyncUi({ bridge }: Props) {
         bridge.sendMessageFromServer(message);
     }, [bridge]);
 
-    const handlePrimarySubtitleChange = useCallback((id: string) => {
-        setSelectedPrimarySubtitleId(id);
-    }, []);
+    const handleReferenceChange = useCallback((id: string) => setSelectedReferenceId(id), []);
 
-    const handleReferenceSubtitleChange = useCallback((id: string) => {
-        setSelectedReferenceSubtitleId(id);
-    }, []);
+    const handleUpload = useCallback(() => fileInputRef.current?.click(), []);
 
     const handleFileInputChange = useCallback(async () => {
         const files = fileInputRef.current?.files;
@@ -101,69 +84,27 @@ export default function SubtitleSyncUi({ bridge }: Props) {
         if (files && files.length > 0) {
             const file = files[0];
             const base64 = await bufferToBase64(await file.arrayBuffer());
+            const id = `uploaded-${Date.now()}`;
 
-            const newTrack: SubtitleSyncSubtitleTrack = {
-                id: `uploaded-${Date.now()}`,
-                label: file.name,
-                fileName: file.name,
-            };
-
-            setSubtitleTracks((tracks) => [...tracks, newTrack]);
-
-            if (uploadTarget === 'primary') {
-                setSelectedPrimarySubtitleId(newTrack.id);
-            } else {
-                setSelectedReferenceSubtitleId(newTrack.id);
-            }
-
-            // Store the base64 data in a way the controller can access
-            // We'll send it with the sync message
-            (newTrack as any).base64 = base64;
+            uploadsRef.current.set(id, { name: file.name, base64 });
+            setCandidates((cs) => [...cs, { id, label: file.name, origin: 'uploaded' }]);
+            setSelectedReferenceId(id);
         }
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-    }, [uploadTarget]);
-
-    const handleUploadPrimary = useCallback(() => {
-        setUploadTarget('primary');
-        fileInputRef.current?.click();
     }, []);
-
-    const handleUploadReference = useCallback(() => {
-        setUploadTarget('reference');
-        fileInputRef.current?.click();
-    }, []);
-
-    const handleUseAudio = useCallback(() => {
-        const message: SubtitleSyncUiBridgeUseAudioMessage = { command: 'use-audio' };
-        bridge.sendMessageFromServer(message);
-        setOpen(false);
-    }, [bridge]);
 
     const handleSync = useCallback(() => {
-        const primaryTrack = subtitleTracks.find((t) => t.id === selectedPrimarySubtitleId);
-        const referenceTrack = subtitleTracks.find((t) => t.id === selectedReferenceSubtitleId);
-
         const message: SubtitleSyncUiBridgeSyncMessage = {
             command: 'sync',
-            primarySubtitle: primaryTrack
-                ? {
-                      name: primaryTrack.fileName || primaryTrack.label,
-                      base64: (primaryTrack as any).base64 || '',
-                  }
-                : undefined,
-            referenceSubtitle:
-                referenceTrack && selectedReferenceSubtitleId !== '-'
-                    ? {
-                          name: referenceTrack.fileName || referenceTrack.label,
-                          base64: (referenceTrack as any).base64 || '',
-                      }
-                    : undefined,
+            referenceId: selectedReferenceId,
+            uploaded: uploadsRef.current.get(selectedReferenceId),
         };
         bridge.sendMessageFromServer(message);
-    }, [bridge, subtitleTracks, selectedPrimarySubtitleId, selectedReferenceSubtitleId]);
+        setOpen(false);
+    }, [bridge, selectedReferenceId]);
 
     return (
         <StyledEngineProvider injectFirst>
@@ -172,16 +113,13 @@ export default function SubtitleSyncUi({ bridge }: Props) {
                 <SubtitleSyncDialog
                     open={open}
                     isLoading={isLoading}
-                    subtitleTracks={subtitleTracks}
-                    selectedPrimarySubtitleId={selectedPrimarySubtitleId}
-                    selectedReferenceSubtitleId={selectedReferenceSubtitleId}
+                    primaryLabel={primaryLabel}
+                    candidates={candidates}
+                    selectedReferenceId={selectedReferenceId}
                     error={error}
                     onClose={handleClose}
-                    onPrimarySubtitleChange={handlePrimarySubtitleChange}
-                    onReferenceSubtitleChange={handleReferenceSubtitleChange}
-                    onUploadPrimary={handleUploadPrimary}
-                    onUploadReference={handleUploadReference}
-                    onUseAudio={handleUseAudio}
+                    onReferenceChange={handleReferenceChange}
+                    onUpload={handleUpload}
                     onSync={handleSync}
                 />
                 <input
