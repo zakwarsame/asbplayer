@@ -287,7 +287,13 @@
             "referenceSubtitle": "Reference Subtitle (optional)",
             "none": "None",
             "useAudio": "Use Audio",
-            "sync": "Sync"
+            "sync": "Sync",
+            "alignTo": "Align to",
+            "audio": "🔊 Audio",
+            "upload": "Upload reference…",
+            "scoring": "Scoring references…",
+            "undo": "Undo",
+            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)"
         }
     },
     "ftue": {
@@ -325,6 +331,7 @@
     "info": {
         "copiedSubtitle": "Copied: {{text}}",
         "copiedSubtitle2": "Copied: {{result}}",
+        "subtitlesSynced": "Subtitles synced: {{offset}}",
         "disabledAutoPause": "Auto-pause: Off",
         "disabledCondensedPlayback": "Condensed playback: Off",
         "disabledFastForwardPlayback": "Fast forward playback: Off",

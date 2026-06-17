@@ -287,7 +287,13 @@
             "referenceSubtitle": "Reference Subtitle (optional)",
             "none": "None",
             "useAudio": "Use Audio",
-            "sync": "Sync"
+            "sync": "Sync",
+            "alignTo": "Align to",
+            "audio": "🔊 Audio",
+            "upload": "Upload reference…",
+            "scoring": "Scoring references…",
+            "undo": "Undo",
+            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)"
         }
     },
     "ftue": {
@@ -350,7 +356,8 @@
         "error": "Virhe: {{message}}",
         "errorNoMessage": "Virhe",
         "toggleSubtitlesShortcut": "Valitse tekstityksen näyttö painamalla \"{{keys}}\"",
-        "manualMiningIntervalPrompt": "Käytä louhintapikakuvaketta uudelleen"
+        "manualMiningIntervalPrompt": "Käytä louhintapikakuvaketta uudelleen",
+        "subtitlesSynced": "Subtitles synced: {{offset}}"
     },
     "landing": {
         "cta": "Vedä ja pudota tekstitys ja media tiedostot, tai <1>browse</1>.",

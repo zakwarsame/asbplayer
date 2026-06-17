@@ -335,19 +335,25 @@ export interface BrowserFeatures {
     sidePanel: boolean;
 }
 
-// Subtitle sync modal model
-export interface SubtitleSyncSubtitleTrack {
+// Subtitle sync chooser modal model
+export type SubtitleSyncReferenceOrigin = 'audio' | 'loaded' | 'captured' | 'uploaded';
+
+export interface SubtitleSyncCandidate {
     id: string;
     label: string;
-    fileName?: string;
+    origin: SubtitleSyncReferenceOrigin;
+    /** Correlation confidence (0-1) against the primary track, if it has been scored. */
+    confidence?: number;
 }
 
 export interface SubtitleSyncUiModel {
     open?: boolean;
     isLoading?: boolean;
-    loadedSubtitles?: SubtitleSyncSubtitleTrack[];
-    selectedPrimarySubtitleId?: string;
-    selectedReferenceSubtitleId?: string;
+    /** Name of the loaded subtitle track being aligned. */
+    primaryLabel?: string;
+    /** Reference candidates: 🔊 Audio first, then scored subtitle references. */
+    candidates?: SubtitleSyncCandidate[];
+    selectedReferenceId?: string;
     error?: string;
     themeType?: string;
 }

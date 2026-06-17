@@ -272,7 +272,13 @@
             "referenceSubtitle": "Reference Subtitle (optional)",
             "none": "None",
             "useAudio": "Use Audio",
-            "sync": "Sync"
+            "sync": "Sync",
+            "alignTo": "Align to",
+            "audio": "🔊 Audio",
+            "upload": "Upload reference…",
+            "scoring": "Scoring references…",
+            "undo": "Undo",
+            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)"
         }
     },
     "ftue": {
@@ -335,7 +341,8 @@
         "error": "Galat: {{message}}",
         "errorNoMessage": "Galat",
         "toggleSubtitlesShortcut": "Tekan \"{{keys}}\" untuk menampilkan/sembunyikan takarir",
-        "manualMiningIntervalPrompt": "Gunakan kembali pintasan penambangan"
+        "manualMiningIntervalPrompt": "Gunakan kembali pintasan penambangan",
+        "subtitlesSynced": "Subtitles synced: {{offset}}"
     },
     "landing": {
         "cta": "Seret dan letakkan berkas takarir dan media, atau <1>jelajahi</1>.",

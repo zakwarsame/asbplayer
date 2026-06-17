@@ -272,7 +272,13 @@
             "referenceSubtitle": "Reference Subtitle (optional)",
             "none": "None",
             "useAudio": "Use Audio",
-            "sync": "Sync"
+            "sync": "Sync",
+            "alignTo": "Align to",
+            "audio": "🔊 Audio",
+            "upload": "Upload reference…",
+            "scoring": "Scoring references…",
+            "undo": "Undo",
+            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)"
         }
     },
     "ftue": {
@@ -335,7 +341,8 @@
         "error": "Ошибка: {{message}}",
         "errorNoMessage": "Ошибка",
         "toggleSubtitlesShortcut": "Нажмите \"{{keys}}\" для переключения отображения субтитров",
-        "manualMiningIntervalPrompt": "Нажмите горячую клавишу для майнинга ещё раз, чтобы задать временной отрезок"
+        "manualMiningIntervalPrompt": "Нажмите горячую клавишу для майнинга ещё раз, чтобы задать временной отрезок",
+        "subtitlesSynced": "Subtitles synced: {{offset}}"
     },
     "landing": {
         "cta": "Перетащите медиафайлы и файлы субтитров или <1>выберите</1> их.",

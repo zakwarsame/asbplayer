@@ -287,7 +287,13 @@
             "referenceSubtitle": "Reference Subtitle (optional)",
             "none": "None",
             "useAudio": "Use Audio",
-            "sync": "Sync"
+            "sync": "Sync",
+            "alignTo": "Align to",
+            "audio": "🔊 Audio",
+            "upload": "Upload reference…",
+            "scoring": "Scoring references…",
+            "undo": "Undo",
+            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)"
         }
     },
     "ftue": {
@@ -350,7 +356,8 @@
         "error": "Erreur : {{message}}",
         "errorNoMessage": "Erreur",
         "toggleSubtitlesShortcut": "Appuyez sur \"{{keys}}\" pour activer/désactiver l'affichage des sous-titres",
-        "manualMiningIntervalPrompt": "Réutiliser le raccourci de minage"
+        "manualMiningIntervalPrompt": "Réutiliser le raccourci de minage",
+        "subtitlesSynced": "Subtitles synced: {{offset}}"
     },
     "landing": {
         "cta": "Glissez-déposez des fichiers de sous-titres et multimédia, ou <1>parcourir</1>.",
