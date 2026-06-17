@@ -94,6 +94,9 @@ import { shouldShowUpdateAlert } from './update-alert';
 import { bufferToBase64 } from '@project/common/base64';
 import { pgsParserWorkerFactory } from './pgs-parser-worker-factory';
 import { DictionaryProvider } from '@project/common/dictionary-db/dictionary-provider';
+import { detectOffsetBetweenSubtitles } from './vad/vad-offset-detector';
+import { gatherReferenceCandidates, MIN_SUBTITLE_SYNC_CONFIDENCE } from './subtitle-sync';
+import type { SubtitleOffsetDetectedMessage } from '@project/common';
 import { ExtensionDictionaryStorage } from './extension-dictionary-storage';
 import { HoveredToken } from '@project/common/subtitle-annotations';
 import { v4 as uuidv4 } from 'uuid';
@@ -987,15 +990,17 @@ export default class Binding {
                     case 'load-subtitles':
                         this.showVideoDataDialog(false);
                         break;
+                    case 'auto-sync-subtitles':
+                        this.autoSyncSubtitles();
+                        break;
                     case 'start-subtitle-sync':
                         this.subtitleSyncController.show();
                         break;
-                    case 'vad-alignment-error':
-                        const vadErrorMessage = request.message as { error: string };
-                        this.subtitleController.notification('info.error', { message: vadErrorMessage.error });
+                    case 'subtitle-sync-error':
+                        const syncErrorMessage = request.message as { error: string };
+                        this.subtitleController.notification('info.error', { message: syncErrorMessage.error });
                         break;
                     case 'subtitle-offset-detected':
-                        // Already handled by the offset case above
                         break;
                     case 'start-recording-audio-with-timeout':
                         const startRecordingAudioWithTimeoutMessage =
@@ -1883,5 +1888,60 @@ export default class Binding {
             src: this.video.src,
         };
         browser.runtime.sendMessage(command);
+    }
+
+    async autoSyncSubtitles() {
+        const subtitles = this.subtitleController.subtitles;
+
+        if (!subtitles || subtitles.length === 0) {
+            this._notifySubtitleSyncError('No subtitles loaded');
+            return;
+        }
+
+        const primaryTrack = subtitles.reduce((min, s) => Math.min(min, s.track), Infinity);
+        const primaryCues = subtitles
+            .filter((s) => s.track === primaryTrack)
+            .map((s) => ({ originalStart: s.originalStart, originalEnd: s.originalEnd }));
+
+        const candidates = await gatherReferenceCandidates(this, primaryTrack);
+
+        let best: { offset: number; confidence: number; label: string } | undefined;
+        for (const candidate of candidates) {
+            const { offset, confidence } = detectOffsetBetweenSubtitles(primaryCues, candidate.cues);
+            if (confidence >= MIN_SUBTITLE_SYNC_CONFIDENCE && (!best || confidence > best.confidence)) {
+                best = { offset, confidence, label: candidate.label };
+            }
+        }
+
+        if (best) {
+            this.applySubtitleSyncOffset(best.offset, best.confidence, best.label);
+        } else {
+            this.triggerVadAlignment();
+        }
+    }
+
+    applySubtitleSyncOffset(offset: number, confidence: number, referenceLabel: string) {
+        const subtitles = this.subtitleController.subtitles;
+        const previousOffset = subtitles.length > 0 ? subtitles[0].start - subtitles[0].originalStart : 0;
+
+        this.subtitleController.offset(offset);
+        this.subtitleController.notification('info.subtitlesSynced', { offset: `${(offset / 1000).toFixed(2)}s` });
+
+        const message: SubtitleOffsetDetectedMessage = {
+            command: 'subtitle-offset-detected',
+            offset,
+            confidence,
+            referenceLabel,
+            previousOffset,
+        };
+        browser.runtime.sendMessage({ sender: 'asbplayer-extension-to-sidepanel', message });
+    }
+
+    private _notifySubtitleSyncError(error: string) {
+        this.subtitleController.notification('info.error', { message: error });
+        browser.runtime.sendMessage({
+            sender: 'asbplayer-extension-to-sidepanel',
+            message: { command: 'subtitle-sync-error', error },
+        });
     }
 }
