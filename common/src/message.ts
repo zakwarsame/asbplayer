@@ -1143,6 +1143,8 @@ export interface SubtitleOffsetDetectedMessage extends Message {
     readonly offset: number;
     readonly drift?: number;
     readonly confidence: number;
+    readonly referenceLabel?: string;
+    readonly previousOffset?: number;
 }
 
 // Raw audio capture (offscreen document)
@@ -1197,8 +1199,9 @@ export interface StartVadAlignmentMessage extends Message {
     readonly command: 'start-vad-alignment';
 }
 
-export interface VadAlignmentErrorMessage extends Message {
-    readonly command: 'vad-alignment-error';
+// Source-agnostic subtitle sync error (audio/VAD or subtitle-vs-subtitle path).
+export interface SubtitleSyncErrorMessage extends Message {
+    readonly command: 'subtitle-sync-error';
     readonly error: string;
 }
 export interface TranscriptionSegment {
@@ -1222,7 +1225,13 @@ export interface TranscribeAudioResponse {
     readonly error?: string;
 }
 
-// Subtitle sync modal messages
+// Subtitle sync messages
+// One-click smart sync: auto-pick the best reference and apply (no modal).
+export interface AutoSyncSubtitlesMessage extends Message {
+    readonly command: 'auto-sync-subtitles';
+}
+
+// Opt-in chooser modal.
 export interface StartSubtitleSyncMessage extends Message {
     readonly command: 'start-subtitle-sync';
 }
@@ -1231,12 +1240,10 @@ export interface SubtitleSyncUiBridgeCloseMessage extends Message {
     readonly command: 'close';
 }
 
-export interface SubtitleSyncUiBridgeUseAudioMessage extends Message {
-    readonly command: 'use-audio';
-}
-
+// `referenceId` is 'audio' for the VAD path, otherwise a candidate id; `uploaded` is set when the
+// chosen candidate is a user-uploaded file.
 export interface SubtitleSyncUiBridgeSyncMessage extends Message {
     readonly command: 'sync';
-    readonly primarySubtitle?: SerializedSubtitleFile;
-    readonly referenceSubtitle?: SerializedSubtitleFile;
+    readonly referenceId: string;
+    readonly uploaded?: SerializedSubtitleFile;
 }
