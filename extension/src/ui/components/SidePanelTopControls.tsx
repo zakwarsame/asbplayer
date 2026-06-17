@@ -6,6 +6,7 @@ import ImportExportIcon from '@mui/icons-material/ImportExport';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SyncIcon from '@mui/icons-material/Sync';
 import CancelIcon from '@mui/icons-material/Cancel';
+import TuneIcon from '@mui/icons-material/Tune';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Fade from '@mui/material/Fade';
@@ -26,6 +27,7 @@ interface Props {
     miningHistoryCount: number;
     onShowStatistics: () => void;
     onAutoSyncSubtitles?: () => void;
+    onOpenSyncChooser?: () => void;
     onCancelAutoSync?: () => void;
     disableBulkExport?: boolean;
     autoSyncInProgress?: boolean;
@@ -42,6 +44,7 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
         miningHistoryCount,
         onShowStatistics,
         onAutoSyncSubtitles,
+        onOpenSyncChooser,
         onCancelAutoSync,
         disableBulkExport,
         autoSyncInProgress,
@@ -94,11 +97,20 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                                             </IconButton>
                                         </Tooltip>
                                     ) : (
-                                        <Tooltip title={t('action.autoSyncSubtitles')!}>
-                                            <IconButton onClick={onAutoSyncSubtitles}>
-                                                <SyncIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <>
+                                            <Tooltip title={t('action.autoSyncSubtitles')!}>
+                                                <IconButton onClick={onAutoSyncSubtitles}>
+                                                    <SyncIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            {onOpenSyncChooser && (
+                                                <Tooltip title={t('extension.subtitleSync.title')!}>
+                                                    <IconButton size="small" onClick={onOpenSyncChooser}>
+                                                        <TuneIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                        </>
                                     )}
                                 </Grid>
                             )}
