@@ -59,6 +59,7 @@ const StreamingVideoSettingsTab: React.FC<Props> = ({
         streamingSubsDragAndDrop,
         streamingAutoSync,
         streamingAutoSyncPromptOnFailure,
+        streamingCaptureSiteSubtitles,
         streamingCondensedPlaybackMinimumSkipIntervalMs,
         streamingAppUrl,
         streamingPages,
@@ -201,6 +202,16 @@ const StreamingVideoSettingsTab: React.FC<Props> = ({
                         />
                     }
                     label={t('extension.settings.autoLoadDetectedSubsFailure')}
+                    labelPlacement="start"
+                />
+                <SwitchLabelWithHoverEffect
+                    control={
+                        <Switch
+                            checked={streamingCaptureSiteSubtitles}
+                            onChange={(e) => onSettingChanged('streamingCaptureSiteSubtitles', e.target.checked)}
+                        />
+                    }
+                    label={t('extension.settings.captureSiteSubtitles')}
                     labelPlacement="start"
                 />
                 <SettingsSection>{t('settings.misc')}</SettingsSection>

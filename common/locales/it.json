@@ -217,6 +217,7 @@
             "asbplayerUrl": "URL dell'applicazione",
             "autoLoadDetectedSubs": "Carica automaticamente i sottotitoli rilevati",
             "autoLoadDetectedSubsFailure": "Chiedi in caso di errore nel caricamento automatico dei sottotitoli",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Screenshot pulito durante l'estrazione",
             "condensedPlaybackMinSkipInterval": "Intervallo minimo di salto per la riproduzione condensata",
             "cropScreenshot": "Ritaglia lo screenshot durante l'estrazione",

@@ -217,6 +217,7 @@
             "asbplayerUrl": "URL Aplikasi",
             "autoLoadDetectedSubs": "Muat otomatis takarir yang terdeteksi",
             "autoLoadDetectedSubsFailure": "Tampilkan peringatan jika gagal memuat takarir secara otomatis",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Bersihkan tangkapan layar saat menambang",
             "condensedPlaybackMinSkipInterval": "Interval lompatan minimum untuk pemutaran ringkas",
             "cropScreenshot": "Potong tangkapan layar saat menambang",

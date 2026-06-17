@@ -79,10 +79,7 @@ export default defineContentScript({
                 return;
             }
 
-            // Check if we have valid stored data
-            const hasValidStoredData = storedData && storedData.subtitles && storedData.subtitles.length > 0;
-
-            if (hasValidStoredData) {
+            if (storedData && storedData.subtitles && storedData.subtitles.length > 0) {
                 Object.assign(response, storedData, {
                     moreInfo: {
                         isReferredFromAnimeSite,
@@ -102,7 +99,6 @@ export default defineContentScript({
                         detail: response,
                     })
                 );
-                return;
             }
         }
 

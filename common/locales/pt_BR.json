@@ -217,6 +217,7 @@
             "asbplayerUrl": "URL do aplicativo",
             "autoLoadDetectedSubs": "Carregar automaticamente legendas detectadas",
             "autoLoadDetectedSubsFailure": "Prompt sobre falha de carregamento automático de legendas",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Limpar captura de tela ao minerar",
             "condensedPlaybackMinSkipInterval": "Intervalo mínimo de salto para reprodução condensada",
             "cropScreenshot": "Cortar captura de tela ao minerar",

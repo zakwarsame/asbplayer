@@ -217,6 +217,7 @@
             "asbplayerUrl": "URL приложения",
             "autoLoadDetectedSubs": "Автоматически загружать обнаруженные субтитры",
             "autoLoadDetectedSubsFailure": "Предлагать загружать субтитры автоматически при ошибке",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Создать чистый скриншот",
             "condensedPlaybackMinSkipInterval": "Режим сжатого воспроизведения: минимальный интервал отсутствия речи для пропуска",
             "cropScreenshot": "Обрезать скриншот",
