@@ -13,15 +13,30 @@ const filenameLanguageRegex = /^([a-z]{2,3})(?:[_-]?\d+)?\.(?:vtt|srt|ass)$/i;
 const imageCueRegex = /\.(jpe?g|png|webp|gif)(\?|#|$)/i;
 
 const langCodeToName: Record<string, string> = {
-    en: 'English', eng: 'English', ja: 'Japanese', jpn: 'Japanese', de: 'German', ger: 'German',
-    es: 'Spanish', spa: 'Spanish', fr: 'French', fre: 'French', it: 'Italian', ita: 'Italian',
-    pt: 'Portuguese', por: 'Portuguese', ru: 'Russian', rus: 'Russian', zh: 'Chinese', ko: 'Korean',
+    en: 'English',
+    eng: 'English',
+    ja: 'Japanese',
+    jpn: 'Japanese',
+    de: 'German',
+    ger: 'German',
+    es: 'Spanish',
+    spa: 'Spanish',
+    fr: 'French',
+    fre: 'French',
+    it: 'Italian',
+    ita: 'Italian',
+    pt: 'Portuguese',
+    por: 'Portuguese',
+    ru: 'Russian',
+    rus: 'Russian',
+    zh: 'Chinese',
+    ko: 'Korean',
 };
 
 function labelFromUrl(url: string): string {
     const filename = new URL(url).pathname.split('/').pop() ?? '';
     const match = filename.match(filenameLanguageRegex);
-    return match ? langCodeToName[match[1].toLowerCase()] ?? match[1] : 'CC';
+    return match ? (langCodeToName[match[1].toLowerCase()] ?? match[1]) : 'CC';
 }
 
 // Some sites serve scrubbing-thumbnail sprites as .vtt files whose cues are image URLs rather than
