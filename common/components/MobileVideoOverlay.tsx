@@ -6,6 +6,7 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import TuneIcon from '@mui/icons-material/Tune';
+import SyncIcon from '@mui/icons-material/Sync';
 import { ControlType, MobileOverlayModel, PlayMode, PostMineAction } from '@project/common';
 import { makeStyles } from '@mui/styles';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +81,7 @@ interface Props {
     onScrollToControlType: (controlType: ControlType) => void;
     onMineSubtitle: () => void;
     onLoadSubtitles?: () => void;
+    onAutoSync?: () => void;
     onOffset: (offset: number) => void;
     onPlaybackRate: (playbackRate: number) => void;
     onPlayModeSelected: (playMode: PlayMode) => void;
@@ -97,6 +99,7 @@ const MobileVideoOverlay = React.forwardRef<HTMLDivElement, Props>(function Mobi
         onScrollToControlType,
         onMineSubtitle,
         onLoadSubtitles,
+        onAutoSync,
         onOffset,
         onPlaybackRate,
         onPlayModeSelected,
@@ -446,6 +449,17 @@ const MobileVideoOverlay = React.forwardRef<HTMLDivElement, Props>(function Mobi
                             <span>
                                 <IconButton disabled={model.recording} onClick={handleOpenPlayModeSelector}>
                                     <TuneIcon className={model.recording ? classes.inactiveButton : classes.button} />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    </Grid>
+                )}
+                {onAutoSync && !model.emptySubtitleTrack && (
+                    <Grid item>
+                        <Tooltip {...defaultTooltipProps} title={t('action.autoSyncSubtitles')!}>
+                            <span>
+                                <IconButton disabled={model.recording} onClick={onAutoSync}>
+                                    <SyncIcon className={model.recording ? classes.inactiveButton : classes.button} />
                                 </IconButton>
                             </span>
                         </Tooltip>

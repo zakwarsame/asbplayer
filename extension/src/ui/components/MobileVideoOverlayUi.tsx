@@ -1,5 +1,6 @@
 import {
     AsbPlayerToVideoCommandV2,
+    AutoSyncSubtitlesMessage,
     ControlType,
     CopySubtitleMessage,
     CurrentTimeToVideoMessage,
@@ -95,6 +96,20 @@ const MobileVideoOverlayUi = () => {
         },
         [location]
     );
+
+    const handleAutoSync = useCallback(() => {
+        if (!location) {
+            return;
+        }
+
+        const command: AsbPlayerToVideoCommandV2<AutoSyncSubtitlesMessage> = {
+            sender: 'asbplayerv2',
+            message: { command: 'auto-sync-subtitles' },
+            tabId: location.tabId,
+            src: location.src,
+        };
+        browser.runtime.sendMessage(command);
+    }, [location]);
 
     const handleSeek = useCallback(
         (timestampMs: number) => {
@@ -233,6 +248,7 @@ const MobileVideoOverlayUi = () => {
                     onScrollToControlType={setLastControlType}
                     onMineSubtitle={handleMineSubtitle}
                     onLoadSubtitles={handleLoadSubtitles}
+                    onAutoSync={handleAutoSync}
                     onOffset={handleOffset}
                     onSeek={handleSeek}
                     onPlaybackRate={handlePlaybackRate}
