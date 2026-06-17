@@ -1,14 +1,16 @@
-import {
-    SubtitleSyncSubtitleTrack,
-    SubtitleSyncUiBridgeCloseMessage,
-    SubtitleSyncUiBridgeSyncMessage,
-    SubtitleSyncUiBridgeUseAudioMessage,
-    SubtitleSyncUiModel,
-} from '@project/common';
+import { SubtitleSyncCandidate, SubtitleSyncUiBridgeSyncMessage, SubtitleSyncUiModel } from '@project/common';
 import { SettingsProvider } from '@project/common/settings';
 import Binding from '../services/binding';
 import UiFrame, { uiFrameForHtml } from '../services/ui-frame';
 import { fetchLocalization } from '../services/localization-fetcher';
+import { detectOffsetBetweenSubtitles } from '../services/vad/vad-offset-detector';
+import {
+    gatherReferenceCandidates,
+    parseReferenceCues,
+    MIN_SUBTITLE_SYNC_CONFIDENCE,
+    ReferenceCandidate,
+    ReferenceCue,
+} from '../services/subtitle-sync';
 
 async function html(lang: string) {
     return `<!DOCTYPE html>
@@ -34,6 +36,9 @@ export default class SubtitleSyncController {
     private readonly _frame: UiFrame;
     private readonly _settings: SettingsProvider;
 
+    private _primaryCues: ReferenceCue[] = [];
+    private _candidatesById = new Map<string, ReferenceCandidate>();
+
     private _wasPaused?: boolean;
     private _fullscreenElement?: Element;
     private _activeElement?: Element;
@@ -51,30 +56,45 @@ export default class SubtitleSyncController {
     async show() {
         const client = await this._client();
         const themeType = await this._settings.getSingle('themeType');
+        const subtitles = this._context.subtitleController.subtitles;
+        const fileNames = this._context.subtitleController.subtitleFileNames ?? [];
 
-        // Get currently loaded subtitles from the subtitle controller
-        const loadedSubtitles = this._getLoadedSubtitles();
+        if (!subtitles || subtitles.length === 0) {
+            this._prepareShow();
+            client.updateState({ open: true, isLoading: false, candidates: [], themeType });
+            return;
+        }
+
+        const primaryTrack = subtitles.reduce((min, s) => Math.min(min, s.track), Infinity);
+        this._primaryCues = subtitles
+            .filter((s) => s.track === primaryTrack)
+            .map((s) => ({ originalStart: s.originalStart, originalEnd: s.originalEnd }));
+
+        const references = await gatherReferenceCandidates(this._context, primaryTrack);
+        this._candidatesById = new Map(references.map((c) => [c.id, c]));
+
+        const candidates: SubtitleSyncCandidate[] = references
+            .map((c) => ({
+                id: c.id,
+                label: c.label,
+                origin: c.origin,
+                confidence: detectOffsetBetweenSubtitles(this._primaryCues, c.cues).confidence,
+            }))
+            .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+
+        const best = candidates.find((c) => (c.confidence ?? 0) >= MIN_SUBTITLE_SYNC_CONFIDENCE);
 
         const model: SubtitleSyncUiModel = {
             open: true,
             isLoading: false,
-            loadedSubtitles,
-            selectedPrimarySubtitleId: loadedSubtitles.length > 0 ? loadedSubtitles[0].id : '-',
-            selectedReferenceSubtitleId: '-',
+            primaryLabel: fileNames[primaryTrack] ?? fileNames[0],
+            candidates,
+            selectedReferenceId: best ? best.id : 'audio',
             themeType,
         };
 
         this._prepareShow();
         client.updateState(model);
-    }
-
-    private _getLoadedSubtitles(): SubtitleSyncSubtitleTrack[] {
-        const subtitleFileNames = this._context.subtitleController.subtitleFileNames ?? [];
-        return subtitleFileNames.map((name, index) => ({
-            id: `loaded-${index}`,
-            label: name,
-            fileName: name,
-        }));
     }
 
     private async _client() {
@@ -89,26 +109,46 @@ export default class SubtitleSyncController {
                     return;
                 }
 
-                if ('use-audio' === message.command) {
-                    // Trigger VAD alignment via the existing handler
-                    this._hideAndResume();
-                    this._context.triggerVadAlignment();
-                    return;
-                }
-
                 if ('sync' === message.command) {
-                    const syncMessage = message as SubtitleSyncUiBridgeSyncMessage;
-                    // TODO: Implement subtitle-to-subtitle sync
-                    // For now, just close the dialog
-                    console.log('[SubtitleSync] Sync requested:', syncMessage);
-                    this._hideAndResume();
-                    return;
+                    await this._sync(message as SubtitleSyncUiBridgeSyncMessage);
                 }
             });
         }
 
         this._frame.show();
         return client;
+    }
+
+    private async _sync({ referenceId, uploaded }: SubtitleSyncUiBridgeSyncMessage) {
+        if (referenceId === 'audio') {
+            this._hideAndResume();
+            this._context.triggerVadAlignment();
+            return;
+        }
+
+        let cues: ReferenceCue[] | undefined;
+        let label: string;
+
+        if (uploaded) {
+            cues = await parseReferenceCues(uploaded.base64, uploaded.name);
+            label = uploaded.name;
+        } else {
+            const candidate = this._candidatesById.get(referenceId);
+            cues = candidate?.cues;
+            label = candidate?.label ?? referenceId;
+        }
+
+        this._hideAndResume();
+
+        if (!cues || cues.length === 0 || this._primaryCues.length === 0) {
+            this._context.subtitleController.notification('info.error', {
+                message: 'Could not read reference subtitle',
+            });
+            return;
+        }
+
+        const { offset, confidence } = detectOffsetBetweenSubtitles(this._primaryCues, cues, { minConfidence: 0 });
+        this._context.applySubtitleSyncOffset(offset, confidence, label);
     }
 
     private _prepareShow() {

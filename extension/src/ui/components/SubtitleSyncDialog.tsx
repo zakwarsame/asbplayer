@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
@@ -11,7 +12,7 @@ import TextField from '@mui/material/TextField';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import makeStyles from '@mui/styles/makeStyles';
-import { SubtitleSyncSubtitleTrack } from '@project/common';
+import { SubtitleSyncCandidate } from '@project/common';
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 
@@ -27,49 +28,46 @@ const useStyles = makeStyles(() => ({
     },
 }));
 
+const UPLOAD_ID = '__upload__';
+
 interface Props {
     open: boolean;
     isLoading: boolean;
-    subtitleTracks: SubtitleSyncSubtitleTrack[];
-    selectedPrimarySubtitleId: string;
-    selectedReferenceSubtitleId: string;
+    primaryLabel?: string;
+    candidates: SubtitleSyncCandidate[];
+    selectedReferenceId: string;
     error?: string;
     onClose: () => void;
-    onPrimarySubtitleChange: (id: string) => void;
-    onReferenceSubtitleChange: (id: string) => void;
-    onUploadPrimary: () => void;
-    onUploadReference: () => void;
-    onUseAudio: () => void;
+    onReferenceChange: (id: string) => void;
+    onUpload: () => void;
     onSync: () => void;
 }
 
 export default function SubtitleSyncDialog({
     open,
     isLoading,
-    subtitleTracks,
-    selectedPrimarySubtitleId,
-    selectedReferenceSubtitleId,
+    primaryLabel,
+    candidates,
+    selectedReferenceId,
     error,
     onClose,
-    onPrimarySubtitleChange,
-    onReferenceSubtitleChange,
-    onUploadPrimary,
-    onUploadReference,
-    onUseAudio,
+    onReferenceChange,
+    onUpload,
     onSync,
 }: Props) {
     const { t } = useTranslation();
     const classes = useStyles();
 
-    const noneOption: SubtitleSyncSubtitleTrack = {
-        id: '-',
-        label: t('extension.subtitleSync.none'),
+    const referenceLabel = (candidate: SubtitleSyncCandidate) =>
+        candidate.confidence === undefined
+            ? candidate.label
+            : `${candidate.label} — ${Math.round(candidate.confidence * 100)}%`;
+
+    const handleSelect = (id: string) => {
+        if (id !== UPLOAD_ID) {
+            onReferenceChange(id);
+        }
     };
-
-    const primaryOptions = subtitleTracks;
-    const referenceOptions = [noneOption, ...subtitleTracks];
-
-    const canSync = selectedPrimarySubtitleId !== '-' || selectedReferenceSubtitleId !== '-';
 
     return (
         <Dialog disableRestoreFocus disableEnforceFocus fullWidth maxWidth="sm" open={open} onClose={onClose}>
@@ -90,24 +88,35 @@ export default function SubtitleSyncDialog({
                     )}
 
                     <Grid item>
-                        <Typography variant="body2" color="textSecondary" gutterBottom>
+                        <Typography variant="body2" color="textSecondary">
                             {t('extension.subtitleSync.primarySubtitle')}
+                        </Typography>
+                        <Typography variant="body1">{primaryLabel ?? '—'}</Typography>
+                    </Grid>
+
+                    <Grid item>
+                        <Typography variant="body2" color="textSecondary" gutterBottom>
+                            {t('extension.subtitleSync.alignTo')}
                         </Typography>
                         <div className={classes.relative}>
                             <TextField
                                 select
                                 fullWidth
                                 variant="filled"
-                                value={selectedPrimarySubtitleId}
+                                value={selectedReferenceId}
                                 disabled={isLoading}
-                                onChange={(e) => onPrimarySubtitleChange(e.target.value)}
+                                onChange={(e) => handleSelect(e.target.value)}
                             >
-                                {primaryOptions.map((track) => (
-                                    <MenuItem value={track.id} key={track.id}>
-                                        {track.label}
+                                <MenuItem value="audio">{t('extension.subtitleSync.audio')}</MenuItem>
+                                {candidates.map((candidate) => (
+                                    <MenuItem value={candidate.id} key={candidate.id}>
+                                        {referenceLabel(candidate)}
                                     </MenuItem>
                                 ))}
-                                <MenuItem onClick={onUploadPrimary}>{t('action.openFiles')}</MenuItem>
+                                <Divider />
+                                <MenuItem value={UPLOAD_ID} onClick={onUpload}>
+                                    {t('extension.subtitleSync.upload')}
+                                </MenuItem>
                             </TextField>
                             {isLoading && (
                                 <span className={classes.spinner}>
@@ -116,34 +125,10 @@ export default function SubtitleSyncDialog({
                             )}
                         </div>
                     </Grid>
-
-                    <Grid item>
-                        <Typography variant="body2" color="textSecondary" gutterBottom>
-                            {t('extension.subtitleSync.referenceSubtitle')}
-                        </Typography>
-                        <TextField
-                            select
-                            fullWidth
-                            variant="filled"
-                            value={selectedReferenceSubtitleId}
-                            disabled={isLoading}
-                            onChange={(e) => onReferenceSubtitleChange(e.target.value)}
-                        >
-                            {referenceOptions.map((track) => (
-                                <MenuItem value={track.id} key={track.id}>
-                                    {track.label}
-                                </MenuItem>
-                            ))}
-                            <MenuItem onClick={onUploadReference}>{t('action.openFiles')}</MenuItem>
-                        </TextField>
-                    </Grid>
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onUseAudio} disabled={isLoading}>
-                    {t('extension.subtitleSync.useAudio')}
-                </Button>
-                <Button onClick={onSync} disabled={!canSync || isLoading}>
+                <Button onClick={onSync} disabled={isLoading}>
                     {t('extension.subtitleSync.sync')}
                 </Button>
             </DialogActions>
