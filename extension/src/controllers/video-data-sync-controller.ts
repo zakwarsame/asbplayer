@@ -838,12 +838,9 @@ export default class VideoDataSyncController {
                 return;
             }
 
-            client.updateState(
-                await this._buildModel({ open: true, episode: message.episode, suggestedName: title })
-            );
+            client.updateState(await this._buildModel({ open: true, episode: message.episode, suggestedName: title }));
         } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : 'An error occurred while fetching subtitles';
+            const errorMessage = error instanceof Error ? error.message : 'An error occurred while fetching subtitles';
             this._syncedData = {
                 ...this._syncedData,
                 // Keep subtitles defined so _buildModel shows the error rather than a loading state.
@@ -864,9 +861,7 @@ export default class VideoDataSyncController {
         });
     }
 
-    private async _withCapturedSubtitles(
-        subtitles: VideoDataSubtitleTrack[]
-    ): Promise<VideoDataSubtitleTrack[]> {
+    private async _withCapturedSubtitles(subtitles: VideoDataSubtitleTrack[]): Promise<VideoDataSubtitleTrack[]> {
         const enabled = await this._context.settings.getSingle('streamingCaptureSiteSubtitles');
         if (!enabled && !this._isAnimeSite) {
             return subtitles;
