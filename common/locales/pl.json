@@ -212,6 +212,7 @@
             "asbplayerUrl": "URL asbplayer",
             "autoLoadDetectedSubs": "Automatyczne ładowanie wykrytych napisów",
             "autoLoadDetectedSubsFailure": "Prompt on failure to auto-load subtitles",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Czyść zrzut ekranu",
             "condensedPlaybackMinSkipInterval": "Minimalny interwał pominięcia odtwarzania skondensowanego",
             "cropScreenshot": "Przycinaj zrzut ekranu",

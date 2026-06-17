@@ -627,6 +627,9 @@ const settingsSchema = {
         streamingAutoSyncPromptOnFailure: {
             type: 'boolean',
         },
+        streamingCaptureSiteSubtitles: {
+            type: 'boolean',
+        },
         streamingLastLanguagesSynced: {
             type: 'object',
             additionalProperties: {

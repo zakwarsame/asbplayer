@@ -212,6 +212,7 @@
             "asbplayerUrl": "客户端链接",
             "autoLoadDetectedSubs": "自动加载检测到的字幕",
             "autoLoadDetectedSubsFailure": "自动加载字幕失败",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "截图时隐藏界面元素",
             "condensedPlaybackMinSkipInterval": "紧凑播放的最小跳过间隔",
             "cropScreenshot": "挖掘时裁剪截图",

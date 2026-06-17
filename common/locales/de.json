@@ -222,6 +222,7 @@
             "asbplayerUrl": "absplayer-URL",
             "autoLoadDetectedSubs": "Untertitel automatisch laden",
             "autoLoadDetectedSubsFailure": "Prompt on failure to auto-load subtitles",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Screenshot säubern",
             "condensedPlaybackMinSkipInterval": "Maximale Stille zwischen gesprochenen Zeilen für komprimiertes Audio",
             "cropScreenshot": "Screenshot zuschneiden",

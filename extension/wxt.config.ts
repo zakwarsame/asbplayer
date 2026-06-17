@@ -178,7 +178,7 @@ export default defineConfig({
         let permissions = ['tabs', 'storage', 'unlimitedStorage'];
 
         if (browser === 'chrome') {
-            permissions = [...permissions, 'tabCapture', 'activeTab', 'contextMenus', 'sidePanel', 'offscreen'];
+            permissions = [...permissions, 'tabCapture', 'activeTab', 'contextMenus', 'sidePanel', 'offscreen', 'webRequest'];
 
             const key = isDev
                 ? {}
@@ -189,6 +189,7 @@ export default defineConfig({
             manifest = {
                 ...manifest,
                 ...key,
+                host_permissions: ['<all_urls>'],
                 minimum_chrome_version: '116',
                 commands,
             };

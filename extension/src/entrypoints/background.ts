@@ -45,6 +45,7 @@ import ToggleSidePanelHandler from '@/handlers/video/toggle-side-panel-handler';
 import CopySubtitleHandler from '@/handlers/asbplayerv2/copy-subtitle-handler';
 import { RequestingActiveTabPermissionHandler } from '@/handlers/video/requesting-active-tab-permission';
 import { CardPublisher } from '@/services/card-publisher';
+import NetworkSubtitleCapture from '@/services/network-subtitle-capture';
 import CardUpdatedDialogHandler from '@/handlers/asbplayerv2/card-updated-dialog-handler';
 import CardExportedDialogHandler from '@/handlers/asbplayerv2/card-exported-dialog-handler';
 import AckMessageHandler from '@/handlers/video/ack-message-handler';
@@ -85,6 +86,7 @@ export default defineBackground(() => {
     }
 
     const settings = new SettingsProvider(new ExtensionSettingsStorage());
+    const networkSubtitleCapture = new NetworkSubtitleCapture(settings);
 
     const startListener = async () => {
         primeLocalization(await settings.getSingle('language'));
@@ -273,6 +275,10 @@ export default defineBackground(() => {
         }
         if (message.command === 'check-if-anime-site') {
             sendResponse({ isAnimeSite: isAnimeSite(sender.tab?.url ?? '') });
+            return true;
+        }
+        if (message.command === 'get-network-subtitles' && sender.tab?.id) {
+            sendResponse(networkSubtitleCapture.getTracks(sender.tab.id));
             return true;
         }
     });

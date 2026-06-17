@@ -222,6 +222,7 @@
             "asbplayerUrl": "Sovelluksen URL",
             "autoLoadDetectedSubs": "Lataa automaattisesti havaitut tekstitykset",
             "autoLoadDetectedSubsFailure": "Kysy tekstityksen automaattisen lataamisen epäonnistumisesta",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Puhdista kuvakaappaus louhinnassa",
             "condensedPlaybackMinSkipInterval": "Tiivistetty toiston minimiaika väliin",
             "cropScreenshot": "Rajaa kuvakaappausta louhimassa",

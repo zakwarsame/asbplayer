@@ -222,6 +222,7 @@
             "asbplayerUrl": "App URL",
             "autoLoadDetectedSubs": "Auto-load detected subtitles",
             "autoLoadDetectedSubsFailure": "Prompt on failure to auto-load subtitles",
+            "captureSiteSubtitles": "Capture subtitles served by the streaming site",
             "cleanScreenshot": "Clean screenshot when mining",
             "condensedPlaybackMinSkipInterval": "Condensed playback minimum skip interval",
             "cropScreenshot": "Crop screenshot when mining",
