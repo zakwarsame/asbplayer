@@ -23,12 +23,7 @@ export interface DTWOptions {
  * Generic DTW alignment with customizable cost function.
  * Uses Sakoe-Chiba band constraint for efficiency.
  */
-export function alignDTW<T>(
-    seq1: T[],
-    seq2: T[],
-    costFn: (a: T, b: T) => number,
-    options?: DTWOptions
-): DTWResult {
+export function alignDTW<T>(seq1: T[], seq2: T[], costFn: (a: T, b: T) => number, options?: DTWOptions): DTWResult {
     const n = seq1.length;
     const m = seq2.length;
 

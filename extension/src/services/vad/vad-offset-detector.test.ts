@@ -119,10 +119,7 @@ describe('timeline creation', () => {
 
 describe('detectOffsetVAD', () => {
     it('should detect zero offset for matching timelines', () => {
-        const subs = [
-            subtitle('Hello', 1000, 2000),
-            subtitle('World', 3000, 4000),
-        ];
+        const subs = [subtitle('Hello', 1000, 2000), subtitle('World', 3000, 4000)];
 
         const vad = vadResult(
             [
@@ -176,11 +173,7 @@ describe('detectOffsetVAD', () => {
 
     it('should return lower confidence for mismatched timelines', () => {
         // Subtitle dense at start, VAD sparse throughout - opposite patterns
-        const subs = [
-            subtitle('A', 0, 500),
-            subtitle('B', 500, 1000),
-            subtitle('C', 1000, 1500),
-        ];
+        const subs = [subtitle('A', 0, 500), subtitle('B', 500, 1000), subtitle('C', 1000, 1500)];
 
         // VAD shows opposite pattern - sparse throughout
         const vad = vadResult(
