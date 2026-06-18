@@ -27,7 +27,7 @@ import { isOnTutorialPage } from '@/services/tutorial';
 import { extractExtension, trackFromDef } from '@/pages/util';
 import { fetchAnilistInfo } from '../services/anilist';
 import { fetchSubtitles } from '../services/subtitle';
-import type { CapturedSubtitle } from '@/services/network-subtitle-capture';
+import { requestCapturedSubtitles, capturedSubtitleLabel } from '@/services/captured-subtitles';
 
 declare global {
     function cloneInto(obj: any, targetScope: any, options?: any): any;
@@ -866,21 +866,15 @@ export default class VideoDataSyncController {
         if (!enabled && !this._isAnimeSite) {
             return subtitles;
         }
-        try {
-            const captured: CapturedSubtitle[] =
-                (await browser.runtime.sendMessage({ command: 'get-network-subtitles' })) || [];
-            const capturedTracks = captured.map((c) =>
-                trackFromDef({
-                    label: `[Site] ${c.label}`,
-                    language: c.language,
-                    url: `data:text/vtt;base64,${c.base64}`,
-                    extension: 'vtt',
-                })
-            );
-            return [...subtitles, ...capturedTracks];
-        } catch {
-            return subtitles;
-        }
+        const capturedTracks = (await requestCapturedSubtitles()).map((c) =>
+            trackFromDef({
+                label: capturedSubtitleLabel(c),
+                language: c.language,
+                url: `data:text/plain;base64,${c.base64}`,
+                extension: extractExtension(c.url, 'vtt'),
+            })
+        );
+        return [...subtitles, ...capturedTracks];
     }
 
     private async obtainTitleAndEpisode(): Promise<{ title: string; episode: string }> {

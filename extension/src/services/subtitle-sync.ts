@@ -1,8 +1,9 @@
 import { SubtitleHtml, type SubtitleSyncReferenceOrigin } from '@project/common';
 import { SubtitleReader } from '@project/common/subtitle-reader';
 import { base64ToBlob } from '@project/common/base64';
+import { extractExtension } from '@/pages/util';
 import { pgsParserWorkerFactory } from './pgs-parser-worker-factory';
-import type { CapturedSubtitle } from './network-subtitle-capture';
+import { requestCapturedSubtitles, capturedSubtitleLabel } from './captured-subtitles';
 import type Binding from './binding';
 
 export const MIN_SUBTITLE_SYNC_CONFIDENCE = 0.3;
@@ -32,11 +33,6 @@ const referenceReader = () =>
         convertNetflixRuby: false,
         pgsParserWorkerFactory,
     });
-
-const extensionFromUrl = (url: string): string => {
-    const match = /\.(vtt|srt|ass)(?:\?|#|$)/i.exec(url);
-    return match ? match[1].toLowerCase() : 'vtt';
-};
 
 export async function parseReferenceCues(base64: string, fileName: string): Promise<ReferenceCue[]> {
     const file = new File([base64ToBlob(base64, 'text/plain')], fileName);
@@ -78,29 +74,27 @@ export async function gatherReferenceCandidates(context: Binding, primaryTrack: 
         });
     }
 
-    try {
-        const captured: CapturedSubtitle[] =
-            (await browser.runtime.sendMessage({ command: 'get-network-subtitles' })) || [];
-        const reader = referenceReader();
+    const captured = await requestCapturedSubtitles();
+    const reader = referenceReader();
 
-        for (let i = 0; i < captured.length; i++) {
-            const c = captured[i];
-            try {
-                const file = new File([base64ToBlob(c.base64, 'text/plain')], `reference.${extensionFromUrl(c.url)}`);
-                const nodes = await reader.subtitles([file]);
-                addCandidate({
-                    id: `captured-${i}`,
-                    label: `[Site] ${c.label}`,
-                    origin: 'captured',
-                    language: c.language,
-                    cues: nodes.map((n) => ({ originalStart: n.start, originalEnd: n.end })),
-                });
-            } catch {
-                // Unparseable captured track — skip it.
-            }
+    for (let i = 0; i < captured.length; i++) {
+        const c = captured[i];
+        try {
+            const file = new File(
+                [base64ToBlob(c.base64, 'text/plain')],
+                `reference.${extractExtension(c.url, 'vtt')}`
+            );
+            const nodes = await reader.subtitles([file]);
+            addCandidate({
+                id: `captured-${i}`,
+                label: capturedSubtitleLabel(c),
+                origin: 'captured',
+                language: c.language,
+                cues: nodes.map((n) => ({ originalStart: n.start, originalEnd: n.end })),
+            });
+        } catch {
+            // Unparseable captured track — skip it.
         }
-    } catch {
-        // Background unreachable — fall back to loaded references only.
     }
 
     return candidates;
