@@ -17,9 +17,21 @@
  */
 
 import { SubtitleModel } from '@project/common';
-import { OffsetPoint, OffsetResult } from '../sync/offset-detector';
 import { crossCorrelate, alignBinaryDTW } from './dtw';
 import { VADEngine, VADResult, vadResultToTimeline, subtitlesToTimeline } from './vad-interface';
+
+export interface OffsetPoint {
+    position: number;
+    offset: number;
+    confidence: number;
+}
+
+export interface OffsetResult {
+    offset: number;
+    drift?: number;
+    points: OffsetPoint[];
+    confidence: number;
+}
 
 export interface VADOffsetOptions {
     /** Frame size for timeline conversion (ms). Default: 10 */
