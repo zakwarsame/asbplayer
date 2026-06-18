@@ -62,7 +62,7 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
     return (
         <Fade in={show || forceShow}>
             <Box ref={ref} style={{ position: 'absolute', top: 12, right: 12 }}>
-                <Grid container direction="column">
+                <Grid container direction="column" alignItems="flex-end">
                     <Grid item>
                         <Tooltip title={t('action.loadSubtitles')!}>
                             <IconButton onClick={onLoadSubtitles}>
@@ -98,11 +98,6 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                                         </Tooltip>
                                     ) : (
                                         <>
-                                            <Tooltip title={t('action.autoSyncSubtitles')!}>
-                                                <IconButton onClick={onAutoSyncSubtitles}>
-                                                    <SyncIcon />
-                                                </IconButton>
-                                            </Tooltip>
                                             {onOpenSyncChooser && (
                                                 <Tooltip title={t('extension.subtitleSync.title')!}>
                                                     <IconButton size="small" onClick={onOpenSyncChooser}>
@@ -110,6 +105,11 @@ const SidePanelTopControls = React.forwardRef(function SidePanelTopControls(
                                                     </IconButton>
                                                 </Tooltip>
                                             )}
+                                            <Tooltip title={t('action.autoSyncSubtitles')!}>
+                                                <IconButton onClick={onAutoSyncSubtitles}>
+                                                    <SyncIcon />
+                                                </IconButton>
+                                            </Tooltip>
                                         </>
                                     )}
                                 </Grid>
