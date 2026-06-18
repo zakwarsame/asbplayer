@@ -408,10 +408,7 @@ export default function SidePanel({ dictionaryProvider, settingsProvider, settin
             if (message?.message?.command === 'subtitle-offset-detected') {
                 setAutoSyncInProgress(false);
                 setSyncResult(message.message as SubtitleOffsetDetectedMessage);
-            } else if (
-                message?.message?.command === 'whisper-transcription-error' ||
-                message?.message?.command === 'subtitle-sync-error'
-            ) {
+            } else if (message?.message?.command === 'subtitle-sync-error') {
                 setAutoSyncInProgress(false);
                 handleError(message.message.error);
             }
