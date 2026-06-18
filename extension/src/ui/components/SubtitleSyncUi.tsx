@@ -68,6 +68,8 @@ export default function SubtitleSyncUi({ bridge }: Props) {
         });
     }, [bridge]);
 
+    useEffect(() => bridge.serverIsReady(), [bridge]);
+
     const handleClose = useCallback(() => {
         setOpen(false);
         const message: SubtitleSyncUiBridgeCloseMessage = { command: 'close' };
