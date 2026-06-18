@@ -12,6 +12,10 @@ export interface ReferenceCue {
     originalEnd: number;
 }
 
+const sameTimeline = (a: ReferenceCue[], b: ReferenceCue[]): boolean =>
+    a.length === b.length &&
+    a.every((cue, i) => cue.originalStart === b[i].originalStart && cue.originalEnd === b[i].originalEnd);
+
 export interface ReferenceCandidate {
     id: string;
     label: string;
@@ -41,32 +45,39 @@ export async function parseReferenceCues(base64: string, fileName: string): Prom
 }
 
 export async function gatherReferenceCandidates(context: Binding, primaryTrack: number): Promise<ReferenceCandidate[]> {
-    const candidates: ReferenceCandidate[] = [];
-
     const subtitles = context.subtitleController.subtitles;
     const fileNames = context.subtitleController.subtitleFileNames ?? [];
+    const cuesForTrack = (track: number): ReferenceCue[] =>
+        subtitles
+            .filter((s) => s.track === track)
+            .map((s) => ({ originalStart: s.originalStart, originalEnd: s.originalEnd }));
+
+    const candidates: ReferenceCandidate[] = [];
+    // A subtitle can't be a timing reference for itself, so never offer a track whose cues are
+    // identical to one we already hold — most importantly the primary, which is re-served (and
+    // re-captured) by the site when it was loaded from a captured CC.
+    const knownTimelines: ReferenceCue[][] = [cuesForTrack(primaryTrack)];
+    const addCandidate = (candidate: ReferenceCandidate) => {
+        if (candidate.cues.length === 0 || knownTimelines.some((t) => sameTimeline(t, candidate.cues))) {
+            return;
+        }
+        knownTimelines.push(candidate.cues);
+        candidates.push(candidate);
+    };
+
     const otherTracks = [...new Set(subtitles.map((s) => s.track))]
         .filter((t) => t !== primaryTrack)
         .sort((a, b) => a - b);
 
     for (const track of otherTracks) {
-        const cues = subtitles
-            .filter((s) => s.track === track)
-            .map((s) => ({ originalStart: s.originalStart, originalEnd: s.originalEnd }));
-
-        if (cues.length > 0) {
-            candidates.push({
-                id: `loaded-${track}`,
-                label: fileNames[track] ?? `Track ${track + 1}`,
-                origin: 'loaded',
-                cues,
-            });
-        }
+        addCandidate({
+            id: `loaded-${track}`,
+            label: fileNames[track] ?? `Track ${track + 1}`,
+            origin: 'loaded',
+            cues: cuesForTrack(track),
+        });
     }
 
-    // The background only stores tracks it was allowed to capture, so trust whatever it returns
-    // rather than re-gating here (this content script may run in a player iframe whose URL doesn't
-    // match the streaming site).
     try {
         const captured: CapturedSubtitle[] =
             (await browser.runtime.sendMessage({ command: 'get-network-subtitles' })) || [];
@@ -77,17 +88,13 @@ export async function gatherReferenceCandidates(context: Binding, primaryTrack: 
             try {
                 const file = new File([base64ToBlob(c.base64, 'text/plain')], `reference.${extensionFromUrl(c.url)}`);
                 const nodes = await reader.subtitles([file]);
-                const cues = nodes.map((n) => ({ originalStart: n.start, originalEnd: n.end }));
-
-                if (cues.length > 0) {
-                    candidates.push({
-                        id: `captured-${i}`,
-                        label: `[Site] ${c.label}`,
-                        origin: 'captured',
-                        language: c.language,
-                        cues,
-                    });
-                }
+                addCandidate({
+                    id: `captured-${i}`,
+                    label: `[Site] ${c.label}`,
+                    origin: 'captured',
+                    language: c.language,
+                    cues: nodes.map((n) => ({ originalStart: n.start, originalEnd: n.end })),
+                });
             } catch {
                 // Unparseable captured track — skip it.
             }
