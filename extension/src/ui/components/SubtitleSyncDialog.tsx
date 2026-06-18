@@ -7,6 +7,7 @@ import DialogContent from '@mui/material/DialogContent';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
+import ListSubheader from '@mui/material/ListSubheader';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Toolbar from '@mui/material/Toolbar';
@@ -69,6 +70,29 @@ export default function SubtitleSyncDialog({
         }
     };
 
+    const sections: { origin: SubtitleSyncCandidate['origin']; header: string }[] = [
+        { origin: 'captured', header: t('extension.subtitleSync.sectionSite') },
+        { origin: 'loaded', header: t('extension.subtitleSync.sectionLoaded') },
+        { origin: 'uploaded', header: t('extension.subtitleSync.sectionUploaded') },
+    ];
+
+    // Select children must be a flat list so MUI can resolve the selected value, so each section
+    // contributes a header followed by its items rather than a nested fragment.
+    const referenceItems = sections.flatMap(({ origin, header }) => {
+        const items = candidates.filter((c) => c.origin === origin);
+        if (items.length === 0) {
+            return [];
+        }
+        return [
+            <ListSubheader key={`section-${origin}`}>{header}</ListSubheader>,
+            ...items.map((candidate) => (
+                <MenuItem value={candidate.id} key={candidate.id}>
+                    {referenceLabel(candidate)}
+                </MenuItem>
+            )),
+        ];
+    });
+
     return (
         <Dialog disableRestoreFocus disableEnforceFocus fullWidth maxWidth="sm" open={open} onClose={onClose}>
             <Toolbar>
@@ -108,11 +132,7 @@ export default function SubtitleSyncDialog({
                                 onChange={(e) => handleSelect(e.target.value)}
                             >
                                 <MenuItem value="audio">{t('extension.subtitleSync.audio')}</MenuItem>
-                                {candidates.map((candidate) => (
-                                    <MenuItem value={candidate.id} key={candidate.id}>
-                                        {referenceLabel(candidate)}
-                                    </MenuItem>
-                                ))}
+                                {referenceItems}
                                 <Divider />
                                 <MenuItem value={UPLOAD_ID} onClick={onUpload}>
                                     {t('extension.subtitleSync.upload')}

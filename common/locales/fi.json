@@ -293,7 +293,10 @@
             "upload": "Upload reference…",
             "scoring": "Scoring references…",
             "undo": "Undo",
-            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)"
+            "synced": "Synced to {{reference}} ({{offset}}, {{confidence}}% match)",
+            "sectionSite": "Site subtitles (CC)",
+            "sectionLoaded": "Loaded subtitles",
+            "sectionUploaded": "Uploaded"
         }
     },
     "ftue": {
