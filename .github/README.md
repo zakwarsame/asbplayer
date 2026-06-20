@@ -1,0 +1,105 @@
+# API subs for asbplayer
+
+Web app: https://zakwarsame.github.io/asbplayer/
+
+This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that adds automatic subtitle search and download functionality for anime sites. It works with the [Jimaku API](https://jimaku.cc/login) and [Anilist API](https://docs.anilist.co/) to automatically detect anime titles and episodes on supported streaming sites.
+
+## Extension Installation
+
+🦊 Firefox Addon: https://addons.mozilla.org/en-CA/firefox/addon/api-subs-for-asbplayer/
+
+🌐 Chrome extension: https://chromewebstore.google.com/detail/api-subs-for-asbplayer/ncfciojfgalkgpnemgndcoibdpcgbpfc
+
+<details>
+<summary>Instructions for installing via the assets </summary>
+
+1. Go to the [Releases](https://github.com/zakwarsame/asbplayer/releases) page
+2. Find the latest release
+3. Under "Assets", download the appropriate file:
+    - For Chrome/Chromium browsers: `projectextension-x.x.x-chromium.zip`
+    - For Firefox based browsers: `projectextension-1.0.3-firefox-android.zip`
+
+4. Install in your browser:
+    - **Chrome/Chromium**:
+        - Go to `chrome://extensions/`
+        - Enable "Developer mode" (top right)
+        - Drag and drop the downloaded ZIP file into the extensions page OR click "Load unpacked" and select the extracted folder
+    - **Firefox**:
+        - Go to `about:addons`
+        - Click the gear icon and select "Install Add-on From File..."
+        - Select the downloaded `.zip` file (do not extract it)
+
+ </details>
+
+## Setup
+
+1. Get an API key from [jimaku.cc](https://jimaku.cc)
+    - You can get a free key by signing up on the site: https://jimaku.cc/account
+    - Generate an API key under the "API" heading and copy it
+2. Open asbplayer settings, click on the "Misc" tab and enter your API key in the "API Key" field
+
+## Usage
+
+1. Go to a supported anime streaming site. See below [supported Sites](#extension-features)
+2. Open the side panel
+    - Chrome: click the asbplayer icon from the extensions section and click "Open Side Panel"
+    - Firefox: right click on a video and find "Load subtitles with asbplayer" in the context menu
+3. Choose "Load Subtitles"
+4. When you open the subtitle selector, you'll see additional fields for episode number and a search button
+5. The anime title and episode will be automatically detected
+6. Click search to find and load available subtitles
+
+## New Features
+
+### Extension Features
+
+- **Automatic Anime Detection**: Automatically detects anime titles and episodes on supported streaming sites
+- **Subtitle Search**: Search and download subtitles directly through the asbplayer interface using the Jimaku API
+- **Supported Sites**:
+    - hianime
+    - miruro
+    - animekai
+    - More sites can be easily added
+
+### Web app features
+
+[Click here to view the web app](https://zakwarsame.github.io/asbplayer/)
+
+- A new button in the top left corner next to the "files" icon that allows you to search for subtitles
+- Clicking opens a modal with fields for API key, anime title, episode number and a search button
+- When a result is found, it will be loaded into the player automatically
+
+**Extension demo:** (credit: [@Kellenok](https://github.com/Kellenok))
+
+https://github.com/user-attachments/assets/de743621-6574-47a8-ba32-b3696a5922c3
+
+**Web app demo:**
+
+https://github.com/user-attachments/assets/5a7f0c93-5c30-49bc-a816-04441a53bddc
+
+## How it Works
+
+The extension:
+
+1. Detects when you're on a supported anime site
+2. Extracts the anime title and episode number
+3. Uses the Anilist API to find the correct anime ID
+4. Searches for subtitles using the Jimaku API
+5. Loads the subtitles directly into asbplayer
+
+## Contributing
+
+To add support for additional anime sites:
+
+1. Add the site configuration to `animeSites` in `extension/src/services/anime-sites.ts`
+2. Define the title and episode selectors for the site
+3. Submit a pull request
+
+## Credits
+
+This project is based on [asbplayer](https://github.com/killergerbah/asbplayer) by killergerbah.
+Inspired by [asb-auto-subs](https://github.com/GodPepe7/asb-auto-subs) by GodPepe7.
+
+## License
+
+MIT License
