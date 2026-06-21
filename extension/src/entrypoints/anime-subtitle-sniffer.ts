@@ -1,28 +1,24 @@
-// Sniffs subtitle responses (WEBVTT / ASS / SRT) the page's player fetches, covering the opaque,
-// proxied, sometimes referer-gated URLs the background webRequest capture can't match or re-fetch
-// (animetsu, animex). Runs in the page (MAIN world) so it reads the body the player already received,
-// then hands the text to the content script via window.postMessage. Injected only on anime sites.
+// Forwards subtitle responses the player fetches (incl. the opaque/proxied/referer-gated URLs the
+// webRequest capture can't match) to the content script. Runs in the page so it reads the body the
+// player already received. Injected only on anime sites.
 export default defineUnlistedScript(() => {
     const SKIP_CONTENT_TYPE = /(video|audio|image)\/|dash\+xml|mpegurl/i;
     const MAX_BYTES = 2_000_000;
     const MAX_TRACKS = 30;
     const seen = new Set<string>();
 
-    // Languages harvested from the site's "sources" JSON (animetsu subs[], animex tracks[]) so a
-    // captured subtitle can be labelled with its real language instead of a generic "CC".
+    // Track languages from the site's sources JSON, used to label captured subtitles instead of "CC".
     const urlToLang = new Map<string, string>();
     let lastLangs: string[] = [];
 
     const classify = (text: string): string | undefined => {
-        const head = text.trimStart().slice(0, 1000); // trimStart drops a leading UTF-8 BOM
+        const head = text.trimStart().slice(0, 1000); // trimStart drops a leading BOM
         if (head.startsWith('WEBVTT')) return 'vtt';
         if (/\[Script Info\]/i.test(head)) return 'ass';
         if (/\d+\s*\r?\n\d{2}:\d{2}:\d{2},\d{3}\s*-->/.test(head)) return 'srt';
         return undefined;
     };
 
-    // Walk a parsed sources JSON for subtitle descriptors (objects carrying a language field, usually
-    // alongside a url). Bounded so a pathological payload can't hang the page.
     const harvestLangs = (text: string) => {
         const trimmed = text.trimStart();
         if (trimmed[0] !== '{' && trimmed[0] !== '[') return;
@@ -48,16 +44,9 @@ export default defineUnlistedScript(() => {
         if (langs.length) lastLangs = langs;
     };
 
-    const langForSubtitle = (url: string): string | undefined => {
-        const exact = urlToLang.get(url);
-        if (exact) return exact;
-        for (const [u, lang] of urlToLang) {
-            if (u && (url.includes(u) || u.includes(url))) return lang;
-        }
-        // Proxied subtitle URLs (e.g. animex) don't match the JSON's url; when the sources JSON listed
-        // exactly one track, it's unambiguously this one.
-        return lastLangs.length === 1 ? lastLangs[0] : undefined;
-    };
+    // Proxied URLs (animex) won't match the JSON's url; fall back to the sole listed track.
+    const langForSubtitle = (url: string): string | undefined =>
+        urlToLang.get(url) ?? (lastLangs.length === 1 ? lastLangs[0] : undefined);
 
     const process = (url: string, text: string) => {
         try {
@@ -67,8 +56,8 @@ export default defineUnlistedScript(() => {
                 harvestLangs(text);
                 return;
             }
-            if (/\.(vtt|srt|ass)(\?|$)/i.test(url)) return; // direct files are handled by the webRequest path
-            if (url.includes('jimaku.cc')) return; // the fork already surfaces Jimaku separately
+            if (/\.(vtt|srt|ass)(\?|$)/i.test(url)) return; // direct files: handled by the webRequest path
+            if (url.includes('jimaku.cc')) return; // already surfaced as its own track
             if (seen.has(url) || seen.size >= MAX_TRACKS) return;
             seen.add(url);
             window.postMessage(
@@ -76,7 +65,7 @@ export default defineUnlistedScript(() => {
                 '*'
             );
         } catch {
-            // never break the page
+            // ignore
         }
     };
 
@@ -116,7 +105,7 @@ export default defineUnlistedScript(() => {
                     process(this.responseURL, new TextDecoder().decode(this.response));
                 }
             } catch {
-                // never break the page
+                // ignore
             }
         });
 

@@ -29,9 +29,7 @@ export default defineContentScript({
             return true;
         });
 
-        // Anime sites serve subtitles through opaque/proxied/referer-gated URLs the background capture
-        // can't match or re-fetch. Inject a page-context sniffer that reads the subtitle body the
-        // player already received and relay it to the background capture service.
+        // Inject the page-context sniffer that captures subtitles served via opaque/proxied URLs.
         if (!isAnimeSite(location.href)) {
             return;
         }
