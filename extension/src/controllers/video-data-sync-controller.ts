@@ -871,7 +871,7 @@ export default class VideoDataSyncController {
                 label: capturedSubtitleLabel(c),
                 language: c.language,
                 url: `data:text/plain;base64,${c.base64}`,
-                extension: extractExtension(c.url, 'vtt'),
+                extension: c.extension,
             })
         );
         return [...subtitles, ...capturedTracks];

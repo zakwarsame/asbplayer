@@ -283,6 +283,10 @@ export default defineBackground(() => {
             sendResponse(networkSubtitleCapture.getTracks(sender.tab.id));
             return true;
         }
+        if (message.command === 'captured-subtitle' && sender.tab?.id) {
+            networkSubtitleCapture.addCaptured(sender.tab.id, message);
+            return;
+        }
     });
 
     browser.runtime.onInstalled.addListener(() => {

@@ -6,6 +6,7 @@ export interface CapturedSubtitle {
     label: string;
     language: string;
     base64: string;
+    extension: string;
 }
 
 const subtitleUrlRegex = /\.(vtt|srt|ass)(\?|$)/i;
@@ -114,6 +115,7 @@ export default class NetworkSubtitleCapture {
 
     private async _onCompleted(details: Browser.webRequest.OnCompletedDetails) {
         if (!subtitleUrlRegex.test(details.url) || /thumbnail/i.test(details.url)) return;
+        if (/jimaku\.cc/i.test(details.url)) return; // the fork already surfaces Jimaku as its own track
         if (details.tabId < 1) return; // not tied to a tab
 
         const key = details.tabId + ':' + details.url;
@@ -138,9 +140,38 @@ export default class NetworkSubtitleCapture {
             return;
         }
 
-        const tracks = this._tracksByTab.get(details.tabId) ?? [];
-        if (tracks.some((t) => t.url === details.url)) return;
-        tracks.push({ url: details.url, label: labelFromUrl(details.url), language: 'und', base64: result.base64! });
-        this._tracksByTab.set(details.tabId, tracks);
+        this._store(details.tabId, {
+            url: details.url,
+            label: labelFromUrl(details.url),
+            language: 'und',
+            base64: result.base64!,
+            extension: details.url.match(subtitleUrlRegex)?.[1]?.toLowerCase() ?? 'vtt',
+        });
+    }
+
+    // Stores a subtitle sniffed in-page. Sites like animetsu/animex serve subtitles through opaque,
+    // proxied, sometimes referer-gated URLs the webRequest path can't match or re-fetch; the in-page
+    // sniffer reads the body the player already received and hands it here.
+    async addCaptured(tabId: number, captured: { url: string; base64: string; extension: string; lang?: string }) {
+        if (tabId < 1 || !(await this._isAnimeTab(tabId))) return;
+        // base64 length < ~67 ≈ under 50 decoded bytes; skip empties and thumbnail-sprite tracks.
+        if (!captured.base64 || captured.base64.length < 67 || isImageCueTrack(captured.base64)) return;
+        // Prefer the language the site's sources JSON reported; expand a bare code (en/eng) to a name.
+        const lang = captured.lang?.trim();
+        const label = lang ? (langCodeToName[lang.toLowerCase()] ?? lang) : labelFromUrl(captured.url);
+        this._store(tabId, {
+            url: captured.url,
+            label,
+            language: 'und',
+            base64: captured.base64,
+            extension: captured.extension,
+        });
+    }
+
+    private _store(tabId: number, track: CapturedSubtitle) {
+        const tracks = this._tracksByTab.get(tabId) ?? [];
+        if (tracks.some((t) => t.url === track.url)) return; // dedupe by url
+        tracks.push(track);
+        this._tracksByTab.set(tabId, tracks);
     }
 }
