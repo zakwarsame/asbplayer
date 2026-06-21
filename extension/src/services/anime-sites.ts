@@ -11,6 +11,7 @@ const BRANDS = {
     MIRURO: 'miruro',
     STREM: 'strem',
     ANIMEKAI: 'animekai',
+    ANIMETSU: 'animetsu',
 } as const;
 type BrandKey = (typeof BRANDS)[keyof typeof BRANDS];
 
@@ -19,6 +20,7 @@ const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
     [BRANDS.MIRURO]: (hostname) => /(^|\.)miruro\./.test(hostname),
     [BRANDS.STREM]: (hostname) => /^app\.strem\./.test(hostname),
     [BRANDS.ANIMEKAI]: (hostname) => /(^|\.)(animekai|anikai)\./.test(hostname),
+    [BRANDS.ANIMETSU]: (hostname) => /(^|\.)animetsu\./.test(hostname),
 };
 
 // Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
@@ -124,6 +126,38 @@ export const animeSites = new Map<string, AnimeSite>([
 
                 return {
                     title,
+                    episode,
+                };
+            },
+        },
+    ],
+    [
+        BRANDS.ANIMETSU,
+        {
+            titleQuery: '', // unused; title from document.title
+            epQuery: '', // unused; episode from the DOM
+            epPlayerRegEx: /https:\/\/animetsu\.[^/]+\/watch\/[a-f0-9]+/,
+            extractInfo: () => {
+                // Episode is only in SPA state; the active one is the <button> reading "EP <n>"
+                // (the episode list uses <span> "Ep <n>", so match buttons only).
+                let episode = '';
+                for (const button of Array.from(document.querySelectorAll('button'))) {
+                    const match = button.textContent?.trim().match(/^ep\s*(\d+)$/i);
+                    if (match) {
+                        episode = match[1];
+                        break;
+                    }
+                }
+
+                // document.title is "<episode name> - <anime title>"; the anime title is the
+                // trailing segment (episode names can contain " - ").
+                const docTitle = document.title.trim();
+                const separator = docTitle.lastIndexOf(' - ');
+                const title = separator === -1 ? '' : docTitle.slice(separator + 3).trim();
+
+                // "Animetsu" is the placeholder before data loads; empty title makes the caller retry.
+                return {
+                    title: title === 'Animetsu' ? '' : title,
                     episode,
                 };
             },
