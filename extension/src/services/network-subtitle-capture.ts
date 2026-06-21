@@ -149,14 +149,11 @@ export default class NetworkSubtitleCapture {
         });
     }
 
-    // Stores a subtitle sniffed in-page. Sites like animetsu/animex serve subtitles through opaque,
-    // proxied, sometimes referer-gated URLs the webRequest path can't match or re-fetch; the in-page
-    // sniffer reads the body the player already received and hands it here.
+    // Stores a subtitle sniffed in-page (the opaque/proxied URLs the webRequest path can't capture).
     async addCaptured(tabId: number, captured: { url: string; base64: string; extension: string; lang?: string }) {
         if (tabId < 1 || !(await this._isAnimeTab(tabId))) return;
         // base64 length < ~67 ≈ under 50 decoded bytes; skip empties and thumbnail-sprite tracks.
         if (!captured.base64 || captured.base64.length < 67 || isImageCueTrack(captured.base64)) return;
-        // Prefer the language the site's sources JSON reported; expand a bare code (en/eng) to a name.
         const lang = captured.lang?.trim();
         const label = lang ? (langCodeToName[lang.toLowerCase()] ?? lang) : labelFromUrl(captured.url);
         this._store(tabId, {
@@ -170,7 +167,7 @@ export default class NetworkSubtitleCapture {
 
     private _store(tabId: number, track: CapturedSubtitle) {
         const tracks = this._tracksByTab.get(tabId) ?? [];
-        if (tracks.some((t) => t.url === track.url)) return; // dedupe by url
+        if (tracks.some((t) => t.url === track.url)) return;
         tracks.push(track);
         this._tracksByTab.set(tabId, tracks);
     }
