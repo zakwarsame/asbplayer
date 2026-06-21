@@ -64,7 +64,7 @@ export default defineConfig({
         },
     },
     manifest: ({ browser, mode }) => {
-        const version = '1.3.3';
+        const version = '1.3.4';
         const isDev = mode === 'development';
         const devLabel = isDev ? ' (Dev)' : '';
         const title = `${extName}${devLabel}`;
