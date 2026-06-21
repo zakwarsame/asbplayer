@@ -12,6 +12,7 @@ const BRANDS = {
     STREM: 'strem',
     ANIMEKAI: 'animekai',
     ANIMETSU: 'animetsu',
+    ANIMEX: 'animex',
 } as const;
 type BrandKey = (typeof BRANDS)[keyof typeof BRANDS];
 
@@ -21,6 +22,7 @@ const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
     [BRANDS.STREM]: (hostname) => /^app\.strem\./.test(hostname),
     [BRANDS.ANIMEKAI]: (hostname) => /(^|\.)(animekai|anikai)\./.test(hostname),
     [BRANDS.ANIMETSU]: (hostname) => /(^|\.)animetsu\./.test(hostname),
+    [BRANDS.ANIMEX]: (hostname) => /(^|\.)animex\./.test(hostname),
 };
 
 // Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
@@ -159,6 +161,28 @@ export const animeSites = new Map<string, AnimeSite>([
                 return {
                     title: title === 'Animetsu' ? '' : title,
                     episode,
+                };
+            },
+        },
+    ],
+    [
+        BRANDS.ANIMEX,
+        {
+            titleQuery: '', // unused; everything is parsed from the URL
+            epQuery: '', // unused; everything is parsed from the URL
+            epPlayerRegEx: /https:\/\/animex\.[^/]+\/watch\/.+-\d+-episode-\d+/,
+            extractInfo: () => {
+                // Watch URL is /watch/<title-slug>-<anilistId>-episode-<ep>. The trailing numeric
+                // group is the AniList id even when the slug itself contains numbers (kaiju-no-8,
+                // season-2), so we pass anilistId through for an exact lookup.
+                const match = window.location.href.match(/\/watch\/(.+)-(\d+)-episode-(\d+)/);
+                if (!match) return { title: '', episode: '' };
+
+                const [, titleSlug, anilistId, episode] = match;
+                return {
+                    title: titleSlug.replace(/-/g, ' ').trim(),
+                    episode,
+                    anilistId: parseInt(anilistId, 10),
                 };
             },
         },
