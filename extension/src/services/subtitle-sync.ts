@@ -1,7 +1,6 @@
 import { SubtitleHtml, type SubtitleSyncReferenceOrigin } from '@project/common';
 import { SubtitleReader } from '@project/common/subtitle-reader';
 import { base64ToBlob } from '@project/common/base64';
-import { extractExtension } from '@/pages/util';
 import { pgsParserWorkerFactory } from './pgs-parser-worker-factory';
 import { requestCapturedSubtitles, capturedSubtitleLabel } from './captured-subtitles';
 import type Binding from './binding';
@@ -80,10 +79,7 @@ export async function gatherReferenceCandidates(context: Binding, primaryTrack: 
     for (let i = 0; i < captured.length; i++) {
         const c = captured[i];
         try {
-            const file = new File(
-                [base64ToBlob(c.base64, 'text/plain')],
-                `reference.${extractExtension(c.url, 'vtt')}`
-            );
+            const file = new File([base64ToBlob(c.base64, 'text/plain')], `reference.${c.extension}`);
             const nodes = await reader.subtitles([file]);
             addCandidate({
                 id: `captured-${i}`,
