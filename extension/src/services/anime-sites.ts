@@ -1,3 +1,5 @@
+import pagesConfig from '../pages.json';
+
 interface AnimeSite {
     titleQuery: string;
     epQuery: string;
@@ -270,6 +272,17 @@ function detectSiteKey(hostname: string): string | undefined {
 export function isAnimeSite(url: string): boolean {
     const hostname = normalizeHostname(new URL(url).hostname);
     return Boolean(detectSiteKey(hostname));
+}
+
+// A recognised video/streaming site: an anime site, or a host configured in pages.json. Matches the
+// raw host (incl. www), the same way pages.ts resolves the current page config.
+export function isVideoSite(url: string): boolean {
+    if (isAnimeSite(url)) return true;
+    const host = new URL(url).host;
+    return pagesConfig.pages.some((page) => {
+        const p = page as { host: string; literalHosts?: string[] };
+        return new RegExp(p.host).test(host) || (p.literalHosts?.includes(host) ?? false);
+    });
 }
 
 export function getAnimeSiteInfo(url: string) {

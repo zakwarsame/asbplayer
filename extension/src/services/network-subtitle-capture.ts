@@ -1,5 +1,5 @@
 import { SettingsProvider } from '@project/common/settings';
-import { isAnimeSite } from '@/services/anime-sites';
+import { isVideoSite } from '@/services/anime-sites';
 
 export interface CapturedSubtitle {
     url: string;
@@ -53,7 +53,7 @@ function isImageCueTrack(base64: string): boolean {
 }
 
 // Captures subtitle files a site serves over the network so they can be offered in the subtitle
-// picker. Always on for anime sites; elsewhere gated behind the streamingCaptureSiteSubtitles setting.
+// picker. Always on for video sites; elsewhere gated behind the streamingCaptureSiteSubtitles setting.
 export default class NetworkSubtitleCapture {
     private readonly _settings: SettingsProvider;
     private readonly _tracksByTab = new Map<number, CapturedSubtitle[]>();
@@ -104,10 +104,10 @@ export default class NetworkSubtitleCapture {
         this._enabled = await this._settings.getSingle('streamingCaptureSiteSubtitles');
     }
 
-    private async _isAnimeTab(tabId: number): Promise<boolean> {
+    private async _isVideoTab(tabId: number): Promise<boolean> {
         try {
             const { url } = await browser.tabs.get(tabId);
-            return url ? isAnimeSite(url) : false;
+            return url ? isVideoSite(url) : false;
         } catch {
             return false;
         }
@@ -120,8 +120,8 @@ export default class NetworkSubtitleCapture {
 
         const key = details.tabId + ':' + details.url;
         if (this._requested.has(key)) return;
-        // Anime sites always capture; other sites only when the setting is on.
-        if (!this._enabled && !(await this._isAnimeTab(details.tabId))) return;
+        // Video sites always capture; other sites only when the setting is on.
+        if (!this._enabled && !(await this._isVideoTab(details.tabId))) return;
         this._requested.add(key); // mark before fetching — our own fetch re-triggers this listener
 
         // Fetched in-frame by the content script; a background service-worker fetch is 403'd.
@@ -151,7 +151,7 @@ export default class NetworkSubtitleCapture {
 
     // Stores a subtitle sniffed in-page (the opaque/proxied URLs the webRequest path can't capture).
     async addCaptured(tabId: number, captured: { url: string; base64: string; extension: string; lang?: string }) {
-        if (tabId < 1 || !(await this._isAnimeTab(tabId))) return;
+        if (tabId < 1 || !(await this._isVideoTab(tabId))) return;
         // base64 length < ~67 ≈ under 50 decoded bytes; skip empties and thumbnail-sprite tracks.
         if (!captured.base64 || captured.base64.length < 67 || isImageCueTrack(captured.base64)) return;
         const lang = captured.lang?.trim();
