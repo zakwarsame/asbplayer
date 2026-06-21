@@ -2,11 +2,10 @@
 // webRequest capture can't match) to the content script. Runs in the page so it reads the body the
 // player already received. Injected on video sites (and elsewhere when the capture setting is on).
 export default defineUnlistedScript(() => {
-    // Content-types that can't be a subtitle or a sources JSON; skip reading their bodies entirely so
-    // busy sites (YouTube/Netflix) don't pay for every response. Subtitle bodies (text/plain, text/vtt,
-    // octet-stream, or no content-type) and JSON still pass.
-    const SKIP_CONTENT_TYPE =
-        /(video|audio|image|font)\/|dash\+xml|mpegurl|html|css|javascript|ecmascript|wasm|protobuf/i;
+    // Only skip clearly-binary media. Don't filter subtitles by content-type: proxied sources mislabel
+    // them (animeonsen serves ASS as application/wasm), so anything stricter drops real captions. The
+    // harvest pre-check + size cap below are what keep busy sites cheap.
+    const SKIP_CONTENT_TYPE = /(video|audio|image)\/|dash\+xml|mpegurl/i;
     const MAX_BYTES = 2_000_000;
     const MAX_TRACKS = 30;
     const seen = new Set<string>();
