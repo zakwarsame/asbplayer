@@ -60,6 +60,7 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
     - miruro
     - animekai
     - animetsu
+    - animex
     - More sites can be easily added
 
 ### Web app features
