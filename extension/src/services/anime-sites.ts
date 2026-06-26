@@ -15,6 +15,7 @@ const BRANDS = {
     ANIMEKAI: 'animekai',
     ANIMETSU: 'animetsu',
     ANIMEX: 'animex',
+    REANIME: 'reanime',
 } as const;
 type BrandKey = (typeof BRANDS)[keyof typeof BRANDS];
 
@@ -25,6 +26,7 @@ const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
     [BRANDS.ANIMEKAI]: (hostname) => /(^|\.)(animekai|anikai)\./.test(hostname),
     [BRANDS.ANIMETSU]: (hostname) => /(^|\.)animetsu\./.test(hostname),
     [BRANDS.ANIMEX]: (hostname) => /(^|\.)animex\./.test(hostname),
+    [BRANDS.REANIME]: (hostname) => /(^|\.)reanime\./.test(hostname),
 };
 
 // Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
@@ -185,6 +187,29 @@ export const animeSites = new Map<string, AnimeSite>([
                     title: titleSlug.replace(/-/g, ' ').trim(),
                     episode,
                     anilistId: parseInt(anilistId, 10),
+                };
+            },
+        },
+    ],
+    [
+        BRANDS.REANIME,
+        {
+            titleQuery: '', // unused; everything is parsed from the URL
+            epQuery: '', // unused; everything is parsed from the URL
+            epPlayerRegEx: /https:\/\/reanime\.[^/]+\/watch\/.+\?ep=\d+/,
+            extractInfo: () => {
+                // Watch URL is /watch/<title-slug>-<id>?ep=<n>. The trailing 6-char segment is
+                // reANIME's own opaque id (not AniList's), so drop it and search AniList by the
+                // slug text. Episode lives in the ?ep= query param.
+                const match = window.location.pathname.match(/^\/watch\/(.+)-[a-z0-9]{6}\/?$/);
+                const episode = new URLSearchParams(window.location.search).get('ep') || '';
+                // ?ep=latest resolves to a number once the player loads; reject non-numeric so the
+                // caller retries instead of feeding a bad episode downstream.
+                if (!match || !/^\d+$/.test(episode)) return { title: '', episode: '' };
+
+                return {
+                    title: match[1].replace(/-/g, ' ').trim(),
+                    episode,
                 };
             },
         },

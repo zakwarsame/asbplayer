@@ -61,6 +61,7 @@ This is a fork of [asbplayer](https://github.com/killergerbah/asbplayer) that ad
     - animekai
     - animetsu
     - animex
+    - reanime
     - More sites can be easily added
 
 ### Web app features
