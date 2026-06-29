@@ -16,6 +16,7 @@ const BRANDS = {
     ANIMETSU: 'animetsu',
     ANIMEX: 'animex',
     REANIME: 'reanime',
+    KICKASSANIME: 'kickassanime',
 } as const;
 type BrandKey = (typeof BRANDS)[keyof typeof BRANDS];
 
@@ -27,6 +28,7 @@ const BRAND_HOST_TESTS: Record<BrandKey, (hostname: string) => boolean> = {
     [BRANDS.ANIMETSU]: (hostname) => /(^|\.)animetsu\./.test(hostname),
     [BRANDS.ANIMEX]: (hostname) => /(^|\.)animex\./.test(hostname),
     [BRANDS.REANIME]: (hostname) => /(^|\.)reanime\./.test(hostname),
+    [BRANDS.KICKASSANIME]: (hostname) => /(^|\.)kaa\./.test(hostname),
 };
 
 // Site keys are brand-based to allow any TLD (e.g., hianime.to, hianime.se)
@@ -209,6 +211,32 @@ export const animeSites = new Map<string, AnimeSite>([
 
                 return {
                     title: match[1].replace(/-/g, ' ').trim(),
+                    episode,
+                };
+            },
+        },
+    ],
+    [
+        BRANDS.KICKASSANIME,
+        {
+            titleQuery: '', // unused; parsed in extractInfo
+            epQuery: '', // unused; parsed in extractInfo
+            epPlayerRegEx: /https:\/\/(?:www\.)?kaa\.[^/]+\/.+\/ep-\d+/,
+            extractInfo: () => {
+                const titleElement = document.querySelector('.v-card__title h1.text-h6');
+                const episodeElement = document.querySelector('.v-card__title .text-overline');
+
+                const title = titleElement?.textContent?.trim() || '';
+
+                let episode = '';
+                const epText = episodeElement?.textContent?.trim() || '';
+                const epMatch = epText.match(/Episode\s+(\d+(?:\.\d+)?)/i);
+                if (epMatch) {
+                    episode = epMatch[1];
+                }
+
+                return {
+                    title,
                     episode,
                 };
             },
