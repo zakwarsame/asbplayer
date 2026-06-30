@@ -35,7 +35,9 @@
         "userGuide": "ユーザーガイド",
         "search": "検索",
         "reload": "再読み込み",
-        "findPlaceholder": "Search by text or /regex/"
+        "findPlaceholder": "Search by text or /regex/",
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "asbplayerについて",
@@ -248,7 +250,8 @@
                 "youtube": {
                     "targetLanguages": "機械翻訳の対象言語コード"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "空",
@@ -258,7 +261,9 @@
             "selectSubtitles": "字幕を選択",
             "subtitleTrack": "字幕トラック",
             "videoName": "動画ファイル名",
-            "ftue": "自動検出された字幕トラックはここで選択できます。asbplayerはすべてのサイトで字幕トラックを検出できるわけではありません。自分の字幕ファイルはいつでもロードすることができます。"
+            "ftue": "自動検出された字幕トラックはここで選択できます。asbplayerはすべてのサイトで字幕トラックを検出できるわけではありません。自分の字幕ファイルはいつでもロードすることができます。",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "複数の動画を探知しました",
@@ -661,7 +666,8 @@
         "webSocketInterface": "WebSocketインターフェース",
         "yomitanHelperText": "YomitanのAPIのセットアップは<0>こちら<0>をご参考にしてください。",
         "seekableTracks": "操作対象の字幕トラック（プレイバックモード/ショートカット）",
-        "autoCopyableTracks": "自動コピー対象の字幕トラック"
+        "autoCopyableTracks": "自動コピー対象の字幕トラック",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "統計",
@@ -755,5 +761,15 @@
         "searchCategory": "Search category",
         "categoryAnime": "Anime",
         "categoryDrama": "Drama"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }

@@ -35,7 +35,9 @@
         "userGuide": "用户指南",
         "search": "Search",
         "reload": "Reload",
-        "findPlaceholder": "Search by text or /regex/"
+        "findPlaceholder": "Search by text or /regex/",
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "关于 asbplayer",
@@ -248,7 +250,8 @@
                 "youtube": {
                     "targetLanguages": "机器翻译的目标语言代码"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "空轨道",
@@ -258,7 +261,9 @@
             "selectSubtitles": "选择字幕",
             "subtitleTrack": "字幕轨道",
             "videoName": "视频名称",
-            "ftue": "可在此选择自动检测到的字幕轨道。若未能识别，您可随时手动加载字幕文件。"
+            "ftue": "可在此选择自动检测到的字幕轨道。若未能识别，您可随时手动加载字幕文件。",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "检测到多个视频元素",
@@ -661,7 +666,8 @@
         "webSocketInterface": "WebSocket 接口",
         "yomitanHelperText": "Yomitan API 配置说明详见 <0>此处</0>。",
         "seekableTracks": "Subtitle tracks affected by playback modes and keyboard shortcuts",
-        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy"
+        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "统计数据",
@@ -755,5 +761,15 @@
         "searchCategory": "搜索类别",
         "categoryAnime": "动画",
         "categoryDrama": "剧集"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }

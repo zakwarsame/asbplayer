@@ -35,7 +35,9 @@
         "userGuide": "User guide",
         "search": "Search",
         "reload": "Reload",
-        "findPlaceholder": "Search by text or /regex/"
+        "findPlaceholder": "Search by text or /regex/",
+        "autoSubs": "Automatic Subs",
+        "autoSyncSubtitles": "Auto-Sync Subtitles"
     },
     "about": {
         "title": "О asbplayer",
@@ -248,7 +250,8 @@
                 "youtube": {
                     "targetLanguages": "Target language codes for machine translation"
                 }
-            }
+            },
+            "useWebGpuForWhisper": "Use WebGPU for Whisper transcription (experimental)"
         },
         "videoDataSync": {
             "emptySubtitleTrack": "Пусто",
@@ -258,7 +261,9 @@
             "selectSubtitles": "Выбрать субтитры",
             "subtitleTrack": "Выбрать дорожку субтитров",
             "videoName": "Название видео",
-            "ftue": "Здесь можно выбрать дорожки субтитров найденные автоматически. Автоматическая загрузка субтитров не работает на каждом сайте - вы всегда можете загрузить свои собственные файлы с субтитрами."
+            "ftue": "Здесь можно выбрать дорожки субтитров найденные автоматически. Автоматическая загрузка субтитров не работает на каждом сайте - вы всегда можете загрузить свои собственные файлы с субтитрами.",
+            "episode": "Episode",
+            "search": "Search"
         },
         "videoSelect": {
             "multipleVideoElements": "Обнаружено несколько видеоэлементов",
@@ -661,7 +666,8 @@
         "webSocketInterface": "WebSocket interface",
         "yomitanHelperText": "Instructions to setup Yomitan API are <0>here<0>.",
         "seekableTracks": "Subtitle tracks affected by playback modes and keyboard shortcuts",
-        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy"
+        "autoCopyableTracks": "Subtitle tracks eligible for auto-copy",
+        "apiKey": "API Key"
     },
     "statistics": {
         "title": "Statistics",
@@ -755,5 +761,15 @@
         "searchCategory": "Search category",
         "categoryAnime": "Anime",
         "categoryDrama": "Drama"
+    },
+    "autoSubsDialog": {
+        "title": "Automatic Subs",
+        "selectSubtitles": "Select Subtitles",
+        "load": "Load subtitle",
+        "animeTitle": "Title",
+        "episode": "Episode",
+        "search": "Search",
+        "selectSubtitle": "Select Subtitle",
+        "apiKey": "API Key"
     }
 }
