@@ -119,3 +119,69 @@ export const inferTracksFromInterceptedMpd = (
         waitForBasename: false,
     });
 };
+
+// Like the interceptors above, but instead of matching the manifest request directly it derives
+// the manifest URL from any observed resource request (e.g. a media segment). This handles players
+// that fetch the manifest once, before this script is injected: their segment requests are still
+// seen live, and requests that predate the hooks are recovered from the performance timeline.
+export const inferTracksFromInterceptedMpdViaResourceUrl = (
+    resourceUrlToManifestUrl: (resourceUrl: string) => string | undefined,
+    trackExtractor: (playlist: Playlist, language: string) => VideoDataSubtitleTrackDef | undefined
+) => {
+    const originalFetch = window.fetch;
+    let lastManifestUrl: string | undefined;
+
+    const inspect = (resourceUrl: string) => {
+        const manifestUrl = resourceUrlToManifestUrl(resourceUrl);
+
+        if (manifestUrl !== undefined) {
+            lastManifestUrl = manifestUrl;
+        }
+    };
+
+    window.fetch = (...args) => {
+        const input = args[0];
+        const url =
+            typeof input === 'string'
+                ? input
+                : input instanceof Request
+                  ? input.url
+                  : input instanceof URL
+                    ? input.href
+                    : undefined;
+
+        if (url !== undefined) {
+            inspect(url);
+        }
+
+        return originalFetch(...args);
+    };
+
+    const originalXhrOpen = window.XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function () {
+        if (typeof arguments[1] === 'string') {
+            inspect(arguments[1]);
+        }
+
+        // @ts-ignore
+        originalXhrOpen.apply(this, arguments);
+    };
+
+    inferTracks({
+        onRequest: async (addTrack, setBasename) => {
+            setBasename(document.title);
+
+            for (const entry of performance.getEntriesByType('resource')) {
+                inspect(entry.name);
+            }
+
+            if (lastManifestUrl !== undefined) {
+                const tracks = await tryExtractSubtitleTracks(lastManifestUrl, originalFetch, trackExtractor);
+                for (const track of tracks) {
+                    addTrack(track);
+                }
+            }
+        },
+        waitForBasename: false,
+    });
+};

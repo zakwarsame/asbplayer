@@ -16,7 +16,7 @@ import {
     UpdateEpisodeMessage,
 } from '@project/common';
 import { AsbplayerSettings, SettingsProvider } from '@project/common/settings';
-import { base64ToBlob, bufferToBase64 } from '@project/common/base64';
+import { base64ToBlob, bufferToBase64, uint8ArrayToBase64 } from '@project/common/base64';
 import Binding from '../services/binding';
 import { currentPageDelegate } from '../services/pages';
 import UiFrame, { uiFrameForHtml } from '../services/ui-frame';
@@ -753,30 +753,44 @@ export default class VideoDataSyncController {
         const firstUri = url[0];
         const partExtension = extractExtension(firstUri, extension);
         const fileName = `${name}.${partExtension}`;
-        const promises = url.map((u) => fetch(u));
-        const tracks = [];
-        let totalPromises = promises.length;
-        let finishedPromises = 0;
+        const buffers: ArrayBuffer[] = [];
+        // Fetch in batches - tracks with many segments exhaust the browser's connection
+        // pool (net::ERR_INSUFFICIENT_RESOURCES) when all fetches are started at once
+        const batchSize = 32;
 
-        for (const p of promises) {
-            const response = await p;
+        for (let i = 0; i < url.length; i += batchSize) {
+            const responses = await Promise.all(url.slice(i, i + batchSize).map((u) => fetch(u)));
 
-            if (!response.ok) {
-                throw new Error(`Subtitle Retrieval failed with Status ${response.status}/${response.statusText}...`);
+            for (const response of responses) {
+                if (!response.ok) {
+                    throw new Error(
+                        `Subtitle Retrieval failed with Status ${response.status}/${response.statusText}...`
+                    );
+                }
+
+                buffers.push(await response.arrayBuffer());
             }
 
-            ++finishedPromises;
             this._context.subtitleController.notification(
-                `${fileName} (${Math.floor((finishedPromises / totalPromises) * 100)}%)`
+                `${fileName} (${Math.floor((buffers.length / url.length) * 100)}%)`
             );
-
-            tracks.push({
-                name: fileName,
-                base64: bufferToBase64(await response.arrayBuffer()),
-            });
         }
 
-        return tracks;
+        // fMP4 media segments form one self-delimiting stream, so hand them over as a single
+        // file - thousands of tiny files would freeze the page reconstructing and parsing them.
+        if (partExtension === 'm4s') {
+            const merged = new Uint8Array(buffers.reduce((total, b) => total + b.byteLength, 0));
+            let offset = 0;
+
+            for (const buffer of buffers) {
+                merged.set(new Uint8Array(buffer), offset);
+                offset += buffer.byteLength;
+            }
+
+            return [{ name: fileName, base64: uint8ArrayToBase64(merged) }];
+        }
+
+        return buffers.map((buffer) => ({ name: fileName, base64: bufferToBase64(buffer) }));
     }
 
     private async _reportError(error: string) {

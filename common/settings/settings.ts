@@ -860,6 +860,7 @@ export interface PageSettings {
     svtplay: Page;
     urplay: Page;
     archive: Page;
+    crave: Page;
 }
 
 export interface StreamingVideoSettings {

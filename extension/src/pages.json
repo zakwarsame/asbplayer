@@ -231,6 +231,15 @@
             "key": "archive",
             "host": "archive\\.org",
             "searchShadowRootsForVideoElements": true
+        },
+        {
+            "key": "crave",
+            "host": "(www\\.)?crave\\.ca",
+            "pageScript": "crave-page.js",
+            "syncAllowedAtPath": ".*",
+            "autoSync": {
+                "enabled": true
+            }
         }
     ]
 }

@@ -4,6 +4,7 @@ import { WebVTT } from 'videojs-vtt.js';
 import { XMLParser } from 'fast-xml-parser';
 import { SubtitleHtml, SubtitleTextImage, Token, Tokenization } from '@project/common';
 import DOMPurify from 'dompurify';
+import { parseWvttSegment } from './mp4-wvtt';
 
 const vttClassRegex = /<(\/)?c(\.[^>]*)?>/g;
 const assNewLineRegex = RegExp(/\\[nN]/, 'ig');
@@ -412,6 +413,15 @@ export default class SubtitleReader {
             }
 
             return subtitles;
+        }
+
+        if (file.name.endsWith('.m4s')) {
+            return parseWvttSegment(await file.arrayBuffer()).map((cue) => ({
+                start: cue.start,
+                end: cue.end,
+                text: this._filterText(cue.text),
+                track,
+            }));
         }
 
         if (file.name.endsWith('.bbjson')) {
