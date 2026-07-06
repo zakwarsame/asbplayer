@@ -26,6 +26,13 @@ export const uiFrameForSrc = (src: string) => {
     });
 };
 
+// A modal <dialog> (opened via showModal) renders in the browser's top layer, which paints above
+// all z-indexed content and makes everything outside the dialog inert. Some players (e.g. tou.tv)
+// wrap themselves in one, so the overlay must live inside it to be visible and interactive. Falls
+// back to document.body, which is the normal case for every other site.
+const overlayParentElement = (): Element =>
+    (document.querySelector('dialog:modal') as HTMLDialogElement | null) ?? document.body;
+
 type FrameInitializer = (frame: HTMLIFrameElement, lang: string) => Promise<void>;
 
 export default class UiFrame {
@@ -96,7 +103,7 @@ export default class UiFrame {
         this._frame.setAttribute('allowtransparency', 'true');
 
         this._client = new FrameBridgeClient(this._frame, this._fetchOptions);
-        document.body.appendChild(this._frame);
+        overlayParentElement().appendChild(this._frame);
 
         await this._frameInitializer(this._frame, this._language);
         await this._client!.bind();

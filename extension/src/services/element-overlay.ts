@@ -117,10 +117,18 @@ export class CachingElementOverlay implements ElementOverlay {
         }
     }
 
+    // The video may live inside a top-layer element - the fullscreen element, or a modal <dialog>
+    // (opened via showModal) that some players wrap themselves in. Overlays appended to
+    // document.body render behind the top layer, so in either case they must be placed inside that
+    // element instead. Returns null in the normal case, where document.body is used.
+    private _topLayerElement(): Element | null {
+        return document.fullscreenElement ?? this.targetElement.closest('dialog:modal');
+    }
+
     get containerElement() {
-        if (document.fullscreenElement && this.fullscreenContainerElement !== undefined) {
+        if (this._topLayerElement() && this.fullscreenContainerElement !== undefined) {
             return this.fullscreenContainerElement;
-        } else if (!document.fullscreenElement && this.nonFullscreenContainerElement !== undefined) {
+        } else if (!this._topLayerElement() && this.nonFullscreenContainerElement !== undefined) {
             return this.nonFullscreenContainerElement;
         }
 
@@ -148,7 +156,7 @@ export class CachingElementOverlay implements ElementOverlay {
     }
 
     setHtml(htmls: KeyedHtml[]) {
-        if (document.fullscreenElement) {
+        if (this._topLayerElement()) {
             this._displayFullscreenContentElementsWithHtml(htmls);
         } else {
             this._displayNonFullscreenContentElementsWithHtml(htmls);
@@ -192,7 +200,7 @@ export class CachingElementOverlay implements ElementOverlay {
         document.body.appendChild(container);
 
         const toggle = () => {
-            if (document.fullscreenElement) {
+            if (this._topLayerElement()) {
                 container.style.setProperty('display', 'none', 'important');
                 this._transferChildren(container, this._fullscreenContainerElement());
             } else {
@@ -228,7 +236,7 @@ export class CachingElementOverlay implements ElementOverlay {
         const that = this;
 
         const toggle = () => {
-            if (document.fullscreenElement) {
+            if (this._topLayerElement()) {
                 if (container.style.display === 'none') {
                     container.style.display = '';
                     container.remove();
@@ -238,7 +246,7 @@ export class CachingElementOverlay implements ElementOverlay {
                 if (this.nonFullscreenContainerElement) {
                     this._transferChildren(this.nonFullscreenContainerElement, container);
                 }
-            } else if (!document.fullscreenElement) {
+            } else if (!this._topLayerElement()) {
                 container.style.setProperty('display', 'none', 'important');
                 this._transferChildren(container, this._nonFullscreenContainerElement());
             }
@@ -254,6 +262,14 @@ export class CachingElementOverlay implements ElementOverlay {
     }
 
     private _findFullscreenParentElement(container: HTMLElement): HTMLElement {
+        // A modal <dialog> is a viewport-filling top-layer element that the click test below can't
+        // see past, so escape straight into it when the video is inside one.
+        const modalDialog = this.targetElement.closest('dialog:modal');
+
+        if (modalDialog instanceof HTMLElement) {
+            return modalDialog;
+        }
+
         const testNode = container.cloneNode(true) as HTMLElement;
         testNode.innerHTML = '&nbsp;'; // The node needs to take up some space to perform test clicks
         let current = this.targetElement.parentElement;
@@ -326,7 +342,7 @@ export class CachingElementOverlay implements ElementOverlay {
     }
 
     appendHtml(html: string) {
-        if (document.fullscreenElement) {
+        if (this._topLayerElement()) {
             this._appendHtml(`${html}\n`, this.fullscreenContentClassName, this._fullscreenContainerElement());
         } else {
             this._appendHtml(`${html}\n`, this.nonFullscreenContentClassName, this._nonFullscreenContainerElement());
