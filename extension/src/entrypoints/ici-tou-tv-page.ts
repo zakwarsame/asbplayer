@@ -41,7 +41,7 @@ const playingIdMedia = (): string | undefined => {
     const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
     const routeMatch = items.find((item) => typeof item.url === 'string' && item.url.replace(/^\/+/, '') === path);
     // The call-to-action media is what autoplays on a show landing page (no episode in the path)
-    const ctaMatch = ((nextData.props?.pageProps?.data?.header?.cta?.media as MediaItem) ?? {}).idMedia;
+    const ctaMatch = nextData.props?.pageProps?.data?.header?.cta?.media?.idMedia;
     const idMedia = routeMatch?.idMedia ?? ctaMatch ?? items[0]?.idMedia;
 
     return idMedia === undefined ? undefined : String(idMedia);
