@@ -29,6 +29,47 @@ export function poll(test: () => boolean, timeout: number = 10000): Promise<bool
     });
 }
 
+// Reports the URL of every request made through window.fetch or XMLHttpRequest. Requests made
+// before the hooks are installed can be recovered with resourceUrlsFromPerformanceTimeline.
+export function interceptResourceUrls(onUrl: (url: string) => void) {
+    const originalFetch = window.fetch;
+
+    window.fetch = (...args) => {
+        const input = args[0];
+        const url =
+            typeof input === 'string'
+                ? input
+                : input instanceof Request
+                  ? input.url
+                  : input instanceof URL
+                    ? input.href
+                    : undefined;
+
+        if (url !== undefined) {
+            onUrl(url);
+        }
+
+        return originalFetch(...args);
+    };
+
+    const originalXhrOpen = window.XMLHttpRequest.prototype.open;
+
+    window.XMLHttpRequest.prototype.open = function () {
+        if (typeof arguments[1] === 'string') {
+            onUrl(arguments[1]);
+        }
+
+        // @ts-ignore
+        originalXhrOpen.apply(this, arguments);
+    };
+}
+
+export function resourceUrlsFromPerformanceTimeline(onUrl: (url: string) => void) {
+    for (const entry of performance.getEntriesByType('resource')) {
+        onUrl(entry.name);
+    }
+}
+
 type SubtitlesByPath = { [key: string]: VideoDataSubtitleTrack[] };
 
 export interface InferHooks {

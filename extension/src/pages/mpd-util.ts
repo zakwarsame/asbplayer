@@ -1,5 +1,5 @@
 import { VideoDataSubtitleTrack, VideoDataSubtitleTrackDef } from '@project/common';
-import { inferTracks, trackId } from './util';
+import { inferTracks, interceptResourceUrls, resourceUrlsFromPerformanceTimeline, trackId } from './util';
 import { parse } from 'mpd-parser';
 
 export interface Segment {
@@ -139,41 +139,12 @@ export const inferTracksFromInterceptedMpdViaResourceUrl = (
         }
     };
 
-    window.fetch = (...args) => {
-        const input = args[0];
-        const url =
-            typeof input === 'string'
-                ? input
-                : input instanceof Request
-                  ? input.url
-                  : input instanceof URL
-                    ? input.href
-                    : undefined;
-
-        if (url !== undefined) {
-            inspect(url);
-        }
-
-        return originalFetch(...args);
-    };
-
-    const originalXhrOpen = window.XMLHttpRequest.prototype.open;
-    window.XMLHttpRequest.prototype.open = function () {
-        if (typeof arguments[1] === 'string') {
-            inspect(arguments[1]);
-        }
-
-        // @ts-ignore
-        originalXhrOpen.apply(this, arguments);
-    };
+    interceptResourceUrls(inspect);
 
     inferTracks({
         onRequest: async (addTrack, setBasename) => {
             setBasename(document.title);
-
-            for (const entry of performance.getEntriesByType('resource')) {
-                inspect(entry.name);
-            }
+            resourceUrlsFromPerformanceTimeline(inspect);
 
             if (lastManifestUrl !== undefined) {
                 const tracks = await tryExtractSubtitleTracks(lastManifestUrl, originalFetch, trackExtractor);
