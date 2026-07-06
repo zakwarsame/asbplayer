@@ -263,10 +263,11 @@ export class CachingElementOverlay implements ElementOverlay {
 
     private _findFullscreenParentElement(container: HTMLElement): HTMLElement {
         // A modal <dialog> is a viewport-filling top-layer element that the click test below can't
-        // see past, so escape straight into it when the video is inside one.
+        // see past, so escape straight into it when the video is inside one - unless the video is
+        // also fullscreen, whose top layer sits above the dialog and is found by the click test.
         const modalDialog = this.targetElement.closest('dialog:modal');
 
-        if (modalDialog instanceof HTMLElement) {
+        if (!document.fullscreenElement && modalDialog instanceof HTMLElement) {
             return modalDialog;
         }
 
