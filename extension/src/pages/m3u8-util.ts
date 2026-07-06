@@ -89,6 +89,58 @@ export function subtitleTrackSegmentsFromM3U8(url: string): Promise<VideoDataSub
     });
 }
 
+const vttTimestampRegex = /(?:(\d+):)?(\d{2}):(\d{2})\.(\d{3})/g;
+
+const padded = (value: number, length: number) => String(value).padStart(length, '0');
+
+const shiftCueTimingLine = (line: string, offsetSeconds: number) =>
+    line.replace(vttTimestampRegex, (_, hours, minutes, seconds, millis) => {
+        const totalMs =
+            Math.round(offsetSeconds * 1000) +
+            (hours === undefined ? 0 : Number(hours) * 3600000) +
+            Number(minutes) * 60000 +
+            Number(seconds) * 1000 +
+            Number(millis);
+        return `${padded(Math.floor(totalMs / 3600000), 2)}:${padded(Math.floor((totalMs % 3600000) / 60000), 2)}:${padded(
+            Math.floor((totalMs % 60000) / 1000),
+            2
+        )}.${padded(totalMs % 1000, 3)}`;
+    });
+
+// Fetches all segments of a subtitle media playlist and merges them into a single WebVTT
+// document. Some packagers (e.g. Brightcove SSAI) write cue timestamps relative to each
+// segment rather than to the track, so every segment's cues are shifted by the sum of the
+// preceding segments' durations to reconstruct the playlist timeline.
+export const mergedVttFromM3U8 = async (playlistUrl: string): Promise<string> => {
+    const manifest = await fetchM3U8(playlistUrl);
+    const segments = (manifest.segments ?? []).filter((s: any) => typeof s.uri === 'string');
+    const texts: string[] = await Promise.all(
+        segments.map((s: any) =>
+            fetch(new URL(s.uri, playlistUrl).href, { cache: 'no-store' }).then((response) => response.text())
+        )
+    );
+
+    const parts: string[] = ['WEBVTT'];
+    let offsetSeconds = 0;
+
+    for (let i = 0; i < segments.length; ++i) {
+        const body = texts[i]
+            .split('\n')
+            .filter((line) => !line.startsWith('WEBVTT') && !line.startsWith('X-TIMESTAMP-MAP'))
+            .map((line) => (line.includes('-->') ? shiftCueTimingLine(line, offsetSeconds) : line))
+            .join('\n')
+            .trim();
+
+        if (body !== '') {
+            parts.push(body);
+        }
+
+        offsetSeconds += segments[i].duration ?? 0;
+    }
+
+    return parts.join('\n\n') + '\n';
+};
+
 export const inferTracksFromInterceptedM3u8 = (urlRegex: RegExp) => {
     let lastManifestUrl: string | undefined;
 

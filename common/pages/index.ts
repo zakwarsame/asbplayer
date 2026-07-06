@@ -32,4 +32,6 @@ export const pageMetadata: { [K in keyof PageSettings]: PageMetadata } = {
     archive: { title: 'Internet Archive', disableCspRuleId: 24 },
     huluJp: { title: 'Hulu Japan', disableCspRuleId: 25 },
     crave: { title: 'Crave', disableCspRuleId: 26 },
+    telequebec: { title: 'Télé-Québec', disableCspRuleId: 27 },
+    toutv: { title: 'ICI TOU.TV', disableCspRuleId: 28 },
 };

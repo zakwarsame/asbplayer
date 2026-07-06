@@ -112,6 +112,8 @@ export default defineConfig({
                         'ur-play-page.js',
                         'hulu-jp-page.js',
                         'crave-page.js',
+                        'telequebec-page.js',
+                        'ici-tou-tv-page.js',
                         'anime-subtitle-sniffer.js',
                         'anki-ui.js',
                         'mp3-encoder-worker.js',

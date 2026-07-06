@@ -240,6 +240,24 @@
             "autoSync": {
                 "enabled": true
             }
+        },
+        {
+            "key": "telequebec",
+            "host": "(www\\.)?telequebec\\.tv",
+            "pageScript": "telequebec-page.js",
+            "syncAllowedAtPath": "regarder",
+            "autoSync": {
+                "enabled": true
+            }
+        },
+        {
+            "key": "toutv",
+            "host": "ici\\.tou\\.tv",
+            "pageScript": "ici-tou-tv-page.js",
+            "syncAllowedAtPath": ".*",
+            "autoSync": {
+                "enabled": true
+            }
         }
     ]
 }

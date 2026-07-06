@@ -861,6 +861,8 @@ export interface PageSettings {
     urplay: Page;
     archive: Page;
     crave: Page;
+    telequebec: Page;
+    toutv: Page;
 }
 
 export interface StreamingVideoSettings {
