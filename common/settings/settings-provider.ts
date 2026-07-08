@@ -269,6 +269,7 @@ export const defaultSettings: AsbplayerSettings = {
         crave: {},
         telequebec: {},
         toutv: {},
+        nfb: {},
     },
     webSocketClientEnabled: false,
     webSocketServerUrl: 'ws://127.0.0.1:8766/ws',

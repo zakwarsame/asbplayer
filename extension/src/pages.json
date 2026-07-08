@@ -258,6 +258,16 @@
             "autoSync": {
                 "enabled": true
             }
+        },
+        {
+            "key": "nfb",
+            "host": "(www\\.)?(nfb|onf)\\.ca",
+            "pageScript": "nfb-page.js",
+            "syncAllowedAtPath": "film|serie",
+            "searchShadowRootsForVideoElements": true,
+            "autoSync": {
+                "enabled": true
+            }
         }
     ]
 }

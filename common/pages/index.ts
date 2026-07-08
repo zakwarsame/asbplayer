@@ -34,4 +34,5 @@ export const pageMetadata: { [K in keyof PageSettings]: PageMetadata } = {
     crave: { title: 'Crave', disableCspRuleId: 26 },
     telequebec: { title: 'Télé-Québec', disableCspRuleId: 27 },
     toutv: { title: 'ICI TOU.TV', disableCspRuleId: 28 },
+    nfb: { title: 'NFB/ONF', disableCspRuleId: 29 },
 };

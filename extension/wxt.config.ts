@@ -114,6 +114,7 @@ export default defineConfig({
                         'crave-page.js',
                         'telequebec-page.js',
                         'ici-tou-tv-page.js',
+                        'nfb-page.js',
                         'anime-subtitle-sniffer.js',
                         'anki-ui.js',
                         'mp3-encoder-worker.js',

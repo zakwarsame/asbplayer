@@ -863,6 +863,7 @@ export interface PageSettings {
     crave: Page;
     telequebec: Page;
     toutv: Page;
+    nfb: Page;
 }
 
 export interface StreamingVideoSettings {
