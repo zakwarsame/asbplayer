@@ -108,9 +108,9 @@ const shiftCueTimingLine = (line: string, offsetSeconds: number) =>
     });
 
 // Fetches all segments of a subtitle media playlist and merges them into a single WebVTT
-// document. Some packagers (e.g. Brightcove SSAI) write cue timestamps relative to each
-// segment rather than to the track, so every segment's cues are shifted by the sum of the
-// preceding segments' durations to reconstruct the playlist timeline.
+// document. The timestamp domain restarts at every discontinuity (e.g. Brightcove SSAI ad
+// breaks), so cue timestamps are relative to the start of the segment's discontinuity run.
+// Shifting each cue by the playlist offset of its run reconstructs the stitched timeline.
 export const mergedVttFromM3U8 = async (playlistUrl: string): Promise<string> => {
     const manifest = await fetchM3U8(playlistUrl);
     const segments = (manifest.segments ?? []).filter((s: any) => typeof s.uri === 'string');
@@ -121,13 +121,18 @@ export const mergedVttFromM3U8 = async (playlistUrl: string): Promise<string> =>
     );
 
     const parts: string[] = ['WEBVTT'];
-    let offsetSeconds = 0;
+    let playlistSeconds = 0;
+    let runStartSeconds = 0;
 
     for (let i = 0; i < segments.length; ++i) {
+        if (segments[i].discontinuity) {
+            runStartSeconds = playlistSeconds;
+        }
+
         const body = texts[i]
             .split('\n')
             .filter((line) => !line.startsWith('WEBVTT') && !line.startsWith('X-TIMESTAMP-MAP'))
-            .map((line) => (line.includes('-->') ? shiftCueTimingLine(line, offsetSeconds) : line))
+            .map((line) => (line.includes('-->') ? shiftCueTimingLine(line, runStartSeconds) : line))
             .join('\n')
             .trim();
 
@@ -135,7 +140,7 @@ export const mergedVttFromM3U8 = async (playlistUrl: string): Promise<string> =>
             parts.push(body);
         }
 
-        offsetSeconds += segments[i].duration ?? 0;
+        playlistSeconds += segments[i].duration ?? 0;
     }
 
     return parts.join('\n\n') + '\n';
