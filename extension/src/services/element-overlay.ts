@@ -1,4 +1,5 @@
 import { OffscreenDomCache } from '@project/common';
+import { adoptVideoCssIntoShadowRoot } from './shadow-roots';
 
 export enum OffsetAnchor {
     bottom,
@@ -122,7 +123,26 @@ export class CachingElementOverlay implements ElementOverlay {
     // document.body render behind the top layer, so in either case they must be placed inside that
     // element instead. Returns null in the normal case, where document.body is used.
     private _topLayerElement(): Element | null {
-        return document.fullscreenElement ?? this.targetElement.closest('dialog:modal');
+        return document.fullscreenElement ?? this._closestModalDialog();
+    }
+
+    // closest() stops at shadow boundaries, so climb through host elements to find an enclosing
+    // modal <dialog> even when the video is nested in shadow DOM (e.g. NFB's Lit player).
+    private _closestModalDialog(): HTMLElement | null {
+        let node: Element | null = this.targetElement;
+
+        while (node) {
+            const dialog = node.closest('dialog:modal');
+
+            if (dialog instanceof HTMLElement) {
+                return dialog;
+            }
+
+            const root = node.getRootNode();
+            node = root instanceof ShadowRoot ? root.host : null;
+        }
+
+        return null;
     }
 
     get containerElement() {
@@ -231,7 +251,9 @@ export class CachingElementOverlay implements ElementOverlay {
         container.onmouseover = this.onMouseOver;
         container.onmouseout = this.onMouseOut;
         this._applyContainerStyles(container);
-        this._findFullscreenParentElement(container).appendChild(container);
+        const fullscreenParent = this._findFullscreenParentElement(container);
+        fullscreenParent.appendChild(container);
+        adoptVideoCssIntoShadowRoot(fullscreenParent);
         container.style.setProperty('display', 'none', 'important');
         const that = this;
 
@@ -240,7 +262,9 @@ export class CachingElementOverlay implements ElementOverlay {
                 if (container.style.display === 'none') {
                     container.style.display = '';
                     container.remove();
-                    that._findFullscreenParentElement(container).appendChild(container);
+                    const parent = that._findFullscreenParentElement(container);
+                    parent.appendChild(container);
+                    adoptVideoCssIntoShadowRoot(parent);
                 }
 
                 if (this.nonFullscreenContainerElement) {
@@ -265,7 +289,7 @@ export class CachingElementOverlay implements ElementOverlay {
         // A modal <dialog> is a viewport-filling top-layer element that the click test below can't
         // see past, so escape straight into it when the video is inside one - unless the video is
         // also fullscreen, whose top layer sits above the dialog and is found by the click test.
-        const modalDialog = this.targetElement.closest('dialog:modal');
+        const modalDialog = this._closestModalDialog();
 
         if (!document.fullscreenElement && modalDialog instanceof HTMLElement) {
             return modalDialog;

@@ -1,6 +1,7 @@
 import { isFirefoxBuild } from './build-flags';
 import FrameBridgeClient, { FetchOptions } from './frame-bridge-client';
 import { frameColorScheme } from './frame-color-scheme';
+import { adoptVideoCssIntoShadowRoot } from './shadow-roots';
 
 export const uiFrameForHtml = (html: (lang: string) => Promise<string>) => {
     return new UiFrame(async (frame: HTMLIFrameElement, lang: string) => {
@@ -28,10 +29,30 @@ export const uiFrameForSrc = (src: string) => {
 
 // A modal <dialog> (opened via showModal) renders in the browser's top layer, which paints above
 // all z-indexed content and makes everything outside the dialog inert. Some players (e.g. tou.tv)
-// wrap themselves in one, so the overlay must live inside it to be visible and interactive. Falls
-// back to document.body, which is the normal case for every other site.
-const overlayParentElement = (): Element =>
-    (document.querySelector('dialog:modal') as HTMLDialogElement | null) ?? document.body;
+// wrap themselves in one, so the overlay must live inside it to be visible and interactive. The
+// dialog can be nested in shadow DOM (e.g. NFB's Lit player), which querySelector cannot reach, so
+// the search descends into shadow roots. Falls back to document.body, the normal case.
+const modalDialogWithin = (root: ParentNode): HTMLDialogElement | null => {
+    const dialog = root.querySelector('dialog:modal') as HTMLDialogElement | null;
+
+    if (dialog) {
+        return dialog;
+    }
+
+    for (const element of root.querySelectorAll('*')) {
+        if (element.shadowRoot) {
+            const nested = modalDialogWithin(element.shadowRoot);
+
+            if (nested) {
+                return nested;
+            }
+        }
+    }
+
+    return null;
+};
+
+const overlayParentElement = (): Element => modalDialogWithin(document) ?? document.body;
 
 type FrameInitializer = (frame: HTMLIFrameElement, lang: string) => Promise<void>;
 
@@ -103,7 +124,9 @@ export default class UiFrame {
         this._frame.setAttribute('allowtransparency', 'true');
 
         this._client = new FrameBridgeClient(this._frame, this._fetchOptions);
-        overlayParentElement().appendChild(this._frame);
+        const parent = overlayParentElement();
+        parent.appendChild(this._frame);
+        adoptVideoCssIntoShadowRoot(parent);
 
         await this._frameInitializer(this._frame, this._language);
         await this._client!.bind();
